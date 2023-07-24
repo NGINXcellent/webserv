@@ -13,9 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: configure
-      run: ./configure
-    - name: make
+    - name: make test
       run: make test
     - name: In case of failure, make PR as failure
       if: always() # Executar mesmo se o teste falhar
