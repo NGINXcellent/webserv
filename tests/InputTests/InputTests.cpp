@@ -17,6 +17,11 @@ TEST(InputTests, BasicTests)
     const char *argv[2] = {"webserv", ".conf"};
     EXPECT_FALSE(InputHandler::check_args(2, argv));
   }
+
+  {
+    const char *argv[2] = {NULL, NULL};
+    EXPECT_FALSE(InputHandler::check_args(2, argv));
+  }
 }
 
 TEST(InputTests, ExtensionTests)
