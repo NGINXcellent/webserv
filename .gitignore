@@ -3,6 +3,7 @@
 
 ### app specific
 webserv
+tests/build
 
 ### C++ ###
 # Prerequisites

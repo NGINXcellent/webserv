@@ -6,7 +6,7 @@
 #    By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/07/24 17:31:04 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/07/25 15:07:51 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -38,11 +38,14 @@ fclean: clean
 
 re: fclean all
 
+$(TEST_BUILD):
+	@cd tests && cmake -S . -B build
+
 test: $(TEST_BUILD)
 	@cd tests && cmake --build build && cd build && ctest --output-on-failure
 
 cleantest:
-	rm -f $(TEST_BUILD)
+	rm -rf $(TEST_BUILD)
 
 retest: cleantest test
 
