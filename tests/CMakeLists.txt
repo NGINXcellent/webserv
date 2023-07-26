@@ -22,16 +22,17 @@ set(CMAKE_CXX_STANDARD 14)
 
 enable_testing()
 
-# set(Headers
-#	../headers/webserv.h
-# )
+set(Includes
+    ../include/input/InputHandler.hpp
+)
 
 set(Sources
-	../srcs/main.cpp
+	../src/main.cpp
+    ../src/input/InputHandler.cpp
 )
 
 # add_library(${This} ${Sources} ${Libft} ${Headers})
-add_library(${This} ${Sources})
+add_library(${This} ${Sources} ${Includes})
 
 # this will add all the subdirectories with unit tests
 add_subdirectory(InputTests)

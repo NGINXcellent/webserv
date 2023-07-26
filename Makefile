@@ -6,7 +6,7 @@
 #    By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/07/25 15:07:51 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/07/26 13:31:51 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,10 +18,12 @@ CXXFLAGS	= -Wall -Werror -Wextra -std=c++98 -g
 
 TEST_BUILD 	= tests/build
 
-APP = $(addprefix srcs/, \
-	main.cpp)
+INPUT = $(addprefix input/, \
+	InputHandler.cpp)
 
-SRC			= $(APP)
+SRC			= $(addprefix src/, \
+	$(INPUT) 					 \
+	main.cpp)
 
 OBJ			= $(SRC:.cpp=.o)
 
