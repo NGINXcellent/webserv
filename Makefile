@@ -3,7 +3,8 @@ NAME	= webserver
 CC		= c++
 CFLAGS	= -Werror -Wextra -Wall -std=c++98 -g
 
-SRC		= main.cpp
+SRC		= src/main.cpp \
+			src/socketFactory.cpp
 OBJ		= $(SRC:.cpp=.o)
 
 all: $(NAME)
