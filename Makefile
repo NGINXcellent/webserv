@@ -1,28 +1,52 @@
-NAME	= webserver
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
+#    Updated: 2023/07/25 15:07:51 by lfarias-         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-CC		= c++
-CFLAGS	= -Werror -Wextra -Wall -std=c++98 -g
+NAME		= webserv 
 
-SRC		= main.cpp
-OBJ		= $(SRC:.cpp=.o)
+CXX 		= c++
+
+CXXFLAGS	= -Wall -Werror -Wextra -std=c++98 -g
+
+TEST_BUILD 	= tests/build
+
+APP = $(addprefix srcs/, \
+	main.cpp)
+
+SRC			= $(APP)
+
+OBJ			= $(SRC:.cpp=.o)
+
+$(NAME): $(OBJ)
+	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
 
 all: $(NAME)
 
-$(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $@
-
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
-
 clean:
-	rm -f *.o
+	rm -f $(OBJ)
 
 fclean: clean
 	rm -f $(NAME)
 
 re: fclean all
 
-test: all
-	./$(NAME)
+$(TEST_BUILD):
+	@cd tests && cmake -S . -B build
 
-.PHONY: all re clean fclean test
+test: $(TEST_BUILD)
+	@cd tests && cmake --build build && cd build && ctest --output-on-failure
+
+cleantest:
+	rm -rf $(TEST_BUILD)
+
+retest: cleantest test
+
+.PHONY: all fclean clean re test cleantest retest
