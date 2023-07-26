@@ -56,3 +56,15 @@ TEST(InputTests, ExtensionTests)
     EXPECT_FALSE(InputHandler::check_args(2, argv));
   }
 }
+
+TEST(InputTests, ArgcTests)
+{
+    const char *argv[2] = {"webserv", "default.conf"};
+
+    EXPECT_FALSE(InputHandler::check_args(42, argv));
+    EXPECT_FALSE(InputHandler::check_args(3, argv));
+    EXPECT_FALSE(InputHandler::check_args(0, argv));
+    EXPECT_FALSE(InputHandler::check_args(-2, argv));
+    EXPECT_FALSE(InputHandler::check_args(-42, argv));
+    EXPECT_FALSE(InputHandler::check_args(-3, argv));
+}
