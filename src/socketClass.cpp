@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   socketFactory.cpp                                  :+:      :+:    :+:   */
+/*   socketClass.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/26 08:43:36 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/07/26 16:01:34 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/socketFactory.hpp"
+#include "../inc/socketClass.hpp"
 
 // Constructor Server Socket
 TCPServerSocket::TCPServerSocket() : sockfd(-1), connection(-1) {}
@@ -94,9 +94,4 @@ TCPServerSocket::~TCPServerSocket() {
     if (sockfd != -1) {
         close(sockfd);
     }
-}
-
-// TCP Server Socket Factory
-Socket* TCPServerSocketFactory::createSocket() const {
-    return new TCPServerSocket;
 }

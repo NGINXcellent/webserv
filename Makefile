@@ -4,7 +4,7 @@ CC		= c++
 CFLAGS	= -Werror -Wextra -Wall -std=c++98 -g
 
 SRC		= src/main.cpp \
-			src/socketFactory.cpp
+			src/socketClass.cpp
 OBJ		= $(SRC:.cpp=.o)
 
 all: $(NAME)
