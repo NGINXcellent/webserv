@@ -23,7 +23,7 @@ INPUT = $(addprefix input/, \
 
 SRC			= $(addprefix src/, \
 	$(INPUT) 					 \
-  socketClass.cpp
+  socketClass.cpp					 \
 	main.cpp)
 
 OBJ			= $(SRC:.cpp=.o)
