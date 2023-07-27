@@ -6,90 +6,154 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/26 16:01:34 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/07/27 09:22:34 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/socketClass.hpp"
 
 // Constructor Server Socket
-TCPServerSocket::TCPServerSocket() : sockfd(-1), connection(-1) {}
+TCPServerSocket::TCPServerSocket() : sockfd(-1), epollfd(-1) {}
 
-int TCPServerSocket::bindAndListen(int port) {
-// 			socket function defines the type of address this socket can conect
-//			socket(DOMAN, TYPE, PROTOCOL)
-//			DOMAIN: AF_INET-> ipv4		TYPE: SOCK_STREAM -> conection oriented sockets like TCP
-//					AF_INET6->ipv6			  SOCK_DGRAM -> not oriented sockets, UDP
-//					AF_UNIX or AF_LOCAL -> Unix domain sockets
-//			TYPE: specify protocol used on this socket, normally 0, the function
-//					will choose protocol based on other two arguments
+int TCPServerSocket::bindAndListen(int G_PORT)
+{
+    // 			Create epollfd
+    epollfd = epoll_create1(0);
+    if (epollfd == -1)
+    {
+        std::cerr << "Failed to create epoll. errno: " << errno << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // Configurar o endereço para o socket
+    sockaddr_in serverAddr;
+    bzero(&serverAddr, sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_port = htons(G_PORT);
+
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        std::cout << "Failed to create socket. errno: " << errno << std::endl;
+    if (sockfd == -1)
+    {
+        std::cerr << "Failed to create socket. errno: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
 
-//		this structure is defined in lib <netinet/in.h>
-// struct sockaddr_in {
-//     short sin_family;           // ADDRESS FAMILY (AF_INET para IPv4)
-//     unsigned short sin_port;    // PORT NUMBER
-//     struct in_addr sin_addr;    // IPADDRESS (INADDR_ANY, INADDR_LOOPBACK,
-//									inet_addr("xxx.xxx.xxx.xxx") set ip you want)
-//     char sin_zero[8];           // NOT USED
-// };
-    sockaddr_in sockaddr;
-    sockaddr.sin_family = AF_INET; // Same as before, Ipv4
-    sockaddr.sin_addr.s_addr = INADDR_ANY; // set every address interface 0.0.0.0
-    sockaddr.sin_port = htons(port); //make convertion to big-endian or little endial (htonl)
-
-//	after setup, the function bind uses struct to bind to specific port and IP if fail
-//  it returns an -1 and error in cout and exit_failure flag(1)
-    if (bind(sockfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
-        std::cout << "Failed to bind to port " << port << ". errno: " << errno << std::endl;
+    if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
+    {
+        std::cerr << "Failed to bind to port " << G_PORT << ". errno: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
-//	if we can bind to ip and port, now we use the function listen(socket, how many connections we handle), if listen returns -1 we send a error and exit_failure flag (1)
-    if (listen(sockfd, 10) < 0) {
-        std::cout << "Failed to listen on socket. errno: " << errno << std::endl;
+
+    // Colocar o socket em modo de escuta
+    if (listen(sockfd, 10) < 0)
+    {
+        std::cerr << "Failed to listen on socket. errno: " << errno << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // Bind sockfd on epoll event
+    struct epoll_event event;
+    event.events = EPOLLIN;
+    event.data.fd = sockfd;
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event) == -1)
+    {
+        std::cerr << "Failed to add sockfd to epoll. errno: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
 
     return sockfd;
 }
 
-// responsable for accept the conection, can be in the other function but like this i think
-// is more organized. "copy" the sockfd listener to a new FD of reader.
-int TCPServerSocket::acceptConnection() {
-    sockaddr_in sockaddr;
-    socklen_t addrlen = sizeof(sockaddr);
-    connection = accept(sockfd, (struct sockaddr*)&sockaddr, &addrlen);
-    if (connection < 0) {
-        std::cout << "Failed to grab connection. errno: " << errno << std::endl;
-        exit(EXIT_FAILURE);
+void TCPServerSocket::handleConnections()
+{
+    // create just one pool of events, its like a line, if is a new conection, add to poll,
+    // if not, handle the client conection.
+    struct epoll_event events[MAX_EVENTS];
+
+    while (true) {
+        int numEvents = epoll_wait(epollfd, events, MAX_EVENTS, 0);
+        if (numEvents == -1) {
+            std::cerr << "epoll_wait error. errno: " << errno << std::endl;
+            continue;
+        }
+
+        for (int i = 0; i < numEvents; ++i) {
+            int currentFd = events[i].data.fd;
+
+            if (currentFd == sockfd) {
+                // found new conection
+                int newConnection = accept(sockfd, NULL, NULL);
+                if (newConnection < 0)
+                {
+                    std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
+                }
+                else {
+                    // Create new socket and try to add to epoll
+                    struct epoll_event event;
+                    event.events = EPOLLIN;
+                    event.data.fd = newConnection;
+                    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, &event) == -1) {
+                        std::cerr << "Failed to add new connection to epoll. errno: " << errno << std::endl;
+                        close(newConnection);
+                    }
+                    else {
+                        // add this conection to conections vector
+                        connections.push_back(newConnection);
+                    }
+                }
+            }
+            else {
+                // If connection already exist
+                char buffer[1024];
+                int bytesRead = read(currentFd, buffer, sizeof(buffer));
+                if (bytesRead <= 0) {
+                    // Connection error or close, we remove from epoll
+                    // signal(SIGINT, handleSIGINT); localtion is here?
+                    epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
+                    close(currentFd);
+                    for (std::vector<int>::iterator it = connections.begin(); it != connections.end(); ++it)
+                    {
+                        if (*it == currentFd) {
+                            connections.erase(it);
+                            break;
+                        }
+                    }
+                }  else {
+                    // input e output handlers
+                    std::cout << "Received data: " << buffer;
+                    memset(buffer, 0, sizeof(buffer));
+                    std::string response = "Good talking to you\n";
+                    sendData(currentFd, response.c_str(), response.size());
+                }
+            }
+        }
     }
-    return connection;
 }
 
-// return data received from conection fd
-int TCPServerSocket::receiveData(int connection, char* buffer, int bufferSize) {
+int TCPServerSocket::receiveData(int connection, char *buffer, int bufferSize)
+{
     int bytesRead = read(connection, buffer, bufferSize);
     return bytesRead;
 }
 
 // send data to conection fd
-void TCPServerSocket::sendData(int connection, const char* data, int dataSize) {
+void TCPServerSocket::sendData(int connection, const char *data, int dataSize)
+{
     send(connection, data, dataSize, 0);
 }
 
 // close conection fd
-void TCPServerSocket::closeConnection(int connection) {
+void TCPServerSocket::closeConnection(int connection)
+{
     close(connection);
 }
 
 // simple destructor
-TCPServerSocket::~TCPServerSocket() {
-    if (connection != -1) {
-        close(connection);
+TCPServerSocket::~TCPServerSocket()
+{
+    if (epollfd != -1) {
+        close(epollfd);
     }
     if (sockfd != -1) {
         close(sockfd);
