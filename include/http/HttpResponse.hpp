@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:52:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 00:16:39 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/07/28 17:11:53 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ class HttpResponse {
   std::string   getHeaders(void);
   void          setStatusCode(int responseCode);
   void          setContentType(std::string mimeType);
+  // void          setMessageBody(int );
 
  private:
   int           statusCode;
