@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/27 09:26:25 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/07/28 08:59:33 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     TCPServerSocket serverSocket;
     std::cout << "MAX EVENTS: " << MAX_EVENTS << std::endl;
 //  bind to choosen port
-    serverSocket.bindAndListen(G_PORT);
+    serverSocket.bindAndListen();
     std::cout << "Server is listening on port " << G_PORT << std::endl;
 
         serverSocket.handleConnections();

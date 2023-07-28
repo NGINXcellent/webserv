@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/27 09:22:34 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/07/28 10:11:38 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 // Constructor Server Socket
 TCPServerSocket::TCPServerSocket() : sockfd(-1), epollfd(-1) {}
 
-int TCPServerSocket::bindAndListen(int G_PORT)
+int TCPServerSocket::bindAndListen()
 {
     // 			Create epollfd
     epollfd = epoll_create1(0);
@@ -33,14 +33,12 @@ int TCPServerSocket::bindAndListen(int G_PORT)
     serverAddr.sin_port = htons(G_PORT);
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1)
-    {
+    if (sockfd == -1) {
         std::cerr << "Failed to create socket. errno: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
-    {
+    if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
         std::cerr << "Failed to bind to port " << G_PORT << ". errno: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -64,13 +62,34 @@ int TCPServerSocket::bindAndListen(int G_PORT)
 
     return sockfd;
 }
+void TCPServerSocket:: addNewConnection(){
+    int newConnection;
+    struct sockaddr_in clientToAdd;
+    socklen_t len = sizeof(clientToAdd);
 
-void TCPServerSocket::handleConnections()
-{
+    newConnection = accept(sockfd, (struct sockaddr*)&clientToAdd, &len);
+    if (newConnection < 0) {
+        std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
+    }
+    else {
+        // try to add to epoll
+        struct epoll_event event;
+        event.events = EPOLLIN;
+        event.data.fd = newConnection;
+        if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, &event) == -1) {
+            std::cerr << "Failed to add new connection to epoll. errno: " << errno << std::endl;
+            close(newConnection);
+        }
+        else {
+            // add this conection to conections vector
+            connections.push_back(newConnection);
+        }
+    }
+}
+
+void TCPServerSocket::handleConnections() {
     // create just one pool of events, its like a line, if is a new conection, add to poll,
     // if not, handle the client conection.
-    struct epoll_event events[MAX_EVENTS];
-
     while (true) {
         int numEvents = epoll_wait(epollfd, events, MAX_EVENTS, 0);
         if (numEvents == -1) {
@@ -80,29 +99,12 @@ void TCPServerSocket::handleConnections()
 
         for (int i = 0; i < numEvents; ++i) {
             int currentFd = events[i].data.fd;
-
+            // in the future, we will iterate thru servers(sockfd) so the nextline will be a funcion.
             if (currentFd == sockfd) {
-                // found new conection
-                int newConnection = accept(sockfd, NULL, NULL);
-                if (newConnection < 0)
-                {
-                    std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
+                // found new conection, try to add connection
+                addNewConnection();
+                std::cout << "new conection from fd:" << currentFd << std::endl;
                 }
-                else {
-                    // Create new socket and try to add to epoll
-                    struct epoll_event event;
-                    event.events = EPOLLIN;
-                    event.data.fd = newConnection;
-                    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, &event) == -1) {
-                        std::cerr << "Failed to add new connection to epoll. errno: " << errno << std::endl;
-                        close(newConnection);
-                    }
-                    else {
-                        // add this conection to conections vector
-                        connections.push_back(newConnection);
-                    }
-                }
-            }
             else {
                 // If connection already exist
                 char buffer[1024];
@@ -121,9 +123,9 @@ void TCPServerSocket::handleConnections()
                     }
                 }  else {
                     // input e output handlers
-                    std::cout << "Received data: " << buffer;
+                    std::cout << "Received data from fd " << currentFd << ": " << buffer;
                     memset(buffer, 0, sizeof(buffer));
-                    std::string response = "Good talking to you\n";
+                    std::string response = "Good talking to you fd\n";
                     sendData(currentFd, response.c_str(), response.size());
                 }
             }
