@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/26 15:28:35 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/07/26 22:51:13 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,9 @@ int main(int argc, char **argv) {
     TCPServerSocket serverSocket;
 
 //  bind to choosen port
-    serverSocket.bindAndListen(9999);
-    std::cout << "Server is listening on port 9999..." << std::endl;
+    int port = 80;
+    serverSocket.bindAndListen(port);
+    std::cout << "Server is listening on port: " << port << " ..." << std::endl;
 
 //  accept conections
     int connection = serverSocket.acceptConnection();
@@ -34,16 +35,18 @@ int main(int argc, char **argv) {
     bool connected = true;
       while (connected) {
         int bytesRead = serverSocket.receiveData(connection, buffer, 100);
-        if (bytesRead <= 0) {
+        /*if (bytesRead <= 0) {
             // If bytesRead for <= 0, conection closed
             std::cout << "Client disconnected." << std::endl;
             connected = false;
-        } else {
-            std::cout << "Received data: " << buffer;
-            memset(buffer, 0, sizeof(buffer));
-            std::string response = "Good talking to you\n";
-            serverSocket.sendData(connection, response.c_str(), response.size());
+        } else {*/
+        if (bytesRead != 0) {
+          std::cout << "Received data: " << buffer;
+          memset(buffer, 0, sizeof(buffer));
+          std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello, World!";
+          serverSocket.sendData(connection, response.c_str(), response.size());
         }
+        std::cout << "eu nao to maluco!" << std::endl;
     }
 //  close conection and end program
     serverSocket.closeConnection(connection);

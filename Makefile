@@ -6,7 +6,7 @@
 #    By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/07/26 13:31:51 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/07/28 00:46:04 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,11 +19,18 @@ CXXFLAGS	= -Wall -Werror -Wextra -std=c++98 -g
 TEST_BUILD 	= tests/build
 
 INPUT = $(addprefix input/, \
-	InputHandler.cpp)
+	InputHandler.cpp		\
+)
+
+HTTP  = $(addprefix http/,  \
+	HttpRequest.cpp 	    \
+	HttpResponse.cpp 		\
+)
 
 SRC			= $(addprefix src/, \
 	$(INPUT) 					 \
-  socketClass.cpp					 \
+	$(HTTP)						 \
+  socketClass.cpp				 \
 	main.cpp)
 
 OBJ			= $(SRC:.cpp=.o)
