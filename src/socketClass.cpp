@@ -6,78 +6,155 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/26 16:01:34 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/07/28 18:58:00 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/socketClass.hpp"
 
 // Constructor Server Socket
-TCPServerSocket::TCPServerSocket() : sockfd(-1), connection(-1) {}
+TCPServerSocket::TCPServerSocket() : sockfd(-1), epollfd(-1) {}
 
-int TCPServerSocket::bindAndListen(int port) {
-// 			socket function defines the type of address this socket can conect
-//			socket(DOMAN, TYPE, PROTOCOL)
-//			DOMAIN: AF_INET-> ipv4		TYPE: SOCK_STREAM -> conection oriented sockets like TCP
-//					AF_INET6->ipv6			  SOCK_DGRAM -> not oriented sockets, UDP
-//					AF_UNIX or AF_LOCAL -> Unix domain sockets
-//			TYPE: specify protocol used on this socket, normally 0, the function
-//					will choose protocol based on other two arguments
+int TCPServerSocket::bindAndListen()
+{
+    // 			Create epollfd
+    epollfd = epoll_create1(0);
+    if (epollfd == -1)
+    {
+        std::cerr << "Failed to create epoll. errno: " << errno << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // Configurar o endereço para o socket
+    sockaddr_in serverAddr;
+    bzero(&serverAddr, sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_port = htons(G_PORT);
+
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
-        std::cout << "Failed to create socket. errno: " << errno << std::endl;
+        std::cerr << "Failed to create socket. errno: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
 
-//		this structure is defined in lib <netinet/in.h>
-// struct sockaddr_in {
-//     short sin_family;           // ADDRESS FAMILY (AF_INET para IPv4)
-//     unsigned short sin_port;    // PORT NUMBER
-//     struct in_addr sin_addr;    // IPADDRESS (INADDR_ANY, INADDR_LOOPBACK,
-//									inet_addr("xxx.xxx.xxx.xxx") set ip you want)
-//     char sin_zero[8];           // NOT USED
-// };
-    sockaddr_in sockaddr;
-    sockaddr.sin_family = AF_INET; // Same as before, Ipv4
-    sockaddr.sin_addr.s_addr = INADDR_ANY; // set every address interface 0.0.0.0
-    sockaddr.sin_port = htons(port); //make convertion to big-endian or little endial (htonl)
-
-//	after setup, the function bind uses struct to bind to specific port and IP if fail
-//  it returns an -1 and error in cout and exit_failure flag(1)
-    if (bind(sockfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
-        std::cout << "Failed to bind to port " << port << ". errno: " << errno << std::endl;
+    if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
+        std::cerr << "Failed to bind to port " << G_PORT << ". errno: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
-//	if we can bind to ip and port, now we use the function listen(socket, how many connections we handle), if listen returns -1 we send a error and exit_failure flag (1)
-    if (listen(sockfd, 10) < 0) {
-        std::cout << "Failed to listen on socket. errno: " << errno << std::endl;
+
+    // Colocar o socket em modo de escuta
+    if (listen(sockfd, 10) < 0)
+    {
+        std::cerr << "Failed to listen on socket. errno: " << errno << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // Bind sockfd on epoll event
+    events->events = EPOLLIN;
+    events->data.fd = sockfd;
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, events) == -1)
+    {
+        std::cerr << "Failed to add sockfd to epoll. errno: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
 
     return sockfd;
 }
+void TCPServerSocket:: addNewConnection(){
+    int newConnection;
+    struct sockaddr_in clientToAdd;
+    socklen_t len = sizeof(clientToAdd);
 
-// responsable for accept the conection, can be in the other function but like this i think
-// is more organized. "copy" the sockfd listener to a new FD of reader.
-int TCPServerSocket::acceptConnection() {
-    sockaddr_in sockaddr;
-    socklen_t addrlen = sizeof(sockaddr);
-    connection = accept(sockfd, (struct sockaddr*)&sockaddr, &addrlen);
-    if (connection < 0) {
-        std::cout << "Failed to grab connection. errno: " << errno << std::endl;
-        exit(EXIT_FAILURE);
+    newConnection = accept(sockfd, (struct sockaddr*)&clientToAdd, &len);
+    if (newConnection < 0) {
+        std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
     }
-    return connection;
+    else {
+        // try to add to epoll
+        // // EPOLLOUT is not implemented yet
+        events->events = EPOLLIN | EPOLLRDHUP | EPOLLOUT;
+        events->data.fd = newConnection;
+        if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, events) == -1) {
+            std::cerr << "Failed to add new connection to epoll. errno: " << errno << std::endl;
+            close(newConnection);
+        }
+        else {
+            // add this conection to conections vector
+            connections.push_back(newConnection);
+        }
+    }
 }
 
-// return data received from conection fd
-int TCPServerSocket::receiveData(int connection, char* buffer, int bufferSize) {
+void TCPServerSocket::handleConnections() {
+    // create just one pool of events, its like a line, if is a new conection, add to poll,
+    // if not, handle the client conection.
+    while (true) {
+        int numEvents = epoll_wait(epollfd, events, MAX_EVENTS, 0);
+        if (numEvents == -1) {
+            std::cerr << "epoll_wait error. errno: " << errno << std::endl;
+            continue;
+        }
+        for (int i = 0; i < numEvents; ++i) {
+            int currentFd = events[i].data.fd; //this client fd
+            int currentEvent = events[i].events; // this client event state
+            // in the future, we will iterate thru servers(sockfd) so the nextline will be a funcion.
+            if (currentFd == sockfd) {
+                // found new conection, try to add connection
+                addNewConnection();
+                std::cout << "new conection"<< std::endl;
+                }
+            else if ((currentEvent & EPOLLRDHUP) == EPOLLRDHUP) {
+                epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
+                std::cout << "Connection with FD -> " << currentFd << " is closed by client" << std::endl;
+                for (std::vector<int>::iterator it = connections.begin(); it != connections.end(); ++it)
+                {
+                    if (*it == currentFd) {
+                        connections.erase(it);
+                        break;
+                    }
+                }
+            }
+            else if ((currentEvent & EPOLLIN) == EPOLLIN) {
+                // If connection already exist
+                char buffer[1024];
+                bzero(buffer, sizeof(buffer));
+                int bytesRead = read(currentFd, buffer, sizeof(buffer));
+                if (bytesRead <= 0) {
+                    // Connection error or close, we remove from epoll
+                    // signal(SIGINT, handleSIGINT); localtion is here?
+                    epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
+                    close(currentFd);
+                    for (std::vector<int>::iterator it = connections.begin(); it != connections.end(); ++it) {
+                        if (*it == currentFd) {
+                            connections.erase(it);
+                            break;
+                        }
+                    }
+                }
+                else {
+                    // the idea here is to have an request handler to deal with requests
+                    std::cout << "Received data from fd " << currentFd << ": " << buffer;
+                    std::string response = "Good talking to you fd\n";
+                    sendData(currentFd, response.c_str(), response.size());
+                }
+            }
+            // // EPOLLOUT means this FD is ready to write, so, is like while true full.
+            // else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
+            //         std::string response = "Good talking to you fd\n";
+            //         sendData(currentFd, response.c_str(), response.size());
+            // }
+        }
+    }
+}
+
+int TCPServerSocket::receiveData(int connection, char *buffer, int bufferSize) {
     int bytesRead = read(connection, buffer, bufferSize);
     return bytesRead;
 }
 
 // send data to conection fd
-void TCPServerSocket::sendData(int connection, const char* data, int dataSize) {
+void TCPServerSocket::sendData(int connection, const char *data, int dataSize) {
     send(connection, data, dataSize, 0);
 }
 
@@ -88,8 +165,8 @@ void TCPServerSocket::closeConnection(int connection) {
 
 // simple destructor
 TCPServerSocket::~TCPServerSocket() {
-    if (connection != -1) {
-        close(connection);
+    if (epollfd != -1) {
+        close(epollfd);
     }
     if (sockfd != -1) {
         close(sockfd);
