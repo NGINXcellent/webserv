@@ -6,7 +6,7 @@
 #    By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/07/28 00:46:04 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/07/28 22:28:11 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,6 +25,9 @@ INPUT = $(addprefix input/, \
 HTTP  = $(addprefix http/,  \
 	HttpRequest.cpp 	    \
 	HttpResponse.cpp 		\
+	HttpRequestFactory.cpp  \
+	HttpResponseFactory.cpp \
+	Server.cpp              \
 )
 
 SRC			= $(addprefix src/, \

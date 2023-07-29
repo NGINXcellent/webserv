@@ -1,25 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HttpRequest.cpp                                    :+:      :+:    :+:   */
+/*   HttpRequestFactory.hpp                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 22:46:16 by lfarias-         ###   ########.fr       */
+/*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
+/*   Updated: 2023/07/28 22:08:07 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/http/HttpRequest.hpp"
 
-HttpRequest::HttpRequest(void) {}
+#ifndef HTTPREQUESTFACTORY_HPP
+# define HTTPREQUESTFACTORY_HPP
 
-HttpRequest::~HttpRequest(void) {}
+#include "./HttpRequest.hpp"
 
-std::string HttpRequest::getResource(void) {
-  return (this->resource);
-}
+class HttpRequestFactory {
+ public:
+  static HttpRequest *createFrom(char *requestMsg);
 
-void HttpRequest::setResource(std::string resource) {
-  this->resource = resource;
-}
+ private:
+  HttpRequestFactory(void);
+  HttpRequestFactory(const HttpRequestFactory& f);
+  HttpRequestFactory& operator=(const HttpRequestFactory& t);
+  ~HttpRequestFactory(void);
+};
+#endif

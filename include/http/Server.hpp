@@ -1,25 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HttpRequest.cpp                                    :+:      :+:    :+:   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 22:46:16 by lfarias-         ###   ########.fr       */
+/*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
+/*   Updated: 2023/07/28 22:23:11 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/http/HttpRequest.hpp"
 
-HttpRequest::HttpRequest(void) {}
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
-HttpRequest::~HttpRequest(void) {}
+#include "./HttpRequest.hpp"
+#include "./HttpResponse.hpp"
 
-std::string HttpRequest::getResource(void) {
-  return (this->resource);
-}
+class Server {
+ public:
+  static void  execute(HttpRequest *request, HttpResponse *response);
+  static void  startupAndListen(void);
 
-void HttpRequest::setResource(std::string resource) {
-  this->resource = resource;
-}
+ private:
+  Server(void);
+  Server(const Server& f);
+  Server& operator=(const Server& t);
+  ~Server(void);
+};
+#endif

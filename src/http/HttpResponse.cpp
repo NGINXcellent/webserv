@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 16:52:02 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/07/28 23:13:16 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,8 @@
 HttpResponse::HttpResponse(void) {
   statusCode = 200;
   statusMessage = "OK";
-  contentType = "text/plain";
+  // contentType = "text/html";
+  contentType = "image/jpeg";
   contentLength = 0;
 }
 
@@ -30,9 +31,17 @@ std::string   HttpResponse::getHeaders(void) {
   responseHeader += "Content-Type: " + contentType + "\n";
   ss.clear();
   ss.str("");
-  ss << 12;
+  ss << msgBody.size();
   responseHeader += "Content-length: " + ss.str() + "\n";
   responseHeader += "Connection: close\n\n";
-  responseHeader += "Hello World";
+
+  for (size_t i = 0; i < msgBody.size(); i++) {
+    responseHeader += msgBody[i];
+  }
+
   return responseHeader;
+}
+
+void HttpResponse::setMsgBody(const std::vector<char>& data) {
+  msgBody = data;
 }
