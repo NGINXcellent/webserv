@@ -3,14 +3,14 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+         #
+#    By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
 #    Updated: 2023/07/29 13:43:37 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME		= webserv 
+NAME		= webserv
 
 CXX 		= c++
 

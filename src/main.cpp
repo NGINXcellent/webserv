@@ -20,8 +20,18 @@ int main(int argc, char **argv) {
     std::cout << "[USAGE]:  ./webserv <configuration file>.conf" << std::endl;
     return(1);
   }
-  Server webserver;
+ /* Server webserver;
   webserver.startupAndListen();
   webserver.handleConnections();
-  return 0;
+  return 0; */
+  //  create factorys
+    TCPServerSocket serverSocket;
+    std::cout << "MAX EVENTS: " << MAX_EVENTS << std::endl;
+//  bind to choosen port
+    serverSocket.bindAndListen();
+    std::cout << "Server is listening on port " << G_PORT << std::endl;
+
+        serverSocket.handleConnections();
+        // serverSocket.handleExistingConnections();
+    return 0;
 }
