@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 22:19:41 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/07/29 18:15:28 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,14 @@ class HttpRequest {
   HttpRequest(void);
   ~HttpRequest(void);
 
+  std::string getMethod(void);
+  void        setMethod(std::string method);
   std::string getResource(void);
   void        setResource(std::string resource);
 
  private:
   std::string   resource;
+  std::string   method;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);
