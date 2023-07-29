@@ -1,31 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
+/*   MimeType.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/29 11:44:47 by lfarias-         ###   ########.fr       */
+/*   Created: 2023/07/29 12:02:25 by lfarias-          #+#    #+#             */
+/*   Updated: 2023/07/29 14:01:32 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef MIMETYPE_HPP
+# define MIMETYPE_HPP
 
-#include "./HttpRequest.hpp"
-#include "./HttpResponse.hpp"
+#include <string>
+#include <map>
 
-class Server {
+class MimeType {
  public:
-  static void  resolve(HttpRequest *request, HttpResponse *response);
-  static void  startupAndListen(void);
+  static std::string identify(const std::string &str);
 
  private:
-  Server(void);
-  Server(const Server& f);
-  Server& operator=(const Server& t);
-  ~Server(void);
+  static std::map<std::string, std::string> types;
+  static bool is_set;
+
+  MimeType(void);
+  MimeType(const MimeType& f);
+  MimeType& operator=(const MimeType& t);
+  ~MimeType(void);
+
+  static void init_table(void);
 };
 #endif

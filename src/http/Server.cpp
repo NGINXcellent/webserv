@@ -6,25 +6,27 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 23:08:38 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/07/29 16:14:56 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/Server.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
+#include "../../include/http/MimeType.hpp"
 #include "../../inc/socketClass.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <vector>
 
-void  Server::execute(HttpRequest *request, HttpResponse *response) {
+void  Server::resolve(HttpRequest *request, HttpResponse *response) {
   // for the demo request will be a dummy object
   std::ifstream inputFile;
 
   inputFile.open(request->getResource().c_str(), std::ios::binary);
   if (!inputFile.is_open()) {
-    std::cerr << "Resource not found\n";
+    std::cout << "Resource not found\n";
+    return;
   }
 
   std::vector<char> resourceData;
@@ -34,6 +36,7 @@ void  Server::execute(HttpRequest *request, HttpResponse *response) {
   }
 
   inputFile.close();
+  response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);
 }
 
@@ -47,17 +50,17 @@ void  Server::startupAndListen(void) {
   int connection = serverSocket.acceptConnection();
   std::cout << "Connection established. Waiting for data..." << std::endl;
 
-  char buffer[100];
+  char buffer[1024];
   bool connected = true;
   while (connected) {
-    int bytesRead = serverSocket.receiveData(connection, buffer, 100);
+    int bytesRead = serverSocket.receiveData(connection, buffer, 1024);
     buffer[bytesRead] = '\0';
 
     if (bytesRead != 0) {
       std::cout << "Received data: " << buffer;
       HttpRequest *request = HttpRequestFactory::createFrom(buffer);
       HttpResponse response;
-      Server::execute(request, &response);
+      Server::resolve(request, &response);
       std::string responseMsg = response.getHeaders();
       std::cout << "\n ================= RESPONSE =============" << std::endl;
       std::cout << responseMsg << std::endl;

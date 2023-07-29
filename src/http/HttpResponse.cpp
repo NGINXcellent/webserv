@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 23:13:16 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/07/29 14:08:23 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,6 @@
 HttpResponse::HttpResponse(void) {
   statusCode = 200;
   statusMessage = "OK";
-  // contentType = "text/html";
-  contentType = "image/jpeg";
   contentLength = 0;
 }
 
@@ -30,6 +28,7 @@ std::string   HttpResponse::getHeaders(void) {
   std::string responseHeader = "HTTP/1.1 " + ss.str() + " " + statusMessage + "\n";
   responseHeader += "Content-Type: " + contentType + "\n";
   ss.clear();
+
   ss.str("");
   ss << msgBody.size();
   responseHeader += "Content-length: " + ss.str() + "\n";
@@ -44,4 +43,8 @@ std::string   HttpResponse::getHeaders(void) {
 
 void HttpResponse::setMsgBody(const std::vector<char>& data) {
   msgBody = data;
+}
+
+void HttpResponse::setContentType(const std::string &mime) {
+  contentType = mime;
 }
