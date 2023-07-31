@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/29 17:58:34 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/07/30 21:12:29 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,24 +16,26 @@
 
 #include "./HttpRequest.hpp"
 #include "./HttpResponse.hpp"
-#include "../../inc/socketClass.hpp"
+#include "../socket/TcpServerSocket.hpp"
+
+#include <string>
 
 class Server {
  public:
-  Server(void);
+  Server(unsigned int port);
   ~Server(void);
 
-  void  startupAndListen(void);
-  void  handleConnections(void);
-  void  resolve(HttpRequest *request, HttpResponse *response);
-  void  get(HttpRequest *request, HttpResponse *response);
-  void  post(HttpRequest *request, HttpResponse *response);
-  void  del(HttpRequest *request, HttpResponse *response);
+  void        start();
+  std::string process(char *buffer);
+  void        resolve(HttpRequest *request, HttpResponse *response);
+  void        get(HttpRequest *request, HttpResponse *response);
+  void        post(HttpRequest *request, HttpResponse *response);
+  void        del(HttpRequest *request, HttpResponse *response);
 
  private:
-  int               port;
-  TCPServerSocket   socket;
+  unsigned int      port;
   int               connection_fd;
+  TCPServerSocket   *socket;
 
   Server(const Server& f);
   Server& operator=(const Server& t);

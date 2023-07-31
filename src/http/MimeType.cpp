@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/29 12:12:09 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/29 14:29:52 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/07/29 20:29:14 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ std::string MimeType::identify(const std::string &str) {
   init_table();
   int pos = str.rfind('.');
   std::string extension = str.substr(pos, std::string::npos);
-  std::cout << "this is my extension: " << extension << std::endl;
   std::string type = types[extension];
   if (type == "")
     return "application/octet-stream";

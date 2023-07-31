@@ -1,19 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   socketClass.cpp                                    :+:      :+:    :+:   */
+/*   TcpServerSocket.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/30 08:28:29 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/07/30 21:10:19 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/socketClass.hpp"
+#include "../../include/socket/TcpServerSocket.hpp"
+#include "../../include/http/Server.hpp"
 
 // Constructor Server Socket
-TCPServerSocket::TCPServerSocket() : sockfd(-1), epollfd(-1) {}
+TCPServerSocket::TCPServerSocket(unsigned int hPort) : sockfd(-1), \
+                                              epollfd(-1), \
+                                              hostPort(hPort) {}
 
 int TCPServerSocket::bindAndListen() {
   // 			Create epollfd
@@ -28,7 +31,7 @@ int TCPServerSocket::bindAndListen() {
   bzero(&serverAddr, sizeof(serverAddr));
   serverAddr.sin_family = AF_INET;
   serverAddr.sin_addr.s_addr = INADDR_ANY;
-  serverAddr.sin_port = htons(G_PORT);
+  serverAddr.sin_port = htons(hostPort);
 
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd == -1) {
@@ -37,7 +40,7 @@ int TCPServerSocket::bindAndListen() {
   }
 
   if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
-    std::cerr << "Failed to bind to port " << G_PORT << ". errno: " << errno
+    std::cerr << "Failed to bind to port " << hostPort<< ". errno: " << errno
               << std::endl;
     exit(EXIT_FAILURE);
   }
@@ -58,6 +61,7 @@ int TCPServerSocket::bindAndListen() {
 
   return sockfd;
 }
+
 void TCPServerSocket::addNewConnection() {
   int newConnection;
   struct sockaddr_in clientToAdd;
@@ -82,7 +86,7 @@ void TCPServerSocket::addNewConnection() {
   }
 }
 
-void TCPServerSocket::handleConnections() {
+void TCPServerSocket::handleConnections(Server *server) {
   // create just one pool of events, its like a line, if is a new conection, add
   // to poll, if not, handle the client conection.
   while (true) {
@@ -130,8 +134,10 @@ void TCPServerSocket::handleConnections() {
           }
         } else {
           // the idea here is to have an request handler to deal with requests
-          std::cout << "Received data from fd " << currentFd << ": " << buffer;
-          std::string response = "Good talking to you fd\n";
+          // std::cout << "Received data from fd " << currentFd << ": " << buffer;
+          // std::string response = "Good talking to you fd\n";
+          // sendData(currentFd, response.c_str(), response.size());
+          std::string response = server->process(buffer);
           sendData(currentFd, response.c_str(), response.size());
         }
       }
