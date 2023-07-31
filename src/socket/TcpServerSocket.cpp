@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/30 21:10:19 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/07/30 21:34:09 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,6 @@ void TCPServerSocket::addNewConnection() {
   if (newConnection < 0) {
     std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
   } else {
-    // try to add to epoll
     // // EPOLLOUT is not implemented yet
     events->events = EPOLLIN | EPOLLRDHUP | EPOLLOUT;
     events->data.fd = newConnection;
@@ -80,7 +79,6 @@ void TCPServerSocket::addNewConnection() {
                 << std::endl;
       close(newConnection);
     } else {
-      // add this conection to conections vector
       connections.push_back(newConnection);
     }
   }
@@ -95,19 +93,19 @@ void TCPServerSocket::handleConnections(Server *server) {
       std::cerr << "epoll_wait error. errno: " << errno << std::endl;
       continue;
     }
+
     for (int i = 0; i < numEvents; ++i) {
       int currentFd = events[i].data.fd;    // this client fd
       int currentEvent = events[i].events;  // this client event state
-      // in the future, we will iterate thru servers(sockfd) so the nextline
-      // will be a funcion.
+
       if (currentFd == sockfd) {
-        // found new conection, try to add connection
-        addNewConnection();
+        addNewConnection();  // if new connection found, add it.
         std::cout << "new conection" << std::endl;
       } else if ((currentEvent & EPOLLRDHUP) == EPOLLRDHUP) {
         epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
-        std::cout << "Connection with FD -> " << currentFd
-                  << " is closed by client" << std::endl;
+        std::cout << "Connection with FD -> " << currentFd \
+          << " is closed by client" << std::endl;
+
         for (std::vector<int>::iterator it = connections.begin();
              it != connections.end(); ++it) {
           if (*it == currentFd) {
@@ -133,10 +131,6 @@ void TCPServerSocket::handleConnections(Server *server) {
             }
           }
         } else {
-          // the idea here is to have an request handler to deal with requests
-          // std::cout << "Received data from fd " << currentFd << ": " << buffer;
-          // std::string response = "Good talking to you fd\n";
-          // sendData(currentFd, response.c_str(), response.size());
           std::string response = server->process(buffer);
           sendData(currentFd, response.c_str(), response.size());
         }
