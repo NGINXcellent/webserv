@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/29 18:18:27 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/07/30 21:12:03 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,18 +20,8 @@ int main(int argc, char **argv) {
     std::cout << "[USAGE]:  ./webserv <configuration file>.conf" << std::endl;
     return(1);
   }
- /* Server webserver;
-  webserver.startupAndListen();
-  webserver.handleConnections();
-  return 0; */
-  //  create factorys
-    TCPServerSocket serverSocket;
-    std::cout << "MAX EVENTS: " << MAX_EVENTS << std::endl;
-//  bind to choosen port
-    serverSocket.bindAndListen();
-    std::cout << "Server is listening on port " << G_PORT << std::endl;
-
-        serverSocket.handleConnections();
-        // serverSocket.handleExistingConnections();
-    return 0;
+  std::cout << "MAX EVENTS: " << MAX_EVENTS << std::endl;
+  Server webserver(8080);
+  webserver.start();
+  return 0;
 }
