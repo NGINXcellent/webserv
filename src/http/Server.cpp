@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/30 21:13:06 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/01 20:15:41 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ Server::~Server(void) {
 }
 
 void  Server::resolve(HttpRequest *request, HttpResponse *response) {
+  // check the protocol version
   if (request->getMethod() == "GET")
     get(request, response);
   else

@@ -24,11 +24,13 @@ enable_testing()
 
 set(Includes
     ../include/input/InputHandler.hpp
+    ../include/http/HttpResponse.hpp
 )
 
 set(Sources
 	../src/main.cpp
     ../src/input/InputHandler.cpp
+    ../src/http/HttpResponse.cpp
 )
 
 # add_library(${This} ${Sources} ${Libft} ${Headers})
@@ -36,3 +38,4 @@ add_library(${This} ${Sources} ${Includes})
 
 # this will add all the subdirectories with unit tests
 add_subdirectory(InputTests)
+add_subdirectory(HttpTests)

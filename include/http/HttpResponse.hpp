@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:52:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/29 13:42:35 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/01 20:21:40 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ class HttpResponse {
 
  private:
   int               statusCode;
+  std::string       serverVersion;
   std::string       statusMessage;
   std::string       contentType;
   int               contentLength;
