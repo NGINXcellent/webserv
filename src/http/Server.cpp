@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/01 20:15:41 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/01 21:42:53 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <sys/stat.h>
 
 Server::Server(unsigned int nPort) : port(nPort), connection_fd(-1) {
   socket = new TCPServerSocket(nPort);
@@ -66,7 +67,14 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
     resourceData.push_back(byte);
   }
 
+  struct stat fileStats;
+  if (stat(request->getResource().c_str(), &fileStats) != 0) {
+    std::cerr << "Error opening the file' << std::endl";
+  }
+
   inputFile.close();
+
+  response->setDateAndTime(fileStats.st_mtime);
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);
 }
