@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/02 22:25:27 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/03 17:30:13 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,8 +42,12 @@ void  Server::start(void) {
 
 void  Server::resolve(HttpRequest *request, HttpResponse *response) {
   // check the protocol version
-  if (request->getMethod() == "GET")
+  std::string requestMethod = request->getMethod();
+
+  if (requestMethod == "GET")
     get(request, response);
+  else if (requestMethod == "HEAD")
+    head(request, response);
   else
     std::cout << "Op not supported yet" << std::endl;
 }
@@ -72,7 +76,7 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
     return;
   }
 
-  if (access(request->getResource().c_str(), R_OK | X_OK) == -1) {
+  if (access(request->getResource().c_str(), R_OK) == -1) {
     buildErrorResponse(response, 403);
     return;
   }
@@ -93,6 +97,13 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
 
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);
+  response->setContentLength(resourceData.size());
+}
+
+void Server::head(HttpRequest *request, HttpResponse *response) {
+  this->get(request, response);
+  std::vector<char> empty;
+  response->setMsgBody(empty);
 }
 
 int checkRequest(HttpRequest *request) {
@@ -122,4 +133,5 @@ void buildErrorResponse(HttpResponse *response, int error_code) {
     responseContent.push_back(content[i]);
   }
   response->setMsgBody(responseContent);
+  response->setContentLength(responseContent.size());
 }

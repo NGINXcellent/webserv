@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/02 17:57:46 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/03 17:11:18 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ std::string   HttpResponse::getHeaders(void) {
   responseHeader += "Content-Type: " + contentType + "\n";
   ss.clear();
   ss.str("");
-  ss << msgBody.size();
+  ss << contentLength;
   responseHeader += "Content-length: " + ss.str() + "\n";
   responseHeader += "Connection: close\n\n";
 
@@ -52,6 +52,10 @@ void HttpResponse::setMsgBody(const std::vector<char>&data) {
 
 void HttpResponse::setContentType(const std::string &mime) {
   contentType = mime;
+}
+
+void HttpResponse::setContentLength(size_t fileSize) {
+  contentLength = fileSize;
 }
 
 void HttpResponse::setStatusCode(int httpCode) {
