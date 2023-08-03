@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/03 17:30:13 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/03 17:46:24 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
   else if (requestMethod == "HEAD")
     head(request, response);
   else
-    std::cout << "Op not supported yet" << std::endl;
+    buildErrorResponse(response, 501);
 }
 
 std::string Server::process(char *buffer) {
