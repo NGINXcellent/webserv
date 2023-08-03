@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/02 22:09:43 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/02 22:25:27 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,16 @@ std::string Server::process(char *buffer) {
 void Server::get(HttpRequest *request, HttpResponse *response) {
   std::ifstream inputFile;
 
+  if (access(request->getResource().c_str(), F_OK) == -1) {
+    buildErrorResponse(response, 404);
+    return;
+  }
+
+  if (access(request->getResource().c_str(), R_OK | X_OK) == -1) {
+    buildErrorResponse(response, 403);
+    return;
+  }
+
   inputFile.open(request->getResource().c_str(), std::ios::binary);
   if (!inputFile.is_open()) {
     std::cout << "Resource not found\n";
@@ -77,11 +87,6 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
   char byte = 0;
   while (inputFile.get(byte)) {
     resourceData.push_back(byte);
-  }
-
-  struct stat fileStats;
-  if (stat(request->getResource().c_str(), &fileStats) != 0) {
-    std::cerr << "Error opening the file' << std::endl";
   }
 
   inputFile.close();

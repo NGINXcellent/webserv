@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:15:50 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/02 19:33:59 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/02 22:27:00 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ void HttpStatus::init(void) {
 
   // 400 class - client errors
   messages.insert(std::make_pair(400, "Bad Request"));
+  messages.insert(std::make_pair(403, "Forbidden"));
   messages.insert(std::make_pair(404, "Not Found"));
   messages.insert(std::make_pair(405, "Method Not Allowed"));
   messages.insert(std::make_pair(411, "Length Required"));
