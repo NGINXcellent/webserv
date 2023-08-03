@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:52:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/01 21:57:15 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/02 16:07:49 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,13 +27,11 @@ class HttpResponse {
   void          setStatusCode(int responseCode);
   void          setContentType(const std::string &mimeType);
   void          setMsgBody(const std::vector<char>& data);
-  void          setDateAndTime(time_t miliseconds);
 
  private:
   int               statusCode;
   std::string       statusMessage;
   std::string       serverVersion;
-  time_t            timeAndDate;
   std::string       contentType;
   int               contentLength;
   int               dataSize;
