@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/02 20:33:45 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/03 08:19:42 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,6 @@ class InputHandler {
   ~InputHandler(void);
   static bool check_args(int argc, const char **argv);
   void printServers();
-  
 };
 
 #endif

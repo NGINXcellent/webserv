@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/02 22:31:35 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/03 07:50:01 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,6 +185,8 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, s_serverConfig &ser
 
 void InputHandler::checkConfFile(char *fileArg) {
   std::ifstream fileStream(fileArg);
+	if (fileStream.fail())
+		throw (std::runtime_error("fileStream Error"));
   std::string word;
   while(fileStream >> word) {
     if(word == "server") {
