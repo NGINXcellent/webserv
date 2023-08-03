@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/02 22:01:17 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/02 22:31:35 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ void InputHandler::addPort(std::ifstream &fileStream, std::string &string) {
       throw std::runtime_error("bad port");
     int port(atoi(word.c_str()));
     if(port < 1024 || port > 49151)
-      throw std::runtime_error("bad port");
+      throw std::runtime_error("wrong port range");
     if(!(word.find_first_of(";") == word.size() - 1))
       throw std::runtime_error("no ; in end of line");
     else {
@@ -51,6 +51,10 @@ void InputHandler::addToString(std::ifstream &fileStream, std::string &string) {
   if(!(word.find_first_of(";") == word.size() - 1))
     throw std::runtime_error("no ; in end of line");
   word.resize(word.size() - 1);
+  if (word.empty()) {
+    throw std::runtime_error("empty entry");
+    return;
+  }
   string = word;
 }
 
@@ -193,9 +197,6 @@ void InputHandler::checkConfFile(char *fileArg) {
   }
 }
 
-InputHandler::~InputHandler(void) {
-  delete serverVector;
-}
 void InputHandler::printMap(std::map<int, std::string> mapi) {
     for (std::map<int, std::string>::iterator it = mapi.begin(); it != mapi.end(); ++it)
       std::cout << "    value: " << it->first << " place: " << it->second << std::endl;
@@ -235,4 +236,8 @@ void InputHandler::printServers() {
 InputHandler::InputHandler(char* fileArg) {
   serverVector = new std::vector<s_serverConfig>;
   checkConfFile(fileArg);
+}
+
+InputHandler::~InputHandler(void) {
+  delete serverVector;
 }
