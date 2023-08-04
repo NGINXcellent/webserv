@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include "../../include/input/InputHandler.hpp"
 #include <fstream>
-
+#include <unistd.h>
+#include <iostream>
 TEST(InputTests, BasicTests)
 {
   {
@@ -73,12 +74,12 @@ TEST(InputTests, ArgcTests)
 TEST(CheckConfTests, BasicTest)
 {
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/default.conf";
+    const char *configFile = "../../InputTests/test_files/default.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_NO_THROW(InputHandler input(configFileMutable));
   }
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/failDefault.conf";
+    const char *configFile = "../../InputTests/test_files/failDefault.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
@@ -87,13 +88,13 @@ TEST(CheckConfTests, BasicTest)
 TEST(CheckConfTests, MultipleServersTest)
 {
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/default.conf";
+    const char *configFile = "../../InputTests/test_files/default.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     InputHandler input(configFileMutable);
     EXPECT_EQ(input.serverVector->size(), 1);
   }
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/defaultMultiple.conf";
+    const char *configFile = "../../InputTests/test_files/defaultMultiple.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     InputHandler input(configFileMutable);
     EXPECT_EQ(input.serverVector->size(), 6);
@@ -103,37 +104,81 @@ TEST(CheckConfTests, MultipleServersTest)
 TEST(CheckConfTests, FailTests)
 {
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/fail/doubleEntry.conf";
+    const char *configFile = "../../InputTests/test_files/fail/doubleEntry.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/fail/emptyEntry.conf";
+    const char *configFile = "../../InputTests/test_files/fail/emptyEntry.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/fail/invalidListen.conf";
+    const char *configFile = "../../InputTests/test_files/fail/invalidListen.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/fail/invalidServerName.conf";
+    const char *configFile = "../../InputTests/test_files/fail/invalidServerName.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/fail/nestedServer.conf";
+    const char *configFile = "../../InputTests/test_files/fail/nestedServer.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/fail/noDot.conf";
+    const char *configFile = "../../InputTests/test_files/fail/noDot.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
   {
-    const char *configFile = "/home/dvargas/Desktop/webserv/tests/InputTests/test_files/fail/unknowEntry.conf";
+    const char *configFile = "../../InputTests/test_files/fail/unknowEntry.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
+  }
+}
+
+TEST(LocationConfTests, BasicTests)
+{
+  {
+    const char *configFile = "../../InputTests/test_files/locationDefault.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_NO_THROW(InputHandler input(configFileMutable));
+  }
+  {
+    const char *configFile = "../../InputTests/test_files/locationEmpty.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_NO_THROW(InputHandler input(configFileMutable));
+  }
+  {
+    const char *configFile = "../../InputTests/test_files/locationMultiple.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    InputHandler input(configFileMutable);
+    EXPECT_EQ(input.serverVector->at(0).location.size(), 3);
+  }
+}
+
+TEST(LocationConfTests, FailTests)
+{
+  {
+    const char *configFile = "../../InputTests/test_files/fail/locationAutoindexError.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
+  }
+  {
+    const char *configFile = "../../InputTests/test_files/locationindexError.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
+  }
+  {
+    const char *configFile = "../../InputTests/test_files/locationMethodError.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
+  }
+  {
+    const char *configFile = "../../InputTests/test_files/locationRootError.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/03 07:50:01 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/03 21:22:36 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,17 +118,17 @@ void InputHandler::addLocation(std::ifstream &fileStream, s_locationConfig &newL
     }
     else if (word == "autoindex") {
       if(!newLocation.autoindex.empty())
-        throw std::runtime_error("duplicate root inside location");
+        throw std::runtime_error("duplicate autoindex inside location");
       addToString(fileStream, newLocation.autoindex);
     }
     else if (word == "index"){
-      if(!newLocation.autoindex.empty())
-        throw std::runtime_error("duplicate root inside location");
+      if(!newLocation.index.empty())
+        throw std::runtime_error("duplicate index inside location");
       addToString(fileStream, newLocation.index);
     }
-    else if (word == "max_file_size") {
-      if(!newLocation.autoindex.empty())
-        throw std::runtime_error("duplicate root inside location");
+    else if (word == "max_body_size") {
+      if(!newLocation.max_body_size.empty())
+        throw std::runtime_error("duplicate max_body_size inside location");
       addToString(fileStream, newLocation.max_body_size);
     }
     else if (word == "return") //redirect
@@ -182,11 +182,19 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, s_serverConfig &ser
       throw std::runtime_error("BAD FORMAT CONFIG");
   }
 }
+bool is_empty(std::ifstream &fileStream)
+{
+    if (fileStream.tellg() == std::ifstream::traits_type::eof())
+      return true;
+    return false;
+}
 
 void InputHandler::checkConfFile(char *fileArg) {
   std::ifstream fileStream(fileArg);
 	if (fileStream.fail())
-		throw (std::runtime_error("fileStream Error"));
+		throw (std::runtime_error("fileStream init Error"));
+  if (fileStream.peek() == std::ifstream::traits_type::eof())
+      throw std::runtime_error("empty file");
   std::string word;
   while(fileStream >> word) {
     if(word == "server") {

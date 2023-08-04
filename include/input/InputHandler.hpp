@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/03 08:19:42 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/03 21:39:21 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ struct s_serverConfig {
 	int socketfd;
 	std::string port;
 	std::string host;
-	std::string server_name;
+	std::string server_name; // server_name is unique
 	std::string max_body_size;
 	std::map<int, std::string> error_page;
 	std::vector<s_locationConfig> location;
