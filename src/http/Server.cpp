@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/03 17:46:24 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/04 11:13:57 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,8 @@
 #include <sstream>  // stringstream
 
 int checkRequest(HttpRequest *request);
-void buildErrorResponse(HttpResponse *response, int error_code);
+void buildErrorResponse(HttpResponse *response, int error_code, \
+                        int protoMainVersion, int protoSubVersion);
 
 Server::Server(unsigned int nPort) : port(nPort), connection_fd(-1) {
   socket = new TCPServerSocket(nPort);
@@ -49,7 +50,8 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
   else if (requestMethod == "HEAD")
     head(request, response);
   else
-    buildErrorResponse(response, 501);
+    buildErrorResponse(response, 501, \
+                       request->getProtocolMainVersion(), request->getProtocolSubVersion());
 }
 
 std::string Server::process(char *buffer) {
@@ -58,7 +60,8 @@ std::string Server::process(char *buffer) {
 
   int status = checkRequest(request);
   if (status != 0) {
-    buildErrorResponse(&response, status);
+    buildErrorResponse(&response, status, request->getProtocolMainVersion(), \
+                       request->getProtocolSubVersion());
   } else {
     resolve(request, &response);
   }
@@ -70,14 +73,16 @@ std::string Server::process(char *buffer) {
 
 void Server::get(HttpRequest *request, HttpResponse *response) {
   std::ifstream inputFile;
+  int protoMain = request->getProtocolMainVersion();
+  int protoSub = request->getProtocolSubVersion();
 
   if (access(request->getResource().c_str(), F_OK) == -1) {
-    buildErrorResponse(response, 404);
+    buildErrorResponse(response, 404, protoMain, protoSub);
     return;
   }
 
   if (access(request->getResource().c_str(), R_OK) == -1) {
-    buildErrorResponse(response, 403);
+    buildErrorResponse(response, 403, protoMain, protoSub);
     return;
   }
 
@@ -95,6 +100,7 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
 
   inputFile.close();
 
+  response->setProtocol("HTTP", protoMain, protoSub);
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);
   response->setContentLength(resourceData.size());
@@ -107,12 +113,27 @@ void Server::head(HttpRequest *request, HttpResponse *response) {
 }
 
 int checkRequest(HttpRequest *request) {
-  if (request->getProtocolVersion() == "HTTP/1.1" && request->getHost().size() == 0)
+  if (request->getProtocolName() != "HTTP")
     return (400);
+
+  int version = request->getProtocolMainVersion() * 10 + \
+    request->getProtocolSubVersion();
+  if (!(version == 10 || version == 11))
+    return (505);
+  if (version == 11 && request->getHost().size() == 0)
+    return (400);
+
+  std::string method = request->getMethod();
+  for (size_t i = 0; i < method.size(); i++) {
+    if (!std::isupper(method[i]))
+      return (400);
+  }
+
   return (0);
 }
 
-void buildErrorResponse(HttpResponse *response, int error_code) {
+void buildErrorResponse(HttpResponse *response, int error_code, \
+                        int protoMainVersion, int protoSubVersion) {
   response->setStatusCode(error_code);
   response->setContentType("text/html");
 
@@ -132,6 +153,8 @@ void buildErrorResponse(HttpResponse *response, int error_code) {
   for (size_t i = 0; i < content.size(); i++) {
     responseContent.push_back(content[i]);
   }
+
+  response->setProtocol("HTTP", protoMainVersion, protoSubVersion);
   response->setMsgBody(responseContent);
   response->setContentLength(responseContent.size());
 }

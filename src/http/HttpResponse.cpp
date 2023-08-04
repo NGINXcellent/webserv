@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/03 17:11:18 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/03 20:53:28 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ HttpResponse::~HttpResponse(void) {}
 std::string   HttpResponse::getHeaders(void) {
   std::stringstream ss;
   ss << statusCode;
-  std::string responseHeader = "HTTP/1.1 " + ss.str() + " " + statusMessage + "\n";
+  std::string responseHeader = protocol + " " + ss.str() + " " + statusMessage + "\n";
   responseHeader += "Server: " + serverVersion + "\n";
   responseHeader += "Date: ";
   responseHeader += HttpTime::getCurrentTime();
@@ -44,6 +44,18 @@ std::string   HttpResponse::getHeaders(void) {
   }
 
   return responseHeader;
+}
+
+void HttpResponse::setProtocol(std::string protoName, int mainVer, int subVer) {
+  std::stringstream ss;
+  std::string stringProtocol = protoName + "/";
+  ss << mainVer;
+  stringProtocol += ss.str() + ".";
+  ss.clear();
+  ss.str("");
+  ss << subVer;
+  stringProtocol += ss.str();
+  this->protocol = stringProtocol;
 }
 
 void HttpResponse::setMsgBody(const std::vector<char>&data) {

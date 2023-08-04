@@ -6,16 +6,18 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/02 22:07:13 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/04 11:09:43 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequestFactory.hpp"
 #include <iostream>
 #include <map>
+#include <sstream>
 
 void parseRequestLine(std::string& msg, HttpRequest *request);
 void parseHeaders(std::string &msg, HttpRequest *request);
+
 std::string toLowerStr(std::string str);
 
 HttpRequest *HttpRequestFactory::createFrom(char *requestMsg) {
@@ -39,9 +41,18 @@ void parseRequestLine(std::string& msg, HttpRequest *request) {
   request->setResource(resource);
   msg.erase(0, pos + 1);
 
-  pos = msg.find('\n');
-  request->setProtocolVersion(msg.substr(0, pos - 1));
-  msg.erase(0, pos + 1);
+  int lf_pos = msg.find('\n');
+  pos = msg.find('/');
+  std::string protoName = msg.substr(0, pos);
+  std::string versionString = msg.substr(pos + 1);
+  int mainVersion, subVersion;
+  std::stringstream versionStream(versionString);
+  char dot = '.';
+  versionStream >> mainVersion >> dot >> subVersion;
+  request->setProtocolName(protoName);
+  request->setProtocolVersion(mainVersion, subVersion);
+
+  msg.erase(0, lf_pos + 1);
 }
 
 void parseHeaders(std::string &msg, HttpRequest *request) {
@@ -55,9 +66,6 @@ void parseHeaders(std::string &msg, HttpRequest *request) {
     pos = msg.find('\n');
     std::string value = msg.substr(0, pos);
     msg.erase(0, pos + 1);
-
-    std::cout << "key: " << key << std::endl;
-    std::cout << "value: " << value << "\n" << std::endl;
 
     headers.insert(std::make_pair(key, value));
   }
