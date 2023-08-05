@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HttpRequestFactoryTests.cpp                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
+/*   Updated: 2023/08/05 20:14:51 by lfarias-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <gtest/gtest.h>
 
 #include <string>
@@ -14,24 +26,20 @@ void testRequestLine(const char *requestMsg, int expectedStatusCode) {
   delete request;
 }
 
-TEST(RequestTests, RequestLineFormatTest)
-{
-  {
-    char requestMsg[] = {
-      "GET localhost:8080/index.html HTTP/1.1\nhost: localhost:8080\n"};
+TEST(RequestTests, BasicBehaviourTest) {
+  std::vector<std::string> reqLines;
 
-    HttpRequest *request = HttpRequestFactory::createFrom(requestMsg);
-    EXPECT_EQ(HttpRequestFactory::check(request), 0) << request->getProtocolMainVersion();
-    delete request;
-  }
+  reqLines.push_back(
+    "GET localhost:8080/index.html HTTP/1.1\nhost: localhost:8080\n");
+  reqLines.push_back(
+    "GET localhost:8080/index.html HTTP/1.0\n");
+  reqLines.push_back(
+    "HEAD localhost:8080/index.html HTTP/1.1\nhost: localhost:8080\n");
+  reqLines.push_back(
+    "DEL localhost:8080/index.html HTTP/1.1\nhost: localhost:8080\n");
 
-  {
-    char requestMsg[] = {
-      "GET localhost:8080/index.html HTTP/1.2\nhost: localhost:8080\n"};
-
-    HttpRequest *request = HttpRequestFactory::createFrom(requestMsg);
-    EXPECT_EQ(HttpRequestFactory::check(request), 505) << request->getProtocolMainVersion();
-    delete request;
+  for (size_t i = 0; i < reqLines.size(); i++) {
+    testRequestLine(reqLines[i].c_str(), 0);
   }
 }
 
@@ -89,6 +97,16 @@ TEST(RequestTests, RequestLineProtocolTest) {
       "GET localhost:8080/index.html HTTP/1.1-\nhost: localhost:8080\n");
     msgs.push_back(
       "GET localhost:8080/index.html HTTP/1.-1\nhost: localhost:8080\n");
+    msgs.push_back(
+      "GET localhost:8080/index.html HTTP/0.0\nhost: localhost:8080\n");
+    msgs.push_back(
+      "GET localhost:8080/index.html HTTP/0.1\nhost: localhost:8080\n");
+    msgs.push_back(
+      "GET localhost:8080/index.html HTTP/0.10\nhost: localhost:8080\n");
+    msgs.push_back(
+      "GET localhost:8080/index.html HTTP/0.11\nhost: localhost:8080\n");
+    msgs.push_back(
+      "GET localhost:8080/index.html HTTP/0.12\nhost: localhost:8080\n");
 
     // wrong protocol name formatting
     msgs.push_back(
@@ -157,6 +175,37 @@ TEST(RequestTests, RequestExtraSpacesTests) {
 
 TEST(RequestTests, HttpVersionNotSupportedTest) {
   std::vector<std::string> msgs;
+
   msgs.push_back(
-    "\tGET localhost:8080/index.html HTTP/1.1\nhost: localhost:8080\n");
+    "GET localhost:8080/index.html HTTP/1.10\nhost: localhost:8080\n");
+  msgs.push_back(
+    "GET localhost:8080/index.html HTTP/2.0\nhost: localhost:8080\n");
+  msgs.push_back(
+    "GET localhost:8080/index.html HTTP/2.42\nhost: localhost:8080\n");
+  msgs.push_back(
+    "GET localhost:8080/index.html HTTP/3.00\nhost: localhost:8080\n");
+  msgs.push_back(
+    "GET localhost:8080/index.html HTTP/42.42\nhost: localhost:8080\n");
+  msgs.push_back(
+    "GET localhost:8080/index.html HTTP/100.00\nhost: localhost:8080\n");
+
+  for (size_t i = 0; i < msgs.size(); i++) {
+    testRequestLine(msgs[i].c_str(), 505);
+  }
+}
+
+TEST(RequestTests, HttpVersionOnePointZeroTest) {
+
+  std::vector<std::string> msgs;
+
+  msgs.push_back(
+    "GET localhost:8080/index.html HTTP/1.0\nhost: localhost:8080\n");
+  msgs.push_back(
+    "GET localhost:8080/index.html HTTP/1.0\nhost:\n");
+  msgs.push_back(
+    "GET localhost:8080/index.html HTTP/1.0\n");
+
+  for (size_t i = 0; i < msgs.size(); i++) {
+    testRequestLine(msgs[i].c_str(), 0);
+  }
 }

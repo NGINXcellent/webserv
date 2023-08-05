@@ -6,11 +6,12 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 19:11:28 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/05 20:08:53 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequestFactory.hpp"
+
 #include <iostream>
 #include <map>
 #include <vector>
@@ -18,9 +19,7 @@
 
 void parseRequestLine(std::string& msg, HttpRequest *request);
 void parseHeaders(std::string &msg, HttpRequest *request);
-bool isValidNumberPattern(const std::string& input);
 bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVersion);
-int convertStrToInt(std::string protocolVersion);
 
 std::string toLowerStr(std::string str);
 
@@ -117,13 +116,9 @@ bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVe
       return false;
   }
 
-  /*if ((std::isdigit(input[dot_pos - 1]) && std::isdigit(input[dot_pos + 1])))
-    return true;
-  else
-    return false;*/
   std::istringstream iss(input);
-  int majorVersion = -1;
-  int minorVersion = -1;
+  int majorVersion = 0;
+  int minorVersion = 0;
   char dot = '.';
 
   if (iss >> majorVersion >> dot >> minorVersion) {
@@ -134,6 +129,7 @@ bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVe
   } else {
     return (false);
   }
+
   *mainVersion = majorVersion;
   *subVersion = minorVersion;
   return (true);
@@ -169,20 +165,4 @@ int HttpRequestFactory::check(HttpRequest *request) {
   }
 
   return (0);
-}
-
-int convertStrToInt(std::string protocolVersion) {
-  std::istringstream iss(protocolVersion);
-  int result;
-
-  if (iss >> result) {
-    char leftover;
-    if (iss >> leftover) {
-      return (-1);
-    }
-  } else {
-    return (-1);
-  }
-
-  return (result);
 }
