@@ -3,7 +3,7 @@
 #include "../../include/http/HttpResponse.hpp"
 #include <string>
 
-TEST(HttpTests, ServerHeaderTests)
+TEST(ResponseTests, ServerHeaderTests)
 {
   std::string expected = "Server: webserv/0.1";
   HttpResponse response;

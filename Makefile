@@ -6,7 +6,7 @@
 #    By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/08/02 19:31:37 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/08/04 16:45:31 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -62,7 +62,7 @@ $(TEST_BUILD):
 	@cd tests && cmake -S . -B build
 
 test: $(TEST_BUILD)
-	@cd tests && cmake --build build && cd build && ctest --output-on-failure
+	@cd tests && cmake --build build && cd build && ctest --output-on-failure 
 
 cleantest:
 	rm -rf $(TEST_BUILD)

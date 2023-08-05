@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 22:08:07 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/04 15:52:55 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 class HttpRequestFactory {
  public:
   static HttpRequest *createFrom(char *requestMsg);
+  static int          check(HttpRequest *request);
 
  private:
   HttpRequestFactory(void);

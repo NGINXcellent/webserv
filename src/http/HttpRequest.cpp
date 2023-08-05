@@ -6,15 +6,15 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/03 21:09:09 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/05 15:44:28 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequest.hpp"
 
 HttpRequest::HttpRequest(void) {
-  protocolMainVersion = 1;
-  protocolSubVersion = 1;
+  protocolMainVersion = -1;
+  protocolSubVersion = -1;
 }
 
 HttpRequest::~HttpRequest(void) {}

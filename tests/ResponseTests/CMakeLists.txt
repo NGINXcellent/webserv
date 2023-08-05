@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
-set(this HttpTests)
+set(this ResponseTests)
 
 set(Sources 
-    HttpResponseTests.cpp
-    HttpRequestFactoryTests.cpp)
+    HttpResponseTests.cpp)
 
 add_executable(${this} ${Sources})
 

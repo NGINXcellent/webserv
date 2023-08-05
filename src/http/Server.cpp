@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/04 11:13:57 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/04 21:11:28 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,14 +51,15 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
     head(request, response);
   else
     buildErrorResponse(response, 501, \
-                       request->getProtocolMainVersion(), request->getProtocolSubVersion());
+                       request->getProtocolMainVersion(), \
+                       request->getProtocolSubVersion());
 }
 
 std::string Server::process(char *buffer) {
   HttpRequest *request = HttpRequestFactory::createFrom(buffer);
   HttpResponse response;
 
-  int status = checkRequest(request);
+  int status = HttpRequestFactory::check(request);
   if (status != 0) {
     buildErrorResponse(&response, status, request->getProtocolMainVersion(), \
                        request->getProtocolSubVersion());
@@ -112,25 +113,6 @@ void Server::head(HttpRequest *request, HttpResponse *response) {
   response->setMsgBody(empty);
 }
 
-int checkRequest(HttpRequest *request) {
-  if (request->getProtocolName() != "HTTP")
-    return (400);
-
-  int version = request->getProtocolMainVersion() * 10 + \
-    request->getProtocolSubVersion();
-  if (!(version == 10 || version == 11))
-    return (505);
-  if (version == 11 && request->getHost().size() == 0)
-    return (400);
-
-  std::string method = request->getMethod();
-  for (size_t i = 0; i < method.size(); i++) {
-    if (!std::isupper(method[i]))
-      return (400);
-  }
-
-  return (0);
-}
 
 void buildErrorResponse(HttpResponse *response, int error_code, \
                         int protoMainVersion, int protoSubVersion) {
