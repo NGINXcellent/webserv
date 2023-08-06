@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/30 21:12:03 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/03 21:43:46 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,17 @@ int main(int argc, char **argv) {
     std::cout << "[USAGE]:  ./webserv <configuration file>.conf" << std::endl;
     return(1);
   }
-  std::cout << "MAX EVENTS: " << MAX_EVENTS << std::endl;
-  Server webserver(8080);
-  webserver.start();
+  try
+  {
+      InputHandler input(argv[1]);
+      input.printServers();
+  }
+  catch(const std::exception& e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+
+  // Server webserver(8080);
+  // webserver.start();
   return 0;
 }
