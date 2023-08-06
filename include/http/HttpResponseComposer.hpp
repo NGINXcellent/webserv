@@ -1,31 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HttpResponseFactory.hpp                            :+:      :+:    :+:   */
+/*   HttpResponseComposer.hpp                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:05:17 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 17:10:45 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/05 21:26:26 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
-#ifndef HTTPRESPONSEFACTORY_HPP
-# define HTTPRESPONSEFACTORY_HPP
+#ifndef HTTPRESPONSECOMPOSER_HPP
+# define HTTPRESPONSECOMPOSER_HPP
 
 #include <string>
 
 #include "../../include/http/HttpResponse.hpp"
 
-class HttpResponseFactory {
+class HttpResponseComposer {
  public:
-  static HttpResponse   create(std::string resource);
+  static void buildErrorResponse(HttpResponse *response, int error_code, \
+                                  int protoMainVersion, int protoSubVersion);
 
  private:
-  HttpResponseFactory(void);
-  HttpResponseFactory(const HttpResponseFactory& f);
-  HttpResponseFactory& operator=(const HttpResponseFactory& t);
-  ~HttpResponseFactory(void);
+  HttpResponseComposer(void);
+  HttpResponseComposer(const HttpResponseComposer& f);
+  HttpResponseComposer& operator=(const HttpResponseComposer& t);
+  ~HttpResponseComposer(void);
 };
 #endif

@@ -6,14 +6,14 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/04 21:11:28 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/05 21:32:40 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/Server.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
+#include "../../include/http/HttpResponseComposer.hpp"
 #include "../../include/http/MimeType.hpp"
-#include "../../include/http/HttpStatus.hpp"
 #include "../../include/socket/TcpServerSocket.hpp"
 
 #include <iostream>
@@ -21,10 +21,6 @@
 #include <vector>
 #include <sys/stat.h>
 #include <sstream>  // stringstream
-
-int checkRequest(HttpRequest *request);
-void buildErrorResponse(HttpResponse *response, int error_code, \
-                        int protoMainVersion, int protoSubVersion);
 
 Server::Server(unsigned int nPort) : port(nPort), connection_fd(-1) {
   socket = new TCPServerSocket(nPort);
@@ -50,7 +46,7 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
   else if (requestMethod == "HEAD")
     head(request, response);
   else
-    buildErrorResponse(response, 501, \
+    HttpResponseComposer::buildErrorResponse(response, 501, \
                        request->getProtocolMainVersion(), \
                        request->getProtocolSubVersion());
 }
@@ -61,8 +57,10 @@ std::string Server::process(char *buffer) {
 
   int status = HttpRequestFactory::check(request);
   if (status != 0) {
-    buildErrorResponse(&response, status, request->getProtocolMainVersion(), \
-                       request->getProtocolSubVersion());
+    HttpResponseComposer::buildErrorResponse(&response, \
+                                          status, \
+                                          request->getProtocolMainVersion(), \
+                                          request->getProtocolSubVersion());
   } else {
     resolve(request, &response);
   }
@@ -78,12 +76,12 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
   int protoSub = request->getProtocolSubVersion();
 
   if (access(request->getResource().c_str(), F_OK) == -1) {
-    buildErrorResponse(response, 404, protoMain, protoSub);
+    HttpResponseComposer::buildErrorResponse(response, 404, protoMain, protoSub);
     return;
   }
 
   if (access(request->getResource().c_str(), R_OK) == -1) {
-    buildErrorResponse(response, 403, protoMain, protoSub);
+    HttpResponseComposer::buildErrorResponse(response, 403, protoMain, protoSub);
     return;
   }
 
@@ -114,29 +112,3 @@ void Server::head(HttpRequest *request, HttpResponse *response) {
 }
 
 
-void buildErrorResponse(HttpResponse *response, int error_code, \
-                        int protoMainVersion, int protoSubVersion) {
-  response->setStatusCode(error_code);
-  response->setContentType("text/html");
-
-  std::string content;
-  content += "<html><head><title>";
-
-  std::stringstream ss;
-  ss << error_code;
-  std::string errorMsg = HttpStatus::getMessage(error_code);
-
-  content += ss.str() + " " + errorMsg + "</title></head>";
-  content += "<body><center><h1>" + ss.str() + " " + errorMsg + \
-    "</h1></center></body>";
-  content += "<hr><center>webserv/0.1</center></body></html>";
-
-  std::vector<char> responseContent;
-  for (size_t i = 0; i < content.size(); i++) {
-    responseContent.push_back(content[i]);
-  }
-
-  response->setProtocol("HTTP", protoMainVersion, protoSubVersion);
-  response->setMsgBody(responseContent);
-  response->setContentLength(responseContent.size());
-}
