@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 20:08:53 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/05 21:06:02 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,6 @@ void parseRequestLine(std::string& requestLine, HttpRequest *request) {
   }
 
   if (fields.size() != 3) {
-    std::cout << "give me chocolate" << std::endl;
     return;
   }
 
@@ -88,24 +87,42 @@ void parseRequestLine(std::string& requestLine, HttpRequest *request) {
 
 void parseHeaders(std::string &msg, HttpRequest *request) {
   std::map<std::string, std::string> headers;
+  // std::cout << msg << std::endl;
 
   while (msg.size() != 0) {
-    int pos = msg.find(':');
+    size_t pos = msg.find(':');
+    size_t ws_pos = msg.find_first_of(" \t");
+    size_t char_pos = msg.find_first_not_of(" \t");
+
+    if (pos == std::string::npos) {
+      break;
+    }
+
+    if (ws_pos < char_pos) {
+      request->setProtocolName("");  // invalidates the request
+      return;
+    }
+
     std::string key = toLowerStr(msg.substr(0, pos));
     msg.erase(0, pos + 1);
-
     pos = msg.find('\n');
+
+    if (pos == std::string::npos) {
+      request->setProtocolName("");  // invalidates the request
+      return;
+    }
+
     std::string value = msg.substr(0, pos);
     msg.erase(0, pos + 1);
-
     headers.insert(std::make_pair(key, value));
   }
 
-  request->setHost(headers["host"]);
-  // std::cout << "'" << request->getHost() << "'" << std::endl;
-  // std::cout << "'" << request->getProtocolVersion() << "'" << std::endl;
+  size_t char_pos = headers["host"].find_first_not_of(" \t");
 
-  // todo: get the If-Modified-Since and If-Unmodified-Since
+  if (char_pos != std::string::npos) {
+    std::string host = headers["host"].substr(char_pos);
+    request->setHost(host);
+  }
 }
 
 bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVersion) {

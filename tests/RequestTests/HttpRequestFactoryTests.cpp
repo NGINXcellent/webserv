@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 20:14:51 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/05 20:53:50 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,5 +207,58 @@ TEST(RequestTests, HttpVersionOnePointZeroTest) {
 
   for (size_t i = 0; i < msgs.size(); i++) {
     testRequestLine(msgs[i].c_str(), 0);
+  }
+}
+
+TEST(RequestTests, HttpRequestAttributesFormat) {
+  {
+    std::string request;
+    request += "GET localhost:8080/index.html HTTP/1.1\n";
+    request += "host: localhost:8080\n";
+    request += "Connection: keep-alive\n";
+    request += "Accept-Language: en-US,en\n";
+
+    testRequestLine(request.c_str(), 0);
+  }
+  {
+    std::string request;
+    request += "GET localhost:8080/index.html HTTP/1.1\n";
+    request += "   host: localhost:8080\n";
+    request += "Connection: keep-alive\n";
+    request += "Accept-Language: en-US,en\n";
+
+    testRequestLine(request.c_str(), 400);
+  }
+  {
+    std::string request;
+    request += "GET localhost:8080/index.html HTTP/1.1\n";
+    request += "host: localhost:8080\n";
+    request += "\tConnection: keep-alive\n";
+    request += "Accept-Language: en-US,en\n";
+
+    testRequestLine(request.c_str(), 400);
+  }
+  {
+    std::string request;
+    request += "GET localhost:8080/index.html HTTP/1.1\n";
+    request += "host: localhost:8080\n";
+    request += "Connection: keep-alive\n";
+    request += "   \tAccept-Language: en-US,en\n";
+
+    testRequestLine(request.c_str(), 400);
+  }
+  {
+    std::string request;
+    request += "GET localhost:8080/index.html HTTP/1.1\n";
+    request += "host:       localhost:8080\n";
+
+    testRequestLine(request.c_str(), 0);
+  }
+  {
+    std::string request;
+    request += "GET localhost:8080/index.html HTTP/1.1\n";
+    request += "host:\t\tlocalhost:8080\n";
+
+    testRequestLine(request.c_str(), 0);
   }
 }
