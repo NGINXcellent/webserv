@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 21:06:02 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/05 21:14:47 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,9 @@
 #include <vector>
 #include <sstream>
 
-void parseRequestLine(std::string& msg, HttpRequest *request);
-void parseHeaders(std::string &msg, HttpRequest *request);
-bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVersion);
+void parseRequestLine(std::string* msg, HttpRequest *request);
+void parseHeaders(std::string* msg, HttpRequest *request);
+bool parseProtocolVersion(const std::string& input, int* mainVer, int* subVer);
 
 std::string toLowerStr(std::string str);
 
@@ -36,24 +36,24 @@ HttpRequest *HttpRequestFactory::createFrom(char *requestMsg) {
   std::string reqLine = msg.substr(0, pos);
   msg.erase(0, pos + 1);
 
-  parseRequestLine(reqLine, request);
-  parseHeaders(msg, request);
+  parseRequestLine(&reqLine, request);
+  parseHeaders(&msg, request);
   return (request);
 }
 
-void parseRequestLine(std::string& requestLine, HttpRequest *request) {
+void parseRequestLine(std::string* requestLine, HttpRequest *request) {
   std::vector<std::string> fields;
 
-  while (requestLine.size() != 0) {
-    size_t begin = requestLine.find_first_not_of(" \t");
-    size_t end = requestLine.find_first_of(" \t", begin);
+  while (requestLine->size() != 0) {
+    size_t begin = requestLine->find_first_not_of(" \t");
+    size_t end = requestLine->find_first_of(" \t", begin);
 
     if (begin == std::string::npos) {
       break;
     }
 
-    fields.push_back(requestLine.substr(begin, end - begin));
-    requestLine.erase(0, end);
+    fields.push_back(requestLine->substr(begin, end - begin));
+    requestLine->erase(0, end);
   }
 
   if (fields.size() != 3) {
@@ -85,14 +85,14 @@ void parseRequestLine(std::string& requestLine, HttpRequest *request) {
   // std::cout << msg << std::endl;
 }
 
-void parseHeaders(std::string &msg, HttpRequest *request) {
+void parseHeaders(std::string *msg, HttpRequest *request) {
   std::map<std::string, std::string> headers;
   // std::cout << msg << std::endl;
 
-  while (msg.size() != 0) {
-    size_t pos = msg.find(':');
-    size_t ws_pos = msg.find_first_of(" \t");
-    size_t char_pos = msg.find_first_not_of(" \t");
+  while (msg->size() != 0) {
+    size_t pos = msg->find(':');
+    size_t ws_pos = msg->find_first_of(" \t");
+    size_t char_pos = msg->find_first_not_of(" \t");
 
     if (pos == std::string::npos) {
       break;
@@ -103,17 +103,17 @@ void parseHeaders(std::string &msg, HttpRequest *request) {
       return;
     }
 
-    std::string key = toLowerStr(msg.substr(0, pos));
-    msg.erase(0, pos + 1);
-    pos = msg.find('\n');
+    std::string key = toLowerStr(msg->substr(0, pos));
+    msg->erase(0, pos + 1);
+    pos = msg->find('\n');
 
     if (pos == std::string::npos) {
       request->setProtocolName("");  // invalidates the request
       return;
     }
 
-    std::string value = msg.substr(0, pos);
-    msg.erase(0, pos + 1);
+    std::string value = msg->substr(0, pos);
+    msg->erase(0, pos + 1);
     headers.insert(std::make_pair(key, value));
   }
 
