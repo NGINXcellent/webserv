@@ -1,31 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HttpResponseFactory.hpp                            :+:      :+:    :+:   */
+/*   HttpTime.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/28 17:05:17 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/28 17:10:45 by lfarias-         ###   ########.fr       */
+/*   Created: 2023/08/01 22:38:10 by lfarias-          #+#    #+#             */
+/*   Updated: 2023/08/01 23:06:13 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
-#ifndef HTTPRESPONSEFACTORY_HPP
-# define HTTPRESPONSEFACTORY_HPP
+#ifndef HTTPTIME_HPP
+# define HTTPTIME_HPP
 
 #include <string>
+#include <ctime>
 
-#include "../../include/http/HttpResponse.hpp"
-
-class HttpResponseFactory {
+class HttpTime {
  public:
-  static HttpResponse   create(std::string resource);
+  static std::string getCurrentTime(void);
+  static std::string fmtDate(time_t miliseconds);
 
  private:
-  HttpResponseFactory(void);
-  HttpResponseFactory(const HttpResponseFactory& f);
-  HttpResponseFactory& operator=(const HttpResponseFactory& t);
-  ~HttpResponseFactory(void);
+  HttpTime(void);
+  HttpTime(const HttpTime& f);
+  HttpTime& operator=(const HttpTime& t);
+  ~HttpTime(void);
 };
 #endif

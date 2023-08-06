@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/30 21:12:29 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/03 15:26:36 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ class Server {
   std::string process(char *buffer);
   void        resolve(HttpRequest *request, HttpResponse *response);
   void        get(HttpRequest *request, HttpResponse *response);
+  void        head(HttpRequest *request, HttpResponse *response);
   void        post(HttpRequest *request, HttpResponse *response);
   void        del(HttpRequest *request, HttpResponse *response);
 

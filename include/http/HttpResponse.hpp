@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:52:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/29 13:42:35 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/03 20:53:05 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 
 #include <string>
 #include <vector>
+#include <ctime>
 
 class HttpResponse {
  public:
@@ -23,16 +24,19 @@ class HttpResponse {
   ~HttpResponse(void);
 
   std::string   getHeaders(void);
+  void          setProtocol(std::string protoName, int mainVer, int subVer);
   void          setStatusCode(int responseCode);
   void          setContentType(const std::string &mimeType);
+  void          setContentLength(size_t fileSize);
   void          setMsgBody(const std::vector<char>& data);
 
  private:
+  std::string       protocol;
   int               statusCode;
   std::string       statusMessage;
+  std::string       serverVersion;
   std::string       contentType;
-  int               contentLength;
-  int               dataSize;
+  size_t            contentLength;
   std::vector<char> msgBody;
 
   HttpResponse(const HttpResponse& f);
