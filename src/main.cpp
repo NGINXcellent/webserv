@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/08/03 21:43:46 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/06 20:50:36 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,13 +20,12 @@ int main(int argc, char **argv) {
     std::cout << "[USAGE]:  ./webserv <configuration file>.conf" << std::endl;
     return(1);
   }
-  try
-  {
+
+  try {
       InputHandler input(argv[1]);
       input.printServers();
   }
-  catch(const std::exception& e)
-  {
+  catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
   }
 
