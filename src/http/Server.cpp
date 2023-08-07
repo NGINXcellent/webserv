@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 21:32:40 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/06 22:28:49 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,19 +22,12 @@
 #include <sys/stat.h>
 #include <sstream>  // stringstream
 
-Server::Server(unsigned int nPort) : port(nPort), connection_fd(-1) {
-  socket = new TCPServerSocket(nPort);
+Server::Server(struct s_serverConfig) {
+
 }
 
 Server::~Server(void) {
   delete socket;
-}
-
-void  Server::start(void) {
-  socket->bindAndListen();
-  std::cout << "Server is listening on port: " << port << " ..." << std::endl;
-
-  socket->handleConnections(this);
 }
 
 void  Server::resolve(HttpRequest *request, HttpResponse *response) {
@@ -56,6 +49,7 @@ std::string Server::process(char *buffer) {
   HttpResponse response;
 
   int status = HttpRequestFactory::check(request);
+
   if (status != 0) {
     HttpResponseComposer::buildErrorResponse(&response, \
                                           status, \
@@ -66,7 +60,6 @@ std::string Server::process(char *buffer) {
   }
 
   delete request;
-
   return response.getHeaders();
 }
 
@@ -76,12 +69,14 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
   int protoSub = request->getProtocolSubVersion();
 
   if (access(request->getResource().c_str(), F_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 404, protoMain, protoSub);
+    HttpResponseComposer::buildErrorResponse(response, \
+                                             404, protoMain, protoSub);
     return;
   }
 
   if (access(request->getResource().c_str(), R_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 403, protoMain, protoSub);
+    HttpResponseComposer::buildErrorResponse(response, \
+                                             403, protoMain, protoSub);
     return;
   }
 
@@ -93,12 +88,12 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
 
   std::vector<char> resourceData;
   char byte = 0;
+
   while (inputFile.get(byte)) {
     resourceData.push_back(byte);
   }
 
   inputFile.close();
-
   response->setProtocol("HTTP", protoMain, protoSub);
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);

@@ -6,12 +6,13 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/08/06 20:50:36 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/06 22:27:14 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/input/InputHandler.hpp"
 #include "../include/http/Server.hpp"
+#include "../include/socket/Controller.hpp"
 
 #include <iostream>
 
@@ -22,14 +23,14 @@ int main(int argc, char **argv) {
   }
 
   try {
-      InputHandler input(argv[1]);
-      input.printServers();
+    InputHandler input(argv[1]);
+    input.printServers();
+    Controller controller(input);
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
+    return (1);
   }
 
-  // Server webserver(8080);
-  // webserver.start();
   return 0;
 }

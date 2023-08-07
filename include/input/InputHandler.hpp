@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/06 20:54:25 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/06 21:33:19 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,25 +17,25 @@
 #include <map>
 #include <string>
 
-//based con https://www.nginx.com/resources/wiki/start/topics/examples/full/
+// based con https://www.nginx.com/resources/wiki/start/topics/examples/full/
 
 struct s_locationConfig {
-  std::string location;
-  std::string autoindex;
-  std::string index;
-  std::string max_body_size;
-  std::string root;
-  std::map<int, std::string> redirect;
-  std::vector<std::string> allowed_method;
+  std::string                 location;
+  std::string                 autoindex;
+  std::string                 index;
+  std::string                 max_body_size;
+  std::string                 root;
+  std::map<int, std::string>  redirect;
+  std::vector<std::string>    allowed_method;
 };
 
 struct s_serverConfig {
-  int socketfd;
-  std::string port;
-  std::string host;
-  std::string server_name;  // server_name is unique
-  std::string max_body_size;
-  std::map<int, std::string> error_page;
+  int                           socketfd;
+  std::string                   port;
+  std::string                   host;
+  std::string                   server_name;  // server_name is unique
+  std::string                   max_body_size;
+  std::map<int, std::string>    error_page;
   std::vector<s_locationConfig> location;
 };
 
@@ -59,7 +59,8 @@ class InputHandler {
   ~InputHandler(void);
 
   static bool check_args(int argc, const char **argv);
-  void printServers();
+  void        printServers();
 };
 
 #endif
+

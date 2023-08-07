@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/30 21:34:09 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/06 22:09:59 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,8 +106,9 @@ void TCPServerSocket::handleConnections(Server *server) {
         std::cout << "Connection with FD -> " << currentFd \
           << " is closed by client" << std::endl;
 
-        for (std::vector<int>::iterator it = connections.begin();
-             it != connections.end(); ++it) {
+        std::vector<int>::iterator it = connections.begin();
+
+        for (; it != connections.end(); ++it) {
           if (*it == currentFd) {
             connections.erase(it);
             break;
