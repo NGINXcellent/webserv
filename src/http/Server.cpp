@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/06 22:28:49 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/07 17:16:47 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,13 @@
 #include <sys/stat.h>
 #include <sstream>  // stringstream
 
-Server::Server(struct s_serverConfig) {
-
+Server::Server(const struct s_serverConfig& config) {
+  port = strtol(config.port.c_str(), NULL, 0);
+  host = config.host;
+  server_name = config.server_name;
+  max_body_size = strtol(config.port.c_str(), NULL, 0);
+  error_pages = config.error_page;
+  locations = config.location;
 }
 
 Server::~Server(void) {
@@ -106,4 +111,7 @@ void Server::head(HttpRequest *request, HttpResponse *response) {
   response->setMsgBody(empty);
 }
 
+int   Server::getPort(void) {
+  return (port);
+}
 

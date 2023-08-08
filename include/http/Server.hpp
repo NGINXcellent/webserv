@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/06 22:22:26 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/07 17:17:16 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
 
 class Server {
  public:
-  Server(struct s_serverConfig);
+  Server(const struct s_serverConfig& config);
   ~Server(void);
 
   std::string      process(char *buffer);
@@ -35,6 +35,7 @@ class Server {
   void             head(HttpRequest *request, HttpResponse *response);
   void             post(HttpRequest *request, HttpResponse *response);
   void             del(HttpRequest *request, HttpResponse *response);
+  int              getPort(void);
 
  private:
   size_t                        port;

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/06 21:19:19 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/07 10:36:15 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,9 +207,7 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, \
 }
 
 bool is_empty(std::ifstream &fileStream) {
-    if (fileStream.tellg() == std::ifstream::traits_type::eof())
-      return true;
-    return false;
+  return (fileStream.tellg() == std::ifstream::traits_type::eof());
 }
 
 void InputHandler::checkConfFile(char *fileArg) {
