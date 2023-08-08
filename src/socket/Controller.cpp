@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/08 14:41:23 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/08 15:56:25 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,12 +24,16 @@ Controller::Controller(const InputHandler &input) {
     this->serverList.push_back(newServer);
     ++it;
   }
+
+  buffer = new char[1024];
+  bzero(buffer, 1024);
 }
 
 Controller::~Controller(void) {}
 
 void Controller::init(void) {
-  // 			Create epollfd
+  //  Create epollfd
+
   epollfd = epoll_create1(0);
   if (epollfd == -1) {
     std::cerr << "Failed to create epoll. errno: " << errno << std::endl;
@@ -113,7 +117,6 @@ void Controller::handleConnections(void) {
       else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         // If connection already exist
 
-        char *buffer = new char[1024];
         //bufferList.insert(std::make_pair(currentFd, buffer));
         //bzero(bufferList[currentFd], 1024);
         bzero(buffer, 1024);
@@ -125,6 +128,8 @@ void Controller::handleConnections(void) {
           epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
           close(currentFd);
           std::vector<int>::iterator it = connections.begin();
+          std::cout << "Connection with FD -> " << currentFd;
+          std::cout << " is closed by server" << std::endl;
 
           for (; it < connections.end(); ++it) {
             if (*it == currentFd) {
@@ -133,11 +138,15 @@ void Controller::handleConnections(void) {
             }
           }
         }
-        else {
-          // find the connection port
-          // use the port to get all the server that is listening on this port
-          // send the buffer to respect server function process.
+        // SERVER PROCESS
+      }
+      else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
+        // SEND DATA
 
+        if (*buffer == '\0') {
+            i++;
+            continue;
+        }
           struct sockaddr_in address;
           socklen_t sockAddrLen = sizeof(address);
 
@@ -156,7 +165,7 @@ void Controller::handleConnections(void) {
             else
               server = NULL;
           }
-
+ 
           std::cout << "======BUFFER:=======" << std::endl;
           std::cout << buffer << std::endl;
           std::cout << "====================" << std::endl;
@@ -173,13 +182,8 @@ void Controller::handleConnections(void) {
           }
 
           socket->sendData(currentFd, response.c_str(), response.size());
+          bzero(buffer, 1024);
         }
-      }
-      // // EPOLLOUT means this FD is ready to write, so, is like while true
-      // full. else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-      //         std::string response = "Good talking to you fd\n";
-      //         sendData(currentFd, response.c_str(), response.size());
-      // }
     }
   }
 }
