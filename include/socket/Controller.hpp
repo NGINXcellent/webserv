@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/08 15:43:13 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/08 16:41:27 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ class Controller {
   std::vector<TCPServerSocket*> socketList;
   std::map<int, char *>         bufferList;  // connectionFD, buffer
   int                           epollfd;
-  char                          *buffer;
+  //char                          *buffer;
   struct epoll_event            events[MAX_EVENTS];
 
   Controller(const Controller& f);

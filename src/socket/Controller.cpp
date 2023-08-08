@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/08 15:56:25 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/08 16:41:47 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,6 @@ Controller::Controller(const InputHandler &input) {
     this->serverList.push_back(newServer);
     ++it;
   }
-
-  buffer = new char[1024];
-  bzero(buffer, 1024);
 }
 
 Controller::~Controller(void) {}
@@ -64,13 +61,14 @@ void Controller::addNewConnection(int socketFD) {
   struct sockaddr_in clientToAdd;
   socklen_t len = sizeof(clientToAdd);
   newConnection = accept(socketFD, (struct sockaddr *)&clientToAdd, &len);
-
+  
   if (newConnection < 0) {
     std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
   } else {
     // // EPOLLOUT is not implemented yet
     events->events = EPOLLIN | EPOLLRDHUP | EPOLLOUT;
     events->data.fd = newConnection;
+    bufferList.insert(std::make_pair(newConnection, new char[1024]));
 
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, events) == -1) {
       std::cerr << "Failed to add new connection to epoll. errno: " << errno
@@ -117,10 +115,8 @@ void Controller::handleConnections(void) {
       else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         // If connection already exist
 
-        //bufferList.insert(std::make_pair(currentFd, buffer));
-        //bzero(bufferList[currentFd], 1024);
-        bzero(buffer, 1024);
-        int bytesRead = read(currentFd, buffer, 1024);
+        bzero(bufferList[currentFd], 1024);
+        int bytesRead = read(currentFd, bufferList[currentFd], 1024);
 
         if (bytesRead <= 0) {
           // Connection error or close, we remove from epoll
@@ -143,7 +139,7 @@ void Controller::handleConnections(void) {
       else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         // SEND DATA
 
-        if (*buffer == '\0') {
+        if (*bufferList[currentFd] == '\0') {
             i++;
             continue;
         }
@@ -167,9 +163,9 @@ void Controller::handleConnections(void) {
           }
  
           std::cout << "======BUFFER:=======" << std::endl;
-          std::cout << buffer << std::endl;
+          std::cout << bufferList[currentFd] << std::endl;
           std::cout << "====================" << std::endl;
-          std::string response = server->process(buffer);
+          std::string response = server->process(bufferList[currentFd]);
           TCPServerSocket *socket = NULL;
 
           for (size_t i = 0; i < socketList.size(); i++) {
@@ -182,7 +178,7 @@ void Controller::handleConnections(void) {
           }
 
           socket->sendData(currentFd, response.c_str(), response.size());
-          bzero(buffer, 1024);
+          bzero(bufferList[currentFd], 1024);
         }
     }
   }
