@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Controller.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/08 18:16:48 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/09 09:10:09 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "../http/Server.hpp"
 #include "./TcpServerSocket.hpp"
 
+#include <csignal>
 #include <vector>
 #include <map>
 
@@ -46,5 +47,9 @@ class Controller {
   void  writeToBuffer(int currentFd);
   void  sendToClient(int currentFd);
   void  closeConnection(int currentFd);
+
+  //signal handler
+  static void endServer();
+  static void signalHandler(int signal);
 };
 #endif

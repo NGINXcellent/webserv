@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Controller.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/08 21:48:19 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/09 09:13:48 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,13 +26,24 @@ Controller::Controller(const InputHandler &input) {
   }
 }
 
+void Controller::endServer() {
+  exit(0);
+}
+
+void Controller::signalHandler(int signal) {
+  if (signal == SIGINT) {
+    std::cout << "\nServer is stopping gracefully, goodbye !" << std::endl;
+    endServer();
+  }
+}
+
 Controller::~Controller(void) {
   // todo: Implement resource liberation logic
 }
 
 void Controller::init(void) {
   //  Create epollfd
-
+  std::signal(SIGINT, signalHandler);
   epollfd = epoll_create1(0);
   if (epollfd == -1) {
     std::cerr << "Failed to create epoll. errno: " << errno << std::endl;
@@ -147,7 +158,6 @@ bool Controller::isNewConnection(int currentFD) {
   return (false);
 }
 
-// signal(SIGINT, handleSIGINT); localtion is here?
 void Controller::writeToBuffer(int currentFd) {
   bzero(bufferList[currentFd], 1024);
   int bytesRead = read(currentFd, bufferList[currentFd], 1024);
