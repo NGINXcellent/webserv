@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 15:29:55 by dvargas           #+#    #+#             */
-/*   Updated: 2023/07/30 21:03:19 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/08 13:53:14 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,22 +34,17 @@ class TCPServerSocket {
   ~TCPServerSocket(void);
 
   int   bindAndListen(void);
-  void  handleConnections(Server *server);
-  // void handleExistingConnections();
-  // static void handleSIGINT(int);
+  // static void handleSIGINT(int); IMPLEMENT ON CONTROLLER!
   int   acceptConnection(void);
   int   receiveData(int connection, char* buffer, int bufferSize);
   void  sendData(int connection, const char* data, int dataSize);
   void  closeConnection(int connection);
-  int   isNewClient(void);
-  void  addNewConnection(void);
+  int   getFD(void);
+  unsigned int   getPort(void);
 
  private:
   int                 sockfd;
-  int                 epollfd;
   unsigned int        hostPort;
-  std::vector<int>    connections;
-  struct epoll_event  events[MAX_EVENTS];
 };
 
 #endif
