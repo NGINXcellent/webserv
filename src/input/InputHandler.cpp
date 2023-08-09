@@ -6,12 +6,13 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/07 10:36:15 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/09 08:50:11 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/input/InputHandler.hpp"
 
+#include <sstream>
 #include <cstring>
 #include <iostream>
 #include <fstream>
@@ -49,7 +50,8 @@ void InputHandler::addPort(std::ifstream &fileStream, std::string &string) {
     }
 }
 
-void InputHandler::addToString(std::ifstream &fileStream, std::string &string) {
+void InputHandler::addToString(std::ifstream &fileStream, \
+                              std::string &string) {
   std::string word;
   fileStream >> word;
 
@@ -132,33 +134,59 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
     if (word == "root") {
       if (!newLocation.root.empty())
         throw std::runtime_error("duplicate root inside location");
-
       addToString(fileStream, newLocation.root);
+
     } else if (word == "autoindex") {
       if (!newLocation.autoindex.empty())
         throw std::runtime_error("duplicate autoindex inside location");
-
       addToString(fileStream, newLocation.autoindex);
+
     } else if (word == "index") {
       if (!newLocation.index.empty())
         throw std::runtime_error("duplicate index inside location");
-
       addToString(fileStream, newLocation.index);
+
     } else if (word == "max_body_size") {
       if (!newLocation.max_body_size.empty())
         throw std::runtime_error("duplicate max_body_size inside location");
-
       addToString(fileStream, newLocation.max_body_size);
+
     } else if (word == "return") {  // redirect
       addToMap(fileStream, newLocation.redirect);
+
     } else if (word == "allowed_method") {
       addToVector(fileStream, newLocation.allowed_method);
+
     } else if (word == "}") {
       bracket = false;
     } else {
       throw std::runtime_error("Error in location");
     }
   }
+}
+
+void InputHandler::serverNameAdd(std::ifstream &fileStream, \
+                                std::string &string) {
+  std::string word;
+  fileStream >> word;
+
+  if (!(word.find_first_of(";") == word.size() - 1))
+    throw std::runtime_error("no ; in end of line");
+
+  word.resize(word.size() - 1);
+
+  if (word.empty()) {
+    throw std::runtime_error("empty entry");
+    return;
+  }
+
+  for (size_t i = 0; i < serverVector->size(); ++i) {
+    if ((*serverVector)[i].server_name == word){
+      throw std::runtime_error("duplicated server_name");
+      break;
+    }
+  }
+  string = word;
 }
 
 void InputHandler::newServerCheck(std::ifstream &fileStream, \
@@ -175,29 +203,31 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, \
     if (word == "listen") {
       if (!server.port.empty())
         throw std::runtime_error("duplicate listen");
-
       addPort(fileStream, server.port);
+
     } else if (word == "host") {
       if (!server.host.empty())
         throw std::runtime_error("duplicate host");
-
       addToString(fileStream, server.host);
+
     } else if (word == "server_name") {
       if (!server.server_name.empty())
         throw std::runtime_error("duplicate server_name");
+      serverNameAdd(fileStream, server.server_name);
 
-      addToString(fileStream, server.server_name);
     } else if (word == "error_page") {
       addToMap(fileStream, server.error_page);
+
     } else if (word == "max_body_size") {
       if (!server.max_body_size.empty())
         throw std::runtime_error("duplicate max_body_size");
-
       addToString(fileStream, server.max_body_size);
+
     } else if (word == "location") {
       s_locationConfig newLocation;
       addLocation(fileStream, newLocation);
       server.location.push_back(newLocation);
+
     } else if (word == "}") {
       bracket = false;
     } else {
