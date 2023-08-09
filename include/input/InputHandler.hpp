@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/06 21:33:19 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/09 08:45:53 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ struct s_serverConfig {
 
 class InputHandler {
  private:
+  void serverNameAdd(std::ifstream &fileStream, std::string &string);
   void printMap(std::map<int, std::string> mapi);
   bool isAMethod(std::string word);
   void addLocation(std::ifstream &fileStream, s_locationConfig &newLocation);

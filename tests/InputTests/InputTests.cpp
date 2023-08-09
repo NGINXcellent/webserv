@@ -138,6 +138,11 @@ TEST(CheckConfTests, FailTests)
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
+  {
+    const char *configFile = "../../InputTests/test_files/fail/multipleServername.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
+  }
 }
 
 TEST(LocationConfTests, BasicTests)
