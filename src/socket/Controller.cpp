@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/08 16:41:47 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/08 21:48:19 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,9 @@ Controller::Controller(const InputHandler &input) {
   }
 }
 
-Controller::~Controller(void) {}
+Controller::~Controller(void) {
+  // todo: Implement resource liberation logic
+}
 
 void Controller::init(void) {
   //  Create epollfd
@@ -42,7 +44,7 @@ void Controller::init(void) {
     TCPServerSocket *socket = new TCPServerSocket(serverList[i]->getPort());
     socket->bindAndListen();
     socketList.push_back(socket);
-    // std::cout << "Server is listening on port: " << port << " ..." << std::endl;
+    std::cout << "[LOG]\tlistening on port: " << socket->getPort() << std::endl;
 
     // Bind sockfd on epoll event
     events->events = EPOLLIN;
@@ -54,30 +56,8 @@ void Controller::init(void) {
       exit(EXIT_FAILURE);
     }
   }
-}
 
-void Controller::addNewConnection(int socketFD) {
-  int newConnection;
-  struct sockaddr_in clientToAdd;
-  socklen_t len = sizeof(clientToAdd);
-  newConnection = accept(socketFD, (struct sockaddr *)&clientToAdd, &len);
-  
-  if (newConnection < 0) {
-    std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
-  } else {
-    // // EPOLLOUT is not implemented yet
-    events->events = EPOLLIN | EPOLLRDHUP | EPOLLOUT;
-    events->data.fd = newConnection;
-    bufferList.insert(std::make_pair(newConnection, new char[1024]));
-
-    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, events) == -1) {
-      std::cerr << "Failed to add new connection to epoll. errno: " << errno
-                << std::endl;
-      close(newConnection);
-    } else {
-      connections.push_back(newConnection);
-    }
-  }
+  handleConnections();
 }
 
 void Controller::handleConnections(void) {
@@ -95,99 +75,130 @@ void Controller::handleConnections(void) {
       int currentFd = events[i].data.fd;    // this client fd
       int currentEvent = events[i].events;  // this client event state
 
-      if (isSocket(currentFd) != -1) {
-        addNewConnection(currentFd);  // if new connection found, add it.
+      if (isNewConnection(currentFd)) {
         std::cout << "new conection" << std::endl;
+        addNewConnection(currentFd);  // if new connection found, add it.
       } else if ((currentEvent & EPOLLRDHUP) == EPOLLRDHUP) {
-        epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
-        close(currentFd);
         std::cout << "Connection with FD -> " << currentFd;
         std::cout << " is closed by client" << std::endl;
-        std::vector<int>::iterator it = connections.begin();
-
-        for (; it != connections.end(); ++it) {
-          if (*it == currentFd) {
-            connections.erase(it);
-            break;
-          }
-        }
-      }
-      else if ((currentEvent & EPOLLIN) == EPOLLIN) {
-        // If connection already exist
-
-        bzero(bufferList[currentFd], 1024);
-        int bytesRead = read(currentFd, bufferList[currentFd], 1024);
-
-        if (bytesRead <= 0) {
-          // Connection error or close, we remove from epoll
-          // signal(SIGINT, handleSIGINT); localtion is here?
-          epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
-          close(currentFd);
-          std::vector<int>::iterator it = connections.begin();
-          std::cout << "Connection with FD -> " << currentFd;
-          std::cout << " is closed by server" << std::endl;
-
-          for (; it < connections.end(); ++it) {
-            if (*it == currentFd) {
-              connections.erase(it);
-              break;
-            }
-          }
-        }
-        // SERVER PROCESS
-      }
-      else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        // SEND DATA
-
+        closeConnection(currentFd);
+      } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
+        writeToBuffer(currentFd);
+      } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         if (*bufferList[currentFd] == '\0') {
             i++;
             continue;
+        } else {
+          sendToClient(currentFd);
         }
-          struct sockaddr_in address;
-          socklen_t sockAddrLen = sizeof(address);
-
-          if (getsockname(currentFd, (struct sockaddr *)&address, &sockAddrLen) < 0) {
-            std::cout << "Error trying to get socket name" << std::endl;
-            exit(1);
-          }
-
-          int port = ntohs(address.sin_port);
-          Server *server = NULL;
-
-          for (size_t i = 0; i < serverList.size(); i++) {
-            server = serverList[i];
-            if (server != NULL && port == server->getPort())
-              break;
-            else
-              server = NULL;
-          }
- 
-          std::cout << "======BUFFER:=======" << std::endl;
-          std::cout << bufferList[currentFd] << std::endl;
-          std::cout << "====================" << std::endl;
-          std::string response = server->process(bufferList[currentFd]);
-          TCPServerSocket *socket = NULL;
-
-          for (size_t i = 0; i < socketList.size(); i++) {
-            socket = socketList[i];
-
-            if (static_cast<int>(socket->getPort()) == port)
-              break;
-            else
-              socket = NULL;
-          }
-
-          socket->sendData(currentFd, response.c_str(), response.size());
-          bzero(bufferList[currentFd], 1024);
-        }
+      }
     }
   }
 }
 
-int Controller::isSocket(int currentFD) {
+void Controller::addNewConnection(int socketFD) {
+  int newConnection;
+  struct sockaddr_in clientToAdd;
+  socklen_t len = sizeof(clientToAdd);
+  newConnection = accept(socketFD, (struct sockaddr *)&clientToAdd, &len);
+
+  if (newConnection < 0) {
+    std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
+  } else {
+    events->events = EPOLLIN | EPOLLRDHUP | EPOLLOUT;
+    events->data.fd = newConnection;
+
+    // adding new buffer
+    std::map<int, char*>::iterator it = bufferList.find(newConnection);
+
+    if (it == bufferList.end())  // no existing buffer for current fd
+      bufferList[newConnection] = new char[1024];
+
+    *bufferList[newConnection] = '\0';
+
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, events) == -1) {
+      std::cerr << "Failed to add new connection to epoll. errno: " << errno
+                << std::endl;
+      close(newConnection);
+    } else {
+      connections.push_back(newConnection);
+    }
+  }
+}
+
+void  Controller::closeConnection(int currentFd) {
+  epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
+  close(currentFd);
+  std::vector<int>::iterator it = connections.begin();
+
+  for (; it != connections.end(); ++it) {
+    if (*it == currentFd) {
+      connections.erase(it);
+      break;
+    }
+  }
+}
+
+bool Controller::isNewConnection(int currentFD) {
   for (size_t i = 0; i < socketList.size(); i++) {
     if (currentFD == socketList[i]->getFD())
-      return socketList[i]->getFD();
+      return (true);
   }
-  return (-1);
+  return (false);
 }
+
+// signal(SIGINT, handleSIGINT); localtion is here?
+void Controller::writeToBuffer(int currentFd) {
+  bzero(bufferList[currentFd], 1024);
+  int bytesRead = read(currentFd, bufferList[currentFd], 1024);
+
+  if (bytesRead > 0)
+    return;
+
+  // Connection error or close, we remove from epoll
+  std::cout << "Connection with FD -> " << currentFd;
+  std::cout << " is closed by server" << std::endl;
+  closeConnection(currentFd);
+}
+
+void Controller::sendToClient(int currentFd) {
+    struct sockaddr_in address;
+    socklen_t sockAddrLen = sizeof(address);
+
+    if (getsockname(currentFd, (struct sockaddr *)&address, &sockAddrLen) < 0) {
+      std::cout << "Error trying to get socket name" << std::endl;
+      exit(1);
+    }
+
+    int port = ntohs(address.sin_port);
+    Server *server = NULL;
+
+    // todo: Needs a better logic to handle multiple sites with the same port!
+    for (size_t i = 0; i < serverList.size(); i++) {
+      server = serverList[i];
+      if (server != NULL && port == server->getPort())
+        break;
+      else
+        server = NULL;
+    }
+
+    std::cout << "======BUFFER:=======\n";
+    std::cout << bufferList[currentFd];
+    std::cout << "====================" << std::endl;
+    std::string response = server->process(bufferList[currentFd]);
+    TCPServerSocket *socket = NULL;
+
+    // todo: use a map<int, socket>
+    for (size_t i = 0; i < socketList.size(); i++) {
+      socket = socketList[i];
+
+      if (static_cast<int>(socket->getPort()) == port)
+        break;
+      else
+        socket = NULL;
+    }
+
+    socket->sendData(currentFd, response.c_str(), response.size());
+    *bufferList[currentFd] = '\0';
+}
+

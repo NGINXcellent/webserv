@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/08/08 13:46:53 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/08 18:29:10 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ int main(int argc, char **argv) {
     input.printServers();
     Controller controller(input);
     controller.init();
-    controller.handleConnections();
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
