@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:52:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/03 20:53:05 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/09 14:11:45 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <map>
 
 class HttpResponse {
  public:
