@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequestFactoryTests.cpp                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 20:53:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/10 09:06:33 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,9 @@
 #include "../../include/http/HttpRequestFactory.hpp"
 #include "../../include/http/HttpRequest.hpp"
 
-void testRequestLine(const char *requestMsg, int expectedStatusCode) {
+void testRequestLine(const char *requestMsg, int expectedStatusCode, std::string location) {
   HttpRequest *request;
-  request = HttpRequestFactory::createFrom(const_cast<char *>(requestMsg));
+  request = HttpRequestFactory::createFrom(const_cast<char *>(requestMsg), location);
   EXPECT_EQ(HttpRequestFactory::check(request), expectedStatusCode) << requestMsg;
   delete request;
 }
@@ -39,7 +39,7 @@ TEST(RequestTests, BasicBehaviourTest) {
     "DEL localhost:8080/index.html HTTP/1.1\nhost: localhost:8080\n");
 
   for (size_t i = 0; i < reqLines.size(); i++) {
-    testRequestLine(reqLines[i].c_str(), 0);
+    testRequestLine(reqLines[i].c_str(), 0, "/index.html");
   }
 }
 
@@ -67,7 +67,7 @@ TEST(RequestTests, RequestLineMethodTest) {
       "ReLEASE localhost:8080/index.html HTTP/1.1\nhost: localhost:8080\n");
 
     for (size_t i = 0; i < msgs.size(); i++) {
-      testRequestLine(msgs[i].c_str(), 400);
+      testRequestLine(msgs[i].c_str(), 400, "/index.html");
     }
 }
 
@@ -125,7 +125,7 @@ TEST(RequestTests, RequestLineProtocolTest) {
       "GET localhost:8080/index.html /1.1\nhost: localhost:8080\n");
 
     for (size_t i = 0; i < msgs.size(); i++) {
-      testRequestLine(msgs[i].c_str(), 400);
+      testRequestLine(msgs[i].c_str(), 400, "/index.html");
     }
 }
 
@@ -140,7 +140,7 @@ TEST(RequestTests, RequestMissingFieldsTest) {
     "GET HTTP/1.1\nhost: localhost:8080\n");
 
   for (size_t i = 0; i < msgs.size(); i++) {
-    testRequestLine(msgs[i].c_str(), 400);
+    testRequestLine(msgs[i].c_str(), 400, "/index.html");
   }
 }
 
@@ -169,7 +169,7 @@ TEST(RequestTests, RequestExtraSpacesTests) {
     "GET localhost:8080/index.html HTTP/1.1\t\nhost: localhost:8080\n");
 
   for (size_t i = 0; i < msgs.size(); i++) {
-    testRequestLine(msgs[i].c_str(), 0);
+    testRequestLine(msgs[i].c_str(), 0, "/index.html");
   }
 }
 
@@ -190,7 +190,7 @@ TEST(RequestTests, HttpVersionNotSupportedTest) {
     "GET localhost:8080/index.html HTTP/100.00\nhost: localhost:8080\n");
 
   for (size_t i = 0; i < msgs.size(); i++) {
-    testRequestLine(msgs[i].c_str(), 505);
+    testRequestLine(msgs[i].c_str(), 505, "/index.html");
   }
 }
 
@@ -206,7 +206,7 @@ TEST(RequestTests, HttpVersionOnePointZeroTest) {
     "GET localhost:8080/index.html HTTP/1.0\n");
 
   for (size_t i = 0; i < msgs.size(); i++) {
-    testRequestLine(msgs[i].c_str(), 0);
+    testRequestLine(msgs[i].c_str(), 0, "/index.html");
   }
 }
 
@@ -218,7 +218,7 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "Connection: keep-alive\n";
     request += "Accept-Language: en-US,en\n";
 
-    testRequestLine(request.c_str(), 0);
+    testRequestLine(request.c_str(), 0, "/index.html");
   }
   {
     std::string request;
@@ -227,7 +227,7 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "Connection: keep-alive\n";
     request += "Accept-Language: en-US,en\n";
 
-    testRequestLine(request.c_str(), 400);
+    testRequestLine(request.c_str(), 400, "/index.html");
   }
   {
     std::string request;
@@ -236,7 +236,7 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "\tConnection: keep-alive\n";
     request += "Accept-Language: en-US,en\n";
 
-    testRequestLine(request.c_str(), 400);
+    testRequestLine(request.c_str(), 400, "/index.html");
   }
   {
     std::string request;
@@ -245,20 +245,20 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "Connection: keep-alive\n";
     request += "   \tAccept-Language: en-US,en\n";
 
-    testRequestLine(request.c_str(), 400);
+    testRequestLine(request.c_str(), 400, "/index.html");
   }
   {
     std::string request;
     request += "GET localhost:8080/index.html HTTP/1.1\n";
     request += "host:       localhost:8080\n";
 
-    testRequestLine(request.c_str(), 0);
+    testRequestLine(request.c_str(), 0, "/index.html");
   }
   {
     std::string request;
     request += "GET localhost:8080/index.html HTTP/1.1\n";
     request += "host:\t\tlocalhost:8080\n";
 
-    testRequestLine(request.c_str(), 0);
+    testRequestLine(request.c_str(), 0, "/index.html");
   }
 }

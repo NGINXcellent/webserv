@@ -3,29 +3,31 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequestFactory.cpp                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 21:14:47 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/09 21:02:07 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequestFactory.hpp"
+#include "../../include/http/Server.hpp"
 
 #include <iostream>
 #include <map>
 #include <vector>
 #include <sstream>
 
-void parseRequestLine(std::string* msg, HttpRequest *request);
+void parseRequestLine(std::string* msg, HttpRequest *request, std::string location);
 void parseHeaders(std::string* msg, HttpRequest *request);
 bool parseProtocolVersion(const std::string& input, int* mainVer, int* subVer);
 
 std::string toLowerStr(std::string str);
 
-HttpRequest *HttpRequestFactory::createFrom(char *requestMsg) {
-  HttpRequest *request = new HttpRequest();
 
+
+HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, std::string location) {
+  HttpRequest *request = new HttpRequest();
   std::string msg(requestMsg);
   size_t pos = msg.find_first_of('\n');
 
@@ -35,15 +37,13 @@ HttpRequest *HttpRequestFactory::createFrom(char *requestMsg) {
 
   std::string reqLine = msg.substr(0, pos);
   msg.erase(0, pos + 1);
-
-  parseRequestLine(&reqLine, request);
+  parseRequestLine(&reqLine, request, location);
   parseHeaders(&msg, request);
   return (request);
 }
 
-void parseRequestLine(std::string* requestLine, HttpRequest *request) {
+void parseRequestLine(std::string* requestLine, HttpRequest *request, std::string location) {
   std::vector<std::string> fields;
-
   while (requestLine->size() != 0) {
     size_t begin = requestLine->find_first_not_of(" \t");
     size_t end = requestLine->find_first_of(" \t", begin);
@@ -51,7 +51,6 @@ void parseRequestLine(std::string* requestLine, HttpRequest *request) {
     if (begin == std::string::npos) {
       break;
     }
-
     fields.push_back(requestLine->substr(begin, end - begin));
     requestLine->erase(0, end);
   }
@@ -61,9 +60,8 @@ void parseRequestLine(std::string* requestLine, HttpRequest *request) {
   }
 
   request->setMethod(fields[0]);
-
-  std::string resource = "./static_pages" + fields[1];
-  request->setResource(resource);
+  //std::string resource = "." + fields[1] + "/index.html";
+  request->setResource(location);
 
   size_t pos = fields[2].find('/');
 
