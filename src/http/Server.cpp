@@ -45,6 +45,7 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
     head(request, response);
   else
     HttpResponseComposer::buildErrorResponse(response, 501, \
+                       error_pages,
                        request->getProtocolMainVersion(), \
                        request->getProtocolSubVersion());
 }
@@ -58,6 +59,7 @@ std::string Server::process(char *buffer) {
   if (status != 0) {
     HttpResponseComposer::buildErrorResponse(&response, \
                                           status, \
+                                          error_pages, \
                                           request->getProtocolMainVersion(), \
                                           request->getProtocolSubVersion());
   } else {
@@ -74,14 +76,14 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
   int protoSub = request->getProtocolSubVersion();
 
   if (access(request->getResource().c_str(), F_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, \
-                                             404, protoMain, protoSub);
+    HttpResponseComposer::buildErrorResponse(response, 404, error_pages, \
+                                             protoMain, protoSub);
     return;
   }
 
   if (access(request->getResource().c_str(), R_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, \
-                                             403, protoMain, protoSub);
+    HttpResponseComposer::buildErrorResponse(response, 403, error_pages, \
+                                             protoMain, protoSub);
     return;
   }
 

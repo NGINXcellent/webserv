@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/09 09:13:48 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/09 14:40:18 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ void Controller::handleConnections(void) {
         std::cout << " is closed by client" << std::endl;
         closeConnection(currentFd);
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
-        writeToBuffer(currentFd);
+        readFromClient(currentFd);
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         if (*bufferList[currentFd] == '\0') {
             i++;
@@ -158,7 +158,7 @@ bool Controller::isNewConnection(int currentFD) {
   return (false);
 }
 
-void Controller::writeToBuffer(int currentFd) {
+void Controller::readFromClient(int currentFd) {
   bzero(bufferList[currentFd], 1024);
   int bytesRead = read(currentFd, bufferList[currentFd], 1024);
 
