@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 15:44:28 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/11 17:01:58 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,4 +63,12 @@ std::string HttpRequest::getHost(void) {
 
 void HttpRequest::setHost(std::string nHost) {
   host = nHost;
+}
+
+void HttpRequest::setModifiedTimestampCheck(std::string timestamp) {
+  modifiedTimestampCheck = timestamp;
+}
+
+std::string HttpRequest::getModifiedTimestampCheck(void) {
+  return (modifiedTimestampCheck);
 }

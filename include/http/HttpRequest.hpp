@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/03 20:34:44 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/11 17:00:01 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,11 @@ class HttpRequest {
   void          setProtocolVersion(int main, int sub);
   int           getProtocolMainVersion(void);
   int           getProtocolSubVersion(void);
-  void          setHost(std::string nHost);
   std::string   getHost(void);
+  void          setHost(std::string nHost);
+  std::string   getModifiedTimestampCheck(void);
+  void          setModifiedTimestampCheck(std::string timestamp);
+
 
  private:
   std::string   protocolName;
@@ -39,6 +42,7 @@ class HttpRequest {
   std::string   host;
   std::string   resource;
   std::string   method;
+  std::string   modifiedTimestampCheck;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);

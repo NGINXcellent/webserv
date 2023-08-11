@@ -6,11 +6,12 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 21:10:59 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/11 18:11:12 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/Server.hpp"
+#include "../../include/http/HttpTime.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
 #include "../../include/http/HttpResponseComposer.hpp"
 #include "../../include/http/MimeType.hpp"
@@ -75,6 +76,15 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
   std::ifstream inputFile;
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
+  response->setProtocol("HTTP", protoMain, protoSub);
+  response->setLastModifiedTime(HttpTime::getLastModifiedTime(request->getResource()));
+
+  std::string unmodifiedTimestmap = request->getModifiedTimestampCheck();
+
+  if (!HttpTime::isModifiedSince(unmodifiedTimestmap, request->getResource())) {
+    response->setStatusCode(304);
+    return;
+  }
 
   std::vector<char> resourceData;
   int opStatus = FileReader::getContent(request->getResource(), &resourceData);
@@ -84,7 +94,7 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
                                              protoMain, protoSub);
   }
 
-  response->setProtocol("HTTP", protoMain, protoSub);
+  response->setStatusCode(200);
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);
   response->setContentLength(resourceData.size());

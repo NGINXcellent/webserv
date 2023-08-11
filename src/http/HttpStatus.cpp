@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:15:50 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/04 11:15:55 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/11 16:40:27 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,9 @@ void HttpStatus::init(void) {
   // 200 class
   messages.insert(std::make_pair(200, "OK"));
   messages.insert(std::make_pair(204, "No Content"));
+
+  // 300 class - redirection
+  messages.insert(std::make_pair(304, "Not Modified"));
 
   // 400 class - client errors
   messages.insert(std::make_pair(400, "Bad Request"));

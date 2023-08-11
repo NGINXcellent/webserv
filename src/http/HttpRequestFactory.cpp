@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 21:14:47 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/11 17:07:52 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,9 +119,17 @@ void parseHeaders(std::string *msg, HttpRequest *request) {
 
   size_t char_pos = headers["host"].find_first_not_of(" \t");
 
+  // todo: extract this logic to a function, there are probably more headers to get
   if (char_pos != std::string::npos) {
     std::string host = headers["host"].substr(char_pos);
     request->setHost(host);
+  }
+
+  char_pos = headers["if-modified-since"].find_first_not_of(" \t");
+
+  if (char_pos != std::string::npos) {
+    request->setModifiedTimestampCheck(
+                          headers["if-modified-since"].substr(char_pos));
   }
 }
 

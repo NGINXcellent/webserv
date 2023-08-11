@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 21:21:38 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/10 21:42:25 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,9 +33,7 @@ void HttpResponseComposer::buildErrorResponse(HttpResponse *response, \
     return;
 
   std::string content;
-
   content += "<html><head><title>";
-
   std::stringstream ss;
   ss << error_code;
   std::string errorMsg = HttpStatus::getMessage(error_code);
