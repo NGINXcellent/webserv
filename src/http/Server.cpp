@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/09 10:04:14 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/10 21:10:59 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,13 @@
 #include "../../include/http/HttpResponseComposer.hpp"
 #include "../../include/http/MimeType.hpp"
 #include "../../include/socket/TcpServerSocket.hpp"
+#include "../../include/utils/FileReader.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <sys/stat.h>
 #include <sstream>  // stringstream
+
 
 Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
@@ -75,32 +76,14 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
 
-  if (access(request->getResource().c_str(), F_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 404, error_pages, \
-                                             protoMain, protoSub);
-    return;
-  }
-
-  if (access(request->getResource().c_str(), R_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 403, error_pages, \
-                                             protoMain, protoSub);
-    return;
-  }
-
-  inputFile.open(request->getResource().c_str(), std::ios::binary);
-  if (!inputFile.is_open()) {
-    std::cout << "Resource not found\n";
-    return;
-  }
-
   std::vector<char> resourceData;
-  char byte = 0;
+  int opStatus = FileReader::getContent(request->getResource(), &resourceData);
 
-  while (inputFile.get(byte)) {
-    resourceData.push_back(byte);
+  if (opStatus != 0) {
+    HttpResponseComposer::buildErrorResponse(response, opStatus, error_pages, \
+                                             protoMain, protoSub);
   }
 
-  inputFile.close();
   response->setProtocol("HTTP", protoMain, protoSub);
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);

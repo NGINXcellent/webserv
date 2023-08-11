@@ -6,13 +6,14 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/09 14:12:20 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/10 21:21:38 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpResponseComposer.hpp"
 #include "../../include/http/HttpStatus.hpp"
 #include "../../include/http/MimeType.hpp"
+#include "../../include/utils/FileReader.hpp"
 
 #include <sstream>
 #include <fstream>
@@ -63,23 +64,15 @@ bool HttpResponseComposer::getCustomPage(HttpResponse *response, \
     return (false);
 
   std::string filename = error_pages[error_code];
-  std::ifstream inputFile;
-  inputFile.open(filename.c_str(), std::ios::binary);
+  std::vector<char> resourceData;
+  int readStatus = FileReader::getContent(filename, &resourceData);
 
-  if (access(filename.c_str(), F_OK | R_OK) == -1) {
+  if (readStatus != 0) {
     std::cout << "[ERROR]\tCan't find or read custom error page:";
     std::cout << filename << std::endl;
     return (false);
   }
 
-  std::vector<char> resourceData;
-  char byte = 0;
-
-  while (inputFile.get(byte)) {
-    resourceData.push_back(byte);
-  }
-
-  inputFile.close();
   response->setContentType(MimeType::identify(filename));
   response->setMsgBody(resourceData);
   response->setContentLength(resourceData.size());

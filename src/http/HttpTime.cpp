@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 22:34:12 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/01 23:12:54 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/10 20:04:27 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,9 @@ std::string HttpTime::getCurrentTime(void) {
 
 
 std::string HttpTime::fmtDate(time_t miliseconds) {
-
-    std::tm* timeInfo = std::gmtime(&miliseconds);
-
-    char buffer[128];
-    std::strftime(buffer, sizeof(buffer), \
-                  "%a, %d %b %Y %H:%M:%S GMT\n", timeInfo);
-
-    return std::string(buffer);
+  std::tm* timeInfo = std::gmtime(&miliseconds);
+  char buffer[128];
+  std::strftime(buffer, sizeof(buffer), \
+                "%a, %d %b %Y %H:%M:%S GMT\n", timeInfo);
+  return std::string(buffer);
 }
