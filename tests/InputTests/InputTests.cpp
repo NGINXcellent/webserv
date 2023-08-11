@@ -168,22 +168,37 @@ TEST(LocationConfTests, BasicTests)
 TEST(LocationConfTests, FailTests)
 {
   {
-    const char *configFile = "../../InputTests/test_files/fail/locationAutoindexError.conf";
+    const char *configFile = "../../InputTests/test_files/fail/location/locationAutoindexError.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
   {
-    const char *configFile = "../../InputTests/test_files/locationindexError.conf";
+    const char *configFile = "../../InputTests/test_files/fail/location/locationindexError.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
   {
-    const char *configFile = "../../InputTests/test_files/locationMethodError.conf";
+    const char *configFile = "../../InputTests/test_files/fail/location/locationMethodError.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
   {
-    const char *configFile = "../../InputTests/test_files/locationRootError.conf";
+    const char *configFile = "../../InputTests/test_files/fail/location/locationRootError.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
+  }
+  {
+    const char *configFile = "../../InputTests/test_files/fail/location/locationSingleError.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
+  }
+  {
+    const char *configFile = "../../InputTests/test_files/fail/location/locationStartError.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
+  }
+  {
+    const char *configFile = "../../InputTests/test_files/fail/location/locationNoLocationError.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/09 10:04:14 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/10 22:17:17 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 #include <fstream>
 #include <vector>
 #include <sys/stat.h>
-#include <sstream>  // stringstream
+#include <sstream>
 
 Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
@@ -51,7 +51,7 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
 }
 
 std::string Server::process(char *buffer) {
-  HttpRequest *request = HttpRequestFactory::createFrom(buffer);
+  HttpRequest *request = HttpRequestFactory::createFrom(buffer,locations);
   HttpResponse response;
 
   int status = HttpRequestFactory::check(request);

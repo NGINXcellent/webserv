@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequestFactory.hpp                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/04 15:52:55 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/10 20:44:42 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,12 @@
 # define HTTPREQUESTFACTORY_HPP
 
 #include "./HttpRequest.hpp"
+#include <vector>
+#include "./Server.hpp"
 
 class HttpRequestFactory {
  public:
-  static HttpRequest *createFrom(char *requestMsg);
+  static HttpRequest *createFrom(char *requestMsg, std::vector<s_locationConfig> locations);
   static int          check(HttpRequest *request);
 
  private:
