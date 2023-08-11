@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 22:34:12 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/11 19:28:27 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/11 19:35:36 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,6 +117,7 @@ long long parseToMillis(std::string dateTimeStr) {
     ss >> dateTime.tm_min >> delim;
     ss >> dateTime.tm_sec;
     ss >> dateTime.tm_year;
+    dateTime.tm_year -= 1900;
   }
 
   if (ss.fail()) {
