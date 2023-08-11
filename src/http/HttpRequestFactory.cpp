@@ -6,27 +6,29 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/09 21:02:07 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/10 22:18:09 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequestFactory.hpp"
-#include "../../include/http/Server.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <map>
-#include <vector>
 #include <sstream>
+#include <vector>
 
-void parseRequestLine(std::string* msg, HttpRequest *request, std::string location);
-void parseHeaders(std::string* msg, HttpRequest *request);
-bool parseProtocolVersion(const std::string& input, int* mainVer, int* subVer);
+#include "../../include/http/Server.hpp"
 
+void parseRequestLine(std::string *msg, HttpRequest *request, std::string location);
+void parseHeaders(std::string *msg, HttpRequest *request);
+bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
+std::string createLocation(char *buffer, std::vector<s_locationConfig> locations);
 std::string toLowerStr(std::string str);
 
-
-
-HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, std::string location) {
+HttpRequest *HttpRequestFactory::createFrom(
+    char *requestMsg, std::vector<s_locationConfig> locations) {
+  std::string location = createLocation(requestMsg, locations);
   HttpRequest *request = new HttpRequest();
   std::string msg(requestMsg);
   size_t pos = msg.find_first_of('\n');
@@ -42,7 +44,45 @@ HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, std::string locati
   return (request);
 }
 
-void parseRequestLine(std::string* requestLine, HttpRequest *request, std::string location) {
+std::string createLocation(char *buffer, std::vector<s_locationConfig> locations) {
+  std::istringstream streaming(buffer);
+  std::string line;
+  streaming >> line >> line;
+  std::vector<std::string> tokens;
+
+  std::istringstream iss(line);
+  std::string token;
+
+  while (std::getline(iss, token, '/')) {
+    if (!token.empty()) {
+      token = '/' + token;
+      tokens.push_back(token);
+    }
+  }
+
+  for (size_t i = 0; i < locations.size(); ++i) {
+    if (locations[i].location == tokens[0]) {
+      if (locations[i].root.empty())
+        return '.' + line;
+      else {
+        std::string ret;
+        ret += '.' + locations[i].root;
+
+        if (tokens.size() == 1)
+          return ret += '/' + locations[i].index;
+
+        for (size_t j = 1; j < tokens.size(); ++j) {
+          ret += tokens[j];
+        }
+        return ret;
+      }
+    }
+  }
+  return "error";
+}
+
+void parseRequestLine(std::string *requestLine, HttpRequest *request,
+                      std::string location) {
   std::vector<std::string> fields;
   while (requestLine->size() != 0) {
     size_t begin = requestLine->find_first_not_of(" \t");
@@ -60,7 +100,6 @@ void parseRequestLine(std::string* requestLine, HttpRequest *request, std::strin
   }
 
   request->setMethod(fields[0]);
-  //std::string resource = "." + fields[1] + "/index.html";
   request->setResource(location);
 
   size_t pos = fields[2].find('/');
@@ -123,12 +162,13 @@ void parseHeaders(std::string *msg, HttpRequest *request) {
   }
 }
 
-bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVersion) {
+bool parseProtocolVersion(const std::string &input, int *mainVersion,
+                          int *subVersion) {
   size_t dot_pos = input.find('.');
 
-  if (input.empty() || dot_pos == 0 || dot_pos == input.size() - 1 || \
+  if (input.empty() || dot_pos == 0 || dot_pos == input.size() - 1 ||
       dot_pos == std::string::npos) {
-      return false;
+    return false;
   }
 
   std::istringstream iss(input);
@@ -154,7 +194,7 @@ std::string toLowerStr(std::string str) {
   std::string result;
 
   for (size_t i = 0; i < str.size(); i++) {
-      result += static_cast<char>(std::tolower(str[i]));
+    result += static_cast<char>(std::tolower(str[i]));
   }
 
   return result;
@@ -165,18 +205,15 @@ int HttpRequestFactory::check(HttpRequest *request) {
   int minorVersion = request->getProtocolSubVersion();
   int version = mainVersion * 10 + minorVersion;
 
-  if (request->getProtocolName() != "HTTP" || \
-    (mainVersion < 1 || minorVersion < 0))
+  if (request->getProtocolName() != "HTTP" ||
+      (mainVersion < 1 || minorVersion < 0))
     return (400);
-  if (!(version == 10 || version == 11))
-    return (505);
-  if (version == 11 && request->getHost().size() == 0)
-    return (400);
+  if (!(version == 10 || version == 11)) return (505);
+  if (version == 11 && request->getHost().size() == 0) return (400);
 
   std::string method = request->getMethod();
   for (size_t i = 0; i < method.size(); i++) {
-    if (!std::isupper(method[i]))
-      return (400);
+    if (!std::isupper(method[i])) return (400);
   }
 
   return (0);

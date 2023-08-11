@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/09 20:53:54 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/10 20:44:42 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,12 @@
 # define HTTPREQUESTFACTORY_HPP
 
 #include "./HttpRequest.hpp"
+#include <vector>
+#include "./Server.hpp"
 
 class HttpRequestFactory {
  public:
-  static HttpRequest *createFrom(char *requestMsg, std::string location);
+  static HttpRequest *createFrom(char *requestMsg, std::vector<s_locationConfig> locations);
   static int          check(HttpRequest *request);
 
  private:

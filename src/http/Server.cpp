@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 08:32:50 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/10 22:17:17 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 #include <fstream>
 #include <vector>
 #include <sys/stat.h>
-#include <sstream>  // stringstream
+#include <sstream>
 
 Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
@@ -49,47 +49,8 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
                        request->getProtocolSubVersion());
 }
 
-std::string Server::createLocation(char *buffer) {
-    std::istringstream streaming(buffer);
-    std::string line;
-    streaming >> line;
-    streaming >> line;
-    std::vector<std::string> tokens;
-
-    std::istringstream iss(line);
-    std::string token;
-
-    while (std::getline(iss, token, '/')) {
-      if (!token.empty()) {
-        token = '/' + token;
-        tokens.push_back(token);
-      }
-    }
-    for (size_t i = 0; i < locations.size(); ++i) {
-      if (locations[i].location == tokens[0]) {
-          if (locations[i].root.empty())
-            return '.' + line;
-          else {
-            std::string ret;
-            ret+='.' + locations[i].root;
-             if(!locations[i].index.empty()) { // if we have index, this will always serve root + index content
-               ret+='/' + locations[i].index;
-               return ret;
-             }
-            for (size_t j = 1; j < tokens.size(); ++j) {
-              ret += tokens[j];
-            }
-            return ret;
-          }
-      }
-    }
-    return "error";
-}
-
 std::string Server::process(char *buffer) {
-  std::string location = createLocation(buffer);
-  std::cout << "print da func: " << location << std::endl;
-  HttpRequest *request = HttpRequestFactory::createFrom(buffer,location);
+  HttpRequest *request = HttpRequestFactory::createFrom(buffer,locations);
   HttpResponse response;
 
   int status = HttpRequestFactory::check(request);
