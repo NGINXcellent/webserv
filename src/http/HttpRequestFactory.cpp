@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 14:20:03 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 18:42:13 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,14 +23,15 @@
 void parseRequestLine(std::string *msg, HttpRequest *request, std::string location);
 void parseHeaders(std::string *msg, HttpRequest *request);
 bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
-std::string createLocation(char *buffer, std::vector<s_locationConfig> locations);
+std::string createLocation(char *buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
 std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
 std::string toLowerStr(std::string str);
 
-HttpRequest *HttpRequestFactory::createFrom(
-    char *requestMsg, std::vector<s_locationConfig> locations) {
-  std::string location = createLocation(requestMsg, locations);
+HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, \
+                                    std::vector<s_locationConfig> locations) {
+  // shim
   HttpRequest *request = new HttpRequest();
+  std::string location = createLocation(requestMsg, locations, request);
   std::string msg(requestMsg);
   size_t pos = msg.find_first_of('\n');
 
@@ -45,7 +46,8 @@ HttpRequest *HttpRequestFactory::createFrom(
   return (request);
 }
 
-std::string createLocation(char *buffer, std::vector<s_locationConfig> locations) {
+std::string createLocation(char *buffer, std::vector<s_locationConfig> locations, HttpRequest *request) {
+  (void)request;
   std::istringstream streaming(buffer);
   std::string line;
   streaming >> line >> line;
@@ -63,11 +65,13 @@ std::string createLocation(char *buffer, std::vector<s_locationConfig> locations
 
   for (size_t i = 0; i < locations.size(); ++i) {
     if (locations[i].location == tokens[0]) {
-      if (locations[i].root.empty())
+      if (locations[i].root.empty()) {
+        request->setAllowedMethods(locations[i].allowed_method);
         return '.' + line;
-      else {
+      } else {
         std::string ret;
         ret += '.' + locations[i].root;
+        request->setAllowedMethods(locations[i].allowed_method);
 
         if (tokens.size() == 1)
           return ret += '/' + locations[i].index;
@@ -75,16 +79,18 @@ std::string createLocation(char *buffer, std::vector<s_locationConfig> locations
         for (size_t j = 1; j < tokens.size(); ++j) {
           ret += tokens[j];
         }
+
         return ret;
       }
     }
   }
-  return "error";
+  return "";
 }
 
 void parseRequestLine(std::string *requestLine, HttpRequest *request,
                       std::string location) {
   std::vector<std::string> fields;
+
   while (requestLine->size() != 0) {
     size_t begin = requestLine->find_first_not_of(" \t");
     size_t end = requestLine->find_first_of(" \t", begin);

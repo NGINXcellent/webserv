@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/29 12:12:09 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/29 20:29:14 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 17:59:29 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,17 @@ std::map<std::string, std::string> MimeType::types;
 
 std::string MimeType::identify(const std::string &str) {
   init_table();
-  int pos = str.rfind('.');
-  std::string extension = str.substr(pos, std::string::npos);
-  std::string type = types[extension];
-  if (type == "")
-    return "application/octet-stream";
-  else
-    return type;
+  size_t pos = str.rfind('.');
+  std::string type;
+
+  if (pos != std::string::npos) {
+    std::string extension = str.substr(pos, std::string::npos);
+    type = types[extension];
+  } else {
+    type = "application/octet-stream";
+  }
+
+  return type;
 }
 
 void MimeType::init_table(void) {

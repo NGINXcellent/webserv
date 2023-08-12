@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 07:25:24 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/12 15:30:34 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,10 @@ class Server {
   TCPServerSocket               *socket;
   std::map<int, std::string>    error_pages;
   std::vector<s_locationConfig> locations;
-  std::string      createLocation(char *buffer);
 
   Server(const Server& f);
   Server& operator=(const Server& t);
+
+  std::string      createLocation(char *buffer);
 };
 #endif

@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 21:42:25 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 18:15:31 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ void HttpResponseComposer::buildErrorResponse(HttpResponse *response, \
                                        std::map<int, std::string> error_pages, \
                                        int protoMainVersion, \
                                        int protoSubVersion) {
+  // shim
   response->setProtocol("HTTP", protoMainVersion, protoSubVersion);
   response->setStatusCode(error_code);
 

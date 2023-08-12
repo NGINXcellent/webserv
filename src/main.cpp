@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/08/08 18:29:10 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 17:01:25 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,16 +22,15 @@ int main(int argc, char **argv) {
     return(1);
   }
 
-  try {
+  //try {
     InputHandler input(argv[1]);
     input.printServers();
     Controller controller(input);
     controller.init();
-  }
-  catch(const std::exception& e) {
+ /* catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     return (1);
-  }
+  }*/
 
   return 0;
 }

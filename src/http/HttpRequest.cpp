@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 10:07:10 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 15:51:21 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,13 +69,21 @@ void HttpRequest::setModifiedTimestampCheck(std::string timestamp) {
 }
 
 std::string HttpRequest::getModifiedTimestampCheck(void) {
-  return (modifiedTimestampCheck);
+  return (this->modifiedTimestampCheck);
 }
 
 std::string HttpRequest::getUnmodifiedSinceTimestamp(void) {
-  return (unmodifiedSinceTimestamp);
+  return (this->unmodifiedSinceTimestamp);
 }
 
 void HttpRequest::setUnmodifiedSinceTimestamp(std::string unmodifiedTimestamp) {
   unmodifiedSinceTimestamp = unmodifiedTimestamp;
+}
+
+std::vector<std::string> HttpRequest::getAllowedMethods(void) {
+  return (this->allowedMethodList);
+}
+
+void HttpRequest::setAllowedMethods(std::vector<std::string> allowedList) {
+  allowedMethodList = allowedList;
 }

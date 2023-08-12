@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 09:12:51 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/12 20:15:04 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ void InputHandler::addToString(std::ifstream &fileStream, \
 }
 
 bool InputHandler::isAMethod(std::string word) {
-  if (word == "GET" || word == "POST" || word == "DELETE")
+  if (word == "GET" || word == "POST" || word == "DELETE" || word == "HEAD")
     return true;
   return false;
 }

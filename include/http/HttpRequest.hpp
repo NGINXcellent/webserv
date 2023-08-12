@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 10:04:53 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 15:50:04 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define HTTPREQUEST_HPP
 
 #include <string>
+#include <vector>
 
 class HttpRequest {
  public:
@@ -35,17 +36,19 @@ class HttpRequest {
   void          setModifiedTimestampCheck(std::string timestamp);
   std::string   getUnmodifiedSinceTimestamp(void);
   void          setUnmodifiedSinceTimestamp(std::string timestamp);
-
+  std::vector<std::string>   getAllowedMethods(void);
+  void          setAllowedMethods(std::vector<std::string> allowedList);
 
  private:
-  std::string   protocolName;
-  int           protocolMainVersion;
-  int           protocolSubVersion;
-  std::string   host;
-  std::string   resource;
-  std::string   method;
-  std::string   modifiedTimestampCheck;
-  std::string   unmodifiedSinceTimestamp;
+  std::string               protocolName;
+  int                       protocolMainVersion;
+  int                       protocolSubVersion;
+  std::string               host;
+  std::string               resource;
+  std::string               method;
+  std::string               modifiedTimestampCheck;
+  std::string               unmodifiedSinceTimestamp;
+  std::vector<std::string>  allowedMethodList;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);
