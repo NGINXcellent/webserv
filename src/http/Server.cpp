@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 19:07:03 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 19:21:06 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,21 +135,18 @@ void Server::del(HttpRequest *request, HttpResponse *response) {
   std::ifstream inputFile;
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
+  int opStatus = 0;
 
   if (access(request->getResource().c_str(), F_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 404, error_pages, \
-                                             protoMain, protoSub);
-    return;
+    opStatus = 404;
+  } else if (access(request->getResource().c_str(), R_OK | W_OK) == -1) {
+    opStatus = 405;
+  } else if (remove(request->getResource().c_str()) != 0) {
+    opStatus = 500;
   }
 
-  if (access(request->getResource().c_str(), R_OK | W_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 405, error_pages, \
-                                             protoMain, protoSub);
-    return;
-  }
-
-  if (remove(request->getResource().c_str()) != 0) {
-    HttpResponseComposer::buildErrorResponse(response, 500, error_pages, \
+  if (opStatus != 0) {
+    HttpResponseComposer::buildErrorResponse(response, opStatus, error_pages, \
                                              protoMain, protoSub);
     return;
   }
