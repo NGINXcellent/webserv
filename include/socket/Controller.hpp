@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/11 21:27:56 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/11 21:32:52 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #include <vector>
 #include <map>
 
-#define TIMEOUT 600
+#define TIMEOUT 60
 
 class Controller {
  public:

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/11 21:28:59 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/11 21:30:40 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,7 +175,6 @@ void  Controller::closeConnection(int currentFd) {
       break;
     }
   }
-  // timeoutList.erase(currentFd);
 }
 
 bool Controller::isNewConnection(int currentFD) {
