@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 11:50:23 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 14:20:03 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,7 @@ bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVe
 
   if (input.empty() || dot_pos == 0 || dot_pos == input.size() - 1 || \
       dot_pos == std::string::npos) {
-      return false;
+      return (false);
   }
 
   std::istringstream iss(input);
@@ -150,14 +150,16 @@ bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVe
   return (true);
 }
 
-std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers) {
+std::string getHeaderValue(std::string headerName, \
+                           std::map<std::string, std::string> headers) {
+  // shim
   size_t char_pos = headers[headerName].find_first_not_of(" \t");
 
   if (char_pos != std::string::npos) {
     return headers[headerName].substr(char_pos);
   }
 
-  return "";
+  return ("");
 }
 
 std::string toLowerStr(std::string str) {
@@ -167,7 +169,7 @@ std::string toLowerStr(std::string str) {
       result += static_cast<char>(std::tolower(str[i]));
   }
 
-  return result;
+  return (result);
 }
 
 int HttpRequestFactory::check(HttpRequest *request) {
