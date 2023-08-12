@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
 /*   Updated: 2023/08/12 14:14:57 by lfarias-         ###   ########.fr       */
@@ -22,7 +22,7 @@
 #include <fstream>
 #include <vector>
 #include <sstream>  // stringstream
-
+#include <sys/stat.h>
 
 Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
@@ -62,7 +62,7 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
 }
 
 std::string Server::process(char *buffer) {
-  HttpRequest *request = HttpRequestFactory::createFrom(buffer);
+  HttpRequest *request = HttpRequestFactory::createFrom(buffer,locations);
   HttpResponse response;
 
   int status = HttpRequestFactory::check(request);

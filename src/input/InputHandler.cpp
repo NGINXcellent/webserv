@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/09 09:05:00 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/10 09:12:51 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,11 +118,19 @@ void InputHandler::addToMap(std::ifstream &fileStream, \
   mapi.insert(std::make_pair(statusCode, word));
 }
 
+std::string locationCheck(std::string word) {
+  if (word.size() == 1)
+    throw std::runtime_error("wrong location size");
+  else if (word[0] != '/')
+    throw std::runtime_error("location should start with /");
+  return word;
+}
+
 void InputHandler::addLocation(std::ifstream &fileStream, \
                                s_locationConfig &newLocation) {
   std::string word;
   fileStream >> word;
-  newLocation.location = word;
+  newLocation.location = locationCheck(word);
   fileStream >> word;
 
   if (word != "{")
@@ -254,6 +262,8 @@ void InputHandler::checkConfFile(char *fileArg) {
     if (word == "server") {
       s_serverConfig newServer;
       newServerCheck(fileStream, newServer);
+      if (newServer.location.empty())
+        throw std::runtime_error("Server need at least one location");
       serverVector->push_back(newServer);
     } else {
       throw std::runtime_error("wrong word in config file");
