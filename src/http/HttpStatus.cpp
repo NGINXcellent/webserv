@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:15:50 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 09:07:03 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/12 10:24:54 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,12 +30,16 @@ void HttpStatus::init(void) {
   messages.insert(std::make_pair(200, "OK"));
   messages.insert(std::make_pair(204, "No Content"));
 
+  // 300 class - redirection
+  messages.insert(std::make_pair(304, "Not Modified"));
+
   // 400 class - client errors
   messages.insert(std::make_pair(400, "Bad Request"));
   messages.insert(std::make_pair(403, "Forbidden"));
   messages.insert(std::make_pair(404, "Not Found"));
   messages.insert(std::make_pair(405, "Method Not Allowed"));
   messages.insert(std::make_pair(411, "Length Required"));
+  messages.insert(std::make_pair(412, "Precondition Failed"));
   messages.insert(std::make_pair(413, "Payload Too Large"));
   messages.insert(std::make_pair(414, "URI Too Long"));
   messages.insert(std::make_pair(415, "Unsupported Media Type"));

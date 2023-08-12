@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/05 15:44:28 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 10:07:10 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,6 @@ void HttpRequest::setProtocolName(std::string protocol) {
   protocolName = protocol;
 }
 
-
 int HttpRequest::getProtocolMainVersion(void) {
   return (this->protocolMainVersion);
 }
@@ -63,4 +62,20 @@ std::string HttpRequest::getHost(void) {
 
 void HttpRequest::setHost(std::string nHost) {
   host = nHost;
+}
+
+void HttpRequest::setModifiedTimestampCheck(std::string timestamp) {
+  modifiedTimestampCheck = timestamp;
+}
+
+std::string HttpRequest::getModifiedTimestampCheck(void) {
+  return (modifiedTimestampCheck);
+}
+
+std::string HttpRequest::getUnmodifiedSinceTimestamp(void) {
+  return (unmodifiedSinceTimestamp);
+}
+
+void HttpRequest::setUnmodifiedSinceTimestamp(std::string unmodifiedTimestamp) {
+  unmodifiedSinceTimestamp = unmodifiedTimestamp;
 }

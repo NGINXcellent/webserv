@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 22:18:09 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/12 14:20:03 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ void parseRequestLine(std::string *msg, HttpRequest *request, std::string locati
 void parseHeaders(std::string *msg, HttpRequest *request);
 bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
 std::string createLocation(char *buffer, std::vector<s_locationConfig> locations);
+std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
 std::string toLowerStr(std::string str);
 
 HttpRequest *HttpRequestFactory::createFrom(
@@ -124,7 +125,6 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request,
 
 void parseHeaders(std::string *msg, HttpRequest *request) {
   std::map<std::string, std::string> headers;
-  // std::cout << msg << std::endl;
 
   while (msg->size() != 0) {
     size_t pos = msg->find(':');
@@ -154,12 +154,11 @@ void parseHeaders(std::string *msg, HttpRequest *request) {
     headers.insert(std::make_pair(key, value));
   }
 
-  size_t char_pos = headers["host"].find_first_not_of(" \t");
-
-  if (char_pos != std::string::npos) {
-    std::string host = headers["host"].substr(char_pos);
-    request->setHost(host);
-  }
+  request->setHost(getHeaderValue("host", headers));
+  request->setModifiedTimestampCheck( \
+                                getHeaderValue("if-modified-since", headers));
+  request->setUnmodifiedSinceTimestamp( \
+                                getHeaderValue("if-unmodified-since", headers));
 }
 
 bool parseProtocolVersion(const std::string &input, int *mainVersion,
@@ -168,7 +167,7 @@ bool parseProtocolVersion(const std::string &input, int *mainVersion,
 
   if (input.empty() || dot_pos == 0 || dot_pos == input.size() - 1 ||
       dot_pos == std::string::npos) {
-    return false;
+      return (false);
   }
 
   std::istringstream iss(input);
@@ -190,6 +189,18 @@ bool parseProtocolVersion(const std::string &input, int *mainVersion,
   return (true);
 }
 
+std::string getHeaderValue(std::string headerName, \
+                           std::map<std::string, std::string> headers) {
+  // shim
+  size_t char_pos = headers[headerName].find_first_not_of(" \t");
+
+  if (char_pos != std::string::npos) {
+    return headers[headerName].substr(char_pos);
+  }
+
+  return ("");
+}
+
 std::string toLowerStr(std::string str) {
   std::string result;
 
@@ -197,7 +208,7 @@ std::string toLowerStr(std::string str) {
     result += static_cast<char>(std::tolower(str[i]));
   }
 
-  return result;
+  return (result);
 }
 
 int HttpRequestFactory::check(HttpRequest *request) {

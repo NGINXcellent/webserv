@@ -6,21 +6,23 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 08:35:17 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/12 14:14:57 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/Server.hpp"
+#include "../../include/http/HttpTime.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
 #include "../../include/http/HttpResponseComposer.hpp"
 #include "../../include/http/MimeType.hpp"
 #include "../../include/socket/TcpServerSocket.hpp"
+#include "../../include/utils/FileReader.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <sstream>  // stringstream
 #include <sys/stat.h>
-#include <sstream>
 
 Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
@@ -36,7 +38,16 @@ Server::~Server(void) {
 }
 
 void  Server::resolve(HttpRequest *request, HttpResponse *response) {
-  // check the protocol version
+  std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
+
+  if (!uTimestamp.empty() && HttpTime::isModifiedSince(uTimestamp, request->getResource())) {
+    HttpResponseComposer::buildErrorResponse(response, 412, \
+                       error_pages,
+                       request->getProtocolMainVersion(), \
+                       request->getProtocolSubVersion());
+    return;
+  }
+
   std::string requestMethod = request->getMethod();
 
   if (requestMethod == "GET")
@@ -105,34 +116,25 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
   std::ifstream inputFile;
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
+  response->setProtocol("HTTP", protoMain, protoSub);
+  response->setLastModifiedTime(HttpTime::getLastModifiedTime(request->getResource()));
 
-  if (access(request->getResource().c_str(), F_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 404, error_pages, \
-                                             protoMain, protoSub);
-    return;
-  }
+  std::string unmodifiedTimestmap = request->getModifiedTimestampCheck();
 
-  if (access(request->getResource().c_str(), R_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 403, error_pages, \
-                                             protoMain, protoSub);
-    return;
-  }
-
-  inputFile.open(request->getResource().c_str(), std::ios::binary);
-  if (!inputFile.is_open()) {
-    std::cout << "Resource not found\n";
+  if (!HttpTime::isModifiedSince(unmodifiedTimestmap, request->getResource())) {
+    response->setStatusCode(304);
     return;
   }
 
   std::vector<char> resourceData;
-  char byte = 0;
+  int opStatus = FileReader::getContent(request->getResource(), &resourceData);
 
-  while (inputFile.get(byte)) {
-    resourceData.push_back(byte);
+  if (opStatus != 0) {
+    HttpResponseComposer::buildErrorResponse(response, opStatus, error_pages, \
+                                             protoMain, protoSub);
   }
 
-  inputFile.close();
-  response->setProtocol("HTTP", protoMain, protoSub);
+  response->setStatusCode(200);
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);
   response->setContentLength(resourceData.size());

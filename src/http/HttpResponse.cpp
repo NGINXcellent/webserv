@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 22:17:50 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/10 22:24:51 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,12 @@ std::string   HttpResponse::getHeaders(void) {
   responseHeader += "Server: " + serverVersion + "\n";
   responseHeader += "Date: ";
   responseHeader += HttpTime::getCurrentTime();
+
+  if (!modifiedTime.empty()) {
+    responseHeader += "Last-Modified: ";
+    responseHeader += modifiedTime;
+  }
+
   responseHeader += "Content-Type: " + contentType + "\n";
   ss.clear();
   ss.str("");
@@ -73,4 +79,8 @@ void HttpResponse::setContentLength(size_t fileSize) {
 void HttpResponse::setStatusCode(int httpCode) {
   statusCode = httpCode;
   statusMessage = HttpStatus::getMessage(httpCode);
+}
+
+void HttpResponse::setLastModifiedTime(std::string lmfTime) {
+  modifiedTime = lmfTime;
 }
