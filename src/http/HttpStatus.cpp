@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpStatus.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:15:50 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/04 11:15:55 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 09:07:03 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ void HttpStatus::init(void) {
   messages.insert(std::make_pair(415, "Unsupported Media Type"));
 
   // 500 class - server errors
+  messages.insert(std::make_pair(500, "Internal Server Error"));
   messages.insert(std::make_pair(501, "Not Implemented"));
   messages.insert(std::make_pair(505, "HTTP Version Not Supported"));
 
