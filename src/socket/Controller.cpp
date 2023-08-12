@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/09 14:40:18 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/11 21:30:40 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,7 @@ void Controller::handleConnections(void) {
       if (isNewConnection(currentFd)) {
         std::cout << "new conection" << std::endl;
         addNewConnection(currentFd);  // if new connection found, add it.
+        // std::cout << "ALOUOUUOUOUOUOU" << serverList[currentFd]->getPort() << std::endl;
       } else if ((currentEvent & EPOLLRDHUP) == EPOLLRDHUP) {
         std::cout << "Connection with FD -> " << currentFd;
         std::cout << " is closed by client" << std::endl;
@@ -104,7 +105,32 @@ void Controller::handleConnections(void) {
         }
       }
     }
+    checkTimeOut();
   }
+}
+
+void Controller::checkTimeOut() {
+  time_t currentTime = time(NULL);
+  std::vector<int> clientsToRemove;
+  for (std::map<int, time_t>::iterator it = timeoutList.begin(); it != timeoutList.end(); ) {
+    if (currentTime - it->second > TIMEOUT) {
+      std::cout << "removing client: " << it->first << " due to timeout" << std::endl;
+      clientsToRemove.push_back(it->first);
+    }
+    ++it;
+  }
+ for (std::vector<int>::iterator it = clientsToRemove.begin(); it != clientsToRemove.end(); ++it) {
+    closeConnection(*it);
+    timeoutList.erase(*it);
+  }
+}
+
+int Controller::findConnectionSocket (int socketFD) {
+    for (size_t i = 0; i < socketList.size(); i++) {
+    if (socketFD == socketList[i]->getFD())
+      return (i);
+  }
+  return (-1);
 }
 
 void Controller::addNewConnection(int socketFD) {
@@ -124,9 +150,10 @@ void Controller::addNewConnection(int socketFD) {
 
     if (it == bufferList.end())  // no existing buffer for current fd
       bufferList[newConnection] = new char[1024];
-
     *bufferList[newConnection] = '\0';
 
+    time_t currentTime = time(NULL);
+    timeoutList[newConnection] = currentTime;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, events) == -1) {
       std::cerr << "Failed to add new connection to epoll. errno: " << errno
                 << std::endl;
