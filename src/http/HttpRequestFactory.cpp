@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/11 17:07:52 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 11:50:23 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 void parseRequestLine(std::string* msg, HttpRequest *request);
 void parseHeaders(std::string* msg, HttpRequest *request);
 bool parseProtocolVersion(const std::string& input, int* mainVer, int* subVer);
-
+std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
 std::string toLowerStr(std::string str);
 
 HttpRequest *HttpRequestFactory::createFrom(char *requestMsg) {
@@ -87,7 +87,6 @@ void parseRequestLine(std::string* requestLine, HttpRequest *request) {
 
 void parseHeaders(std::string *msg, HttpRequest *request) {
   std::map<std::string, std::string> headers;
-  // std::cout << msg << std::endl;
 
   while (msg->size() != 0) {
     size_t pos = msg->find(':');
@@ -117,20 +116,11 @@ void parseHeaders(std::string *msg, HttpRequest *request) {
     headers.insert(std::make_pair(key, value));
   }
 
-  size_t char_pos = headers["host"].find_first_not_of(" \t");
-
-  // todo: extract this logic to a function, there are probably more headers to get
-  if (char_pos != std::string::npos) {
-    std::string host = headers["host"].substr(char_pos);
-    request->setHost(host);
-  }
-
-  char_pos = headers["if-modified-since"].find_first_not_of(" \t");
-
-  if (char_pos != std::string::npos) {
-    request->setModifiedTimestampCheck(
-                          headers["if-modified-since"].substr(char_pos));
-  }
+  request->setHost(getHeaderValue("host", headers));
+  request->setModifiedTimestampCheck( \
+                                getHeaderValue("if-modified-since", headers));
+  request->setUnmodifiedSinceTimestamp( \
+                                getHeaderValue("if-unmodified-since", headers));
 }
 
 bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVersion) {
@@ -158,6 +148,16 @@ bool parseProtocolVersion(const std::string& input, int* mainVersion, int* subVe
   *mainVersion = majorVersion;
   *subVersion = minorVersion;
   return (true);
+}
+
+std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers) {
+  size_t char_pos = headers[headerName].find_first_not_of(" \t");
+
+  if (char_pos != std::string::npos) {
+    return headers[headerName].substr(char_pos);
+  }
+
+  return "";
 }
 
 std::string toLowerStr(std::string str) {

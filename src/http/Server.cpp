@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/11 18:11:12 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 11:55:51 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,15 @@ Server::~Server(void) {
 void  Server::resolve(HttpRequest *request, HttpResponse *response) {
   // check the protocol version
   std::string requestMethod = request->getMethod();
+  std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
+
+  if (!uTimestamp.empty() && HttpTime::isModifiedSince(uTimestamp, request->getResource())) {
+    HttpResponseComposer::buildErrorResponse(response, 412, \
+                       error_pages,
+                       request->getProtocolMainVersion(), \
+                       request->getProtocolSubVersion());
+    return;
+  }
 
   if (requestMethod == "GET")
     get(request, response);

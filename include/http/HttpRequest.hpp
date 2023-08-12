@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/11 17:00:01 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 10:04:53 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ class HttpRequest {
   void          setHost(std::string nHost);
   std::string   getModifiedTimestampCheck(void);
   void          setModifiedTimestampCheck(std::string timestamp);
+  std::string   getUnmodifiedSinceTimestamp(void);
+  void          setUnmodifiedSinceTimestamp(std::string timestamp);
 
 
  private:
@@ -43,6 +45,7 @@ class HttpRequest {
   std::string   resource;
   std::string   method;
   std::string   modifiedTimestampCheck;
+  std::string   unmodifiedSinceTimestamp;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);
