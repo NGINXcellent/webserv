@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 22:17:17 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/12 08:35:17 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,11 +43,42 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
     get(request, response);
   else if (requestMethod == "HEAD")
     head(request, response);
+  else if (requestMethod == "DELETE")
+    del(request, response);
   else
     HttpResponseComposer::buildErrorResponse(response, 501, \
                        error_pages,
                        request->getProtocolMainVersion(), \
                        request->getProtocolSubVersion());
+}
+
+void Server::del(HttpRequest *request, HttpResponse *response) {
+  std::ifstream inputFile;
+  int protoMain = request->getProtocolMainVersion();
+  int protoSub = request->getProtocolSubVersion();
+
+  if (access(request->getResource().c_str(), F_OK) == -1) {
+    HttpResponseComposer::buildErrorResponse(response, 404, error_pages, \
+                                             protoMain, protoSub);
+    return;
+  }
+
+  if (access(request->getResource().c_str(), R_OK | W_OK) == -1) {
+    HttpResponseComposer::buildErrorResponse(response, 405, error_pages, \
+                                             protoMain, protoSub);
+    return;
+  }
+  if (remove(request->getResource().c_str()) != 0) {
+    HttpResponseComposer::buildErrorResponse(response, 500, error_pages, \
+                                             protoMain, protoSub);
+    return;
+  }
+  std::string msgBody = "File succefully deleted\n";
+
+  response->setStatusCode(204);
+  response->setMsgBody(std::vector<char>(msgBody.begin(), msgBody.end()));
+  response->setProtocol("HTTP", protoMain, protoSub);
+  response->setContentLength(msgBody.size());
 }
 
 std::string Server::process(char *buffer) {
