@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/11 21:30:40 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/12 08:02:14 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,6 @@ void Controller::handleConnections(void) {
       if (isNewConnection(currentFd)) {
         std::cout << "new conection" << std::endl;
         addNewConnection(currentFd);  // if new connection found, add it.
-        // std::cout << "ALOUOUUOUOUOUOU" << serverList[currentFd]->getPort() << std::endl;
       } else if ((currentEvent & EPOLLRDHUP) == EPOLLRDHUP) {
         std::cout << "Connection with FD -> " << currentFd;
         std::cout << " is closed by client" << std::endl;

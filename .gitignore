@@ -42,3 +42,4 @@ tests/build
 # End of https://www.toptal.com/developers/gitignore/api/c++
 .vscode/settings.json
 webserver
+files/static_pages/cantbedeleted000.jpg
