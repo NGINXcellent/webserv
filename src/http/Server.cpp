@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 14:14:57 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/12 19:07:03 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 #include <vector>
 #include <sstream>  // stringstream
 #include <sys/stat.h>
+#include <algorithm>
 
 Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
@@ -40,7 +41,9 @@ Server::~Server(void) {
 void  Server::resolve(HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
 
-  if (!uTimestamp.empty() && HttpTime::isModifiedSince(uTimestamp, request->getResource())) {
+  if (!uTimestamp.empty() && \
+      HttpTime::isModifiedSince(uTimestamp, request->getResource())) {
+    // shim
     HttpResponseComposer::buildErrorResponse(response, 412, \
                        error_pages,
                        request->getProtocolMainVersion(), \
@@ -49,6 +52,17 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
   }
 
   std::string requestMethod = request->getMethod();
+  std::vector<std::string> allowedMethods = request->getAllowedMethods();
+  std::vector<std::string>::iterator it;
+  it = std::find(allowedMethods.begin(), allowedMethods.end(), requestMethod);
+
+  if (!allowedMethods.empty() && it == allowedMethods.end()) {
+    HttpResponseComposer::buildErrorResponse(response, 405, \
+                       error_pages,
+                       request->getProtocolMainVersion(), \
+                       request->getProtocolSubVersion());
+    return;
+  }
 
   if (requestMethod == "GET")
     get(request, response);
@@ -63,37 +77,8 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
                        request->getProtocolSubVersion());
 }
 
-void Server::del(HttpRequest *request, HttpResponse *response) {
-  std::ifstream inputFile;
-  int protoMain = request->getProtocolMainVersion();
-  int protoSub = request->getProtocolSubVersion();
-
-  if (access(request->getResource().c_str(), F_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 404, error_pages, \
-                                             protoMain, protoSub);
-    return;
-  }
-
-  if (access(request->getResource().c_str(), R_OK | W_OK) == -1) {
-    HttpResponseComposer::buildErrorResponse(response, 405, error_pages, \
-                                             protoMain, protoSub);
-    return;
-  }
-  if (remove(request->getResource().c_str()) != 0) {
-    HttpResponseComposer::buildErrorResponse(response, 500, error_pages, \
-                                             protoMain, protoSub);
-    return;
-  }
-  std::string msgBody = "File succefully deleted\n";
-
-  response->setStatusCode(204);
-  response->setMsgBody(std::vector<char>(msgBody.begin(), msgBody.end()));
-  response->setProtocol("HTTP", protoMain, protoSub);
-  response->setContentLength(msgBody.size());
-}
-
 std::string Server::process(char *buffer) {
-  HttpRequest *request = HttpRequestFactory::createFrom(buffer,locations);
+  HttpRequest *request = HttpRequestFactory::createFrom(buffer, locations);
   HttpResponse response;
 
   int status = HttpRequestFactory::check(request);
@@ -113,7 +98,6 @@ std::string Server::process(char *buffer) {
 }
 
 void Server::get(HttpRequest *request, HttpResponse *response) {
-  std::ifstream inputFile;
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
   response->setProtocol("HTTP", protoMain, protoSub);
@@ -132,6 +116,7 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
   if (opStatus != 0) {
     HttpResponseComposer::buildErrorResponse(response, opStatus, error_pages, \
                                              protoMain, protoSub);
+    return;
   }
 
   response->setStatusCode(200);
@@ -144,6 +129,37 @@ void Server::head(HttpRequest *request, HttpResponse *response) {
   this->get(request, response);
   std::vector<char> empty;
   response->setMsgBody(empty);
+}
+
+void Server::del(HttpRequest *request, HttpResponse *response) {
+  std::ifstream inputFile;
+  int protoMain = request->getProtocolMainVersion();
+  int protoSub = request->getProtocolSubVersion();
+
+  if (access(request->getResource().c_str(), F_OK) == -1) {
+    HttpResponseComposer::buildErrorResponse(response, 404, error_pages, \
+                                             protoMain, protoSub);
+    return;
+  }
+
+  if (access(request->getResource().c_str(), R_OK | W_OK) == -1) {
+    HttpResponseComposer::buildErrorResponse(response, 405, error_pages, \
+                                             protoMain, protoSub);
+    return;
+  }
+
+  if (remove(request->getResource().c_str()) != 0) {
+    HttpResponseComposer::buildErrorResponse(response, 500, error_pages, \
+                                             protoMain, protoSub);
+    return;
+  }
+
+  std::string msgBody = "File succefully deleted\n";
+
+  response->setStatusCode(204);
+  response->setMsgBody(std::vector<char>(msgBody.begin(), msgBody.end()));
+  response->setProtocol("HTTP", protoMain, protoSub);
+  response->setContentLength(msgBody.size());
 }
 
 int   Server::getPort(void) {
