@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 20:15:04 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/14 08:12:34 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,9 +119,7 @@ void InputHandler::addToMap(std::ifstream &fileStream, \
 }
 
 std::string locationCheck(std::string word) {
-  if (word.size() == 1)
-    throw std::runtime_error("wrong location size");
-  else if (word[0] != '/')
+  if (word[0] != '/')
     throw std::runtime_error("location should start with /");
   return word;
 }
