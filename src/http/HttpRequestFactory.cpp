@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/14 15:47:29 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/14 19:11:47 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,8 @@ std::string createLocation(char *buffer,
 
     std::istringstream iss(line);
     std::string token;
+    if(line.empty())
+      return "";
 
     if (line == "/") {
         tokens.push_back("/");
