@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/11 21:32:52 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/14 20:53:57 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ class Controller {
   void  addNewConnection(int socketFD);
   void  readFromClient(int currentFd);
   void  sendToClient(int currentFd);
-  void  closeConnection(int currentFd);
+  bool  closeConnection(int currentFd);
 
   //signal handler
   static void endServer();

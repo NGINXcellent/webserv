@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 08:02:14 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/14 20:53:58 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,15 +113,15 @@ void Controller::checkTimeOut() {
   std::vector<int> clientsToRemove;
   for (std::map<int, time_t>::iterator it = timeoutList.begin(); it != timeoutList.end(); ) {
     if (currentTime - it->second > TIMEOUT) {
-      std::cout << "removing client: " << it->first << " due to timeout" << std::endl;
       clientsToRemove.push_back(it->first);
     }
     ++it;
   }
  for (std::vector<int>::iterator it = clientsToRemove.begin(); it != clientsToRemove.end(); ++it) {
-    closeConnection(*it);
     timeoutList.erase(*it);
-  }
+    if(closeConnection(*it))
+      std::cout << "removing client: " << *it << " due to timeout" << std::endl;
+ }
 }
 
 int Controller::findConnectionSocket (int socketFD) {
@@ -163,7 +163,7 @@ void Controller::addNewConnection(int socketFD) {
   }
 }
 
-void  Controller::closeConnection(int currentFd) {
+bool  Controller::closeConnection(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
   close(currentFd);
   std::vector<int>::iterator it = connections.begin();
@@ -171,9 +171,10 @@ void  Controller::closeConnection(int currentFd) {
   for (; it != connections.end(); ++it) {
     if (*it == currentFd) {
       connections.erase(it);
-      break;
+      return true;
     }
   }
+  return false;
 }
 
 bool Controller::isNewConnection(int currentFD) {
