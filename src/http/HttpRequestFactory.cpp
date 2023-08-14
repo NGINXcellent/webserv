@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 18:42:13 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/14 15:47:29 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <map>
 #include <sstream>
 #include <vector>
+#include <sys/stat.h>
 
 #include "../../include/http/Server.hpp"
 
@@ -46,45 +47,70 @@ HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, \
   return (request);
 }
 
-std::string createLocation(char *buffer, std::vector<s_locationConfig> locations, HttpRequest *request) {
-  (void)request;
-  std::istringstream streaming(buffer);
-  std::string line;
-  streaming >> line >> line;
-  std::vector<std::string> tokens;
-
-  std::istringstream iss(line);
-  std::string token;
-
-  while (std::getline(iss, token, '/')) {
-    if (!token.empty()) {
-      token = '/' + token;
-      tokens.push_back(token);
-    }
-  }
-
+bool tokensValidator(std::vector<s_locationConfig> locations,
+                     std::vector<std::string> tokens) {
   for (size_t i = 0; i < locations.size(); ++i) {
-    if (locations[i].location == tokens[0]) {
-      if (locations[i].root.empty()) {
-        request->setAllowedMethods(locations[i].allowed_method);
-        return '.' + line;
-      } else {
-        std::string ret;
-        ret += '.' + locations[i].root;
-        request->setAllowedMethods(locations[i].allowed_method);
-
-        if (tokens.size() == 1)
-          return ret += '/' + locations[i].index;
-
-        for (size_t j = 1; j < tokens.size(); ++j) {
-          ret += tokens[j];
-        }
-
-        return ret;
-      }
-    }
+    if (locations[i].location == tokens[0]) return true;
   }
-  return "";
+  return false;
+}
+
+bool isDirectory(const char* path) {
+    struct stat fileInfo;
+    if (stat(path, &fileInfo) != 0) {
+        return false; // Erro ao obter informações do arquivo
+    }
+    return S_ISDIR(fileInfo.st_mode);
+}
+
+std::string createLocation(char *buffer,
+                           std::vector<s_locationConfig> locations,
+                           HttpRequest *request) {
+    (void)request;
+    std::istringstream streaming(buffer);
+    std::string line;
+    streaming >> line >> line;
+    std::vector<std::string> tokens;
+
+    std::istringstream iss(line);
+    std::string token;
+
+    if (line == "/") {
+        tokens.push_back("/");
+    } else {
+        while (std::getline(iss, token, '/')) {
+          if (!token.empty()) {
+            token = '/' + token;
+            tokens.push_back(token);
+          }
+        }
+    }
+
+    if (!tokensValidator(locations, tokens))
+      tokens.insert(tokens.begin(), "/");
+
+    for (size_t i = 0; i < locations.size(); ++i) {
+        if (locations[i].location == tokens[0]) {
+          std::string ret;
+          if (locations[i].root.empty())
+            ret = '.' + line;
+          else {
+            ret += "." + locations[i].root;
+            for (size_t j = 1; j < tokens.size(); ++j) {
+              ret += tokens[j];
+            }
+          }
+          if (isDirectory(ret.c_str()) && !locations[i].index.empty()) {
+            if (ret != "./")
+              ret += '/' + locations[i].index;
+            else
+              ret += locations[i].index;
+          }
+          request->setAllowedMethods(locations[i].allowed_method);
+          return ret;
+        }
+    }
+    return "";
 }
 
 void parseRequestLine(std::string *requestLine, HttpRequest *request,
