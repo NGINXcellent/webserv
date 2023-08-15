@@ -20,6 +20,9 @@
 #include "../../include/http/HttpRequestFactory.hpp"
 #include "../../include/http/Server.hpp"
 
+
+std::string createLocation(char *buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
+
 void testRequestLine(const char *requestMsg, int expectedStatusCode,
                      std::vector<s_locationConfig> locations) {
   HttpRequest *request;
@@ -50,6 +53,48 @@ TEST(RequestTests, BasicBehaviourTest) {
     testRequestLine(reqLines[i].c_str(), 0, locations);
   }
 }
+
+TEST(LocationTests, basicLocationTests) {
+    std::vector<s_locationConfig> configs;
+
+    s_locationConfig config1;
+    config1.location = "/";
+    config1.index = "index.html";
+    config1.allowed_method = {"GET", "POST"};
+    configs.push_back(config1);
+
+    s_locationConfig config2;
+    config2.location = "/images";
+    config2.root = "/var/www/images";
+    config2.allowed_method = {"GET"};
+    configs.push_back(config2);
+
+    s_locationConfig config3;
+    config3.location = "/dir";
+    config3.root = "./../InputTests/test_files/fail";
+    config3.index = "nestedServer.conf";
+    config3.allowed_method = {"GET"};
+    configs.push_back(config3);
+
+    char buffer1[] = "GET / HTTP/1.1";
+    char buffer2[] = "GET /images HTTP/1.1";
+    char buffer3[] = "GET /teste4/vamos/testar/aqui HTTP/1.1";
+    char buffer4[] = "GET /dir HTTP/1.1";
+    HttpRequest request;
+
+    std::string result1 = createLocation(buffer1, configs, &request);
+    EXPECT_EQ(result1, "./index.html");
+
+    std::string result2 = createLocation(buffer2, configs, &request);
+    EXPECT_EQ(result2, "./var/www/images");
+
+    std::string result3 = createLocation(buffer3, configs, &request);
+    EXPECT_EQ(result3, "./teste4/vamos/testar/aqui");
+
+    std::string result4 = createLocation(buffer4, configs, &request);
+    EXPECT_EQ(result4, "../../InputTests/test_files/fail/nestedServer.conf");
+}
+
 
 TEST(RequestTests, RequestLineMethodTest) {
   std::vector<std::string> msgs;
