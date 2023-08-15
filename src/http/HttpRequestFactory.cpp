@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/14 19:11:47 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/15 08:43:46 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,10 +47,16 @@ HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, \
   return (request);
 }
 
+// this function verify if the tokens are in the right order and deals with redirection
+// if fails we are dealing whith location "/"
 bool tokensValidator(std::vector<s_locationConfig> locations,
-                     std::vector<std::string> tokens) {
+                     std::vector<std::string> &tokens) {
   for (size_t i = 0; i < locations.size(); ++i) {
-    if (locations[i].location == tokens[0]) return true;
+    if (locations[i].location == tokens[0]){
+      if(!locations[i].redirect.second.empty())
+        tokens[0] = locations[i].redirect.second;
+    return true;
+    }
   }
   return false;
 }
@@ -63,6 +69,7 @@ bool isDirectory(const char* path) {
     return S_ISDIR(fileInfo.st_mode);
 }
 
+
 std::string createLocation(char *buffer,
                            std::vector<s_locationConfig> locations,
                            HttpRequest *request) {
@@ -71,12 +78,10 @@ std::string createLocation(char *buffer,
     std::string line;
     streaming >> line >> line;
     std::vector<std::string> tokens;
-
-    std::istringstream iss(line);
-    std::string token;
     if(line.empty())
       return "";
-
+    std::istringstream iss(line);
+    std::string token;
     if (line == "/") {
         tokens.push_back("/");
     } else {
@@ -109,6 +114,7 @@ std::string createLocation(char *buffer,
               ret += locations[i].index;
           }
           request->setAllowedMethods(locations[i].allowed_method);
+          std::cout << "ret de location " << ret << std::endl;
           return ret;
         }
     }

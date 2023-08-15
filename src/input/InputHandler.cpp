@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/14 08:12:34 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/15 08:06:13 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,6 +100,25 @@ void InputHandler::addToVector(std::ifstream &fileStream, \
   }
 }
 
+void InputHandler::addToPair(std::ifstream &fileStream, \
+                            std::pair<int, std::string> &mapi) {
+  std::string word;
+  fileStream >> word;
+
+  if ((word.find_first_not_of("0123456789")) != std::string::npos)
+    throw std::runtime_error("bad number");
+
+  int statusCode(atoi(word.c_str()));
+  fileStream >> word;
+
+  if (!(word.find_first_of(";") == word.size() - 1))
+    throw std::runtime_error("no ; in end of line");
+
+  word.resize(word.size() - 1);
+  mapi.first = statusCode;
+  mapi.second = word;
+}
+
 void InputHandler::addToMap(std::ifstream &fileStream, \
                             std::map<int, std::string> &mapi) {
   std::string word;
@@ -158,7 +177,7 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
       addToString(fileStream, newLocation.max_body_size);
 
     } else if (word == "return") {  // redirect
-      addToMap(fileStream, newLocation.redirect);
+      addToPair(fileStream, newLocation.redirect);
 
     } else if (word == "allowed_method") {
       addToVector(fileStream, newLocation.allowed_method);
@@ -292,7 +311,8 @@ void InputHandler::printLocations(std::vector<s_locationConfig> location) {
       std::cout << toprint.allowed_method[i] << std::endl;
     }
 
-    printMap(toprint.redirect);
+    std::cout <<"    redirect : " << toprint.redirect.first;
+    std::cout << " " << toprint.redirect.second << std::endl;
     std::cout << "\n" << std::endl;
   }
 }
