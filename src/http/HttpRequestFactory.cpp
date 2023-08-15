@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 08:43:46 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/15 09:30:17 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,12 +49,14 @@ HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, \
 
 // this function verify if the tokens are in the right order and deals with redirection
 // if fails we are dealing whith location "/"
-bool tokensValidator(std::vector<s_locationConfig> locations,
+bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *request,
                      std::vector<std::string> &tokens) {
   for (size_t i = 0; i < locations.size(); ++i) {
     if (locations[i].location == tokens[0]){
-      if(!locations[i].redirect.second.empty())
+      if(!locations[i].redirect.second.empty()) {
         tokens[0] = locations[i].redirect.second;
+        request->setResponseStatusCode(locations[i].redirect.first);
+      }
     return true;
     }
   }
@@ -93,7 +95,7 @@ std::string createLocation(char *buffer,
         }
     }
 
-    if (!tokensValidator(locations, tokens))
+    if (!tokensValidator(locations, request, tokens))
       tokens.insert(tokens.begin(), "/");
 
     for (size_t i = 0; i < locations.size(); ++i) {

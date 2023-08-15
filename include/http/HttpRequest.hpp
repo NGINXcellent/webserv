@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 15:50:04 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/15 09:24:12 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ class HttpRequest {
   void          setUnmodifiedSinceTimestamp(std::string timestamp);
   std::vector<std::string>   getAllowedMethods(void);
   void          setAllowedMethods(std::vector<std::string> allowedList);
+  void setResponseStatusCode(int toset);
+  int getResponseStatusCode();
 
  private:
   std::string               protocolName;
@@ -48,6 +50,7 @@ class HttpRequest {
   std::string               method;
   std::string               modifiedTimestampCheck;
   std::string               unmodifiedSinceTimestamp;
+  int                       responseStatusCode;
   std::vector<std::string>  allowedMethodList;
 
   HttpRequest(const HttpRequest& f);
