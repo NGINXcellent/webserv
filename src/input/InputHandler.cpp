@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 08:06:13 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/16 08:35:09 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ void InputHandler::addPort(std::ifstream &fileStream, std::string &string) {
       throw std::runtime_error("wrong port range");
 
     if (!(word.find_first_of(";") == word.size() - 1)) {
-      throw std::runtime_error("no ; in end of line");
+      throw std::runtime_error("no ; at the end of line");
     } else {
       word.resize(word.size() - 1);
       string = word;
@@ -56,7 +56,7 @@ void InputHandler::addToString(std::ifstream &fileStream, \
   fileStream >> word;
 
   if (!(word.find_first_of(";") == word.size() - 1))
-    throw std::runtime_error("no ; in end of line");
+    throw std::runtime_error("no ; at the end of line");
 
   word.resize(word.size() - 1);
 
@@ -108,11 +108,11 @@ void InputHandler::addToPair(std::ifstream &fileStream, \
   if ((word.find_first_not_of("0123456789")) != std::string::npos)
     throw std::runtime_error("bad number");
 
-  int statusCode(atoi(word.c_str()));
+  int statusCode = std::stoi(word);
   fileStream >> word;
 
   if (!(word.find_first_of(";") == word.size() - 1))
-    throw std::runtime_error("no ; in end of line");
+    throw std::runtime_error("no ; at the end of line");
 
   word.resize(word.size() - 1);
   mapi.first = statusCode;
@@ -141,6 +141,18 @@ std::string locationCheck(std::string word) {
   if (word[0] != '/')
     throw std::runtime_error("location should start with /");
   return word;
+}
+
+void redirectCheck(s_locationConfig newLocation) {
+    if (!newLocation.redirect.second.empty()) {
+        if (!newLocation.root.empty() ||
+            !newLocation.autoindex.empty() ||
+            !newLocation.index.empty() ||
+            !newLocation.max_body_size.empty() ||
+            !newLocation.allowed_method.empty()) {
+            throw std::runtime_error("return is not the only entrance");
+        }
+    }
 }
 
 void InputHandler::addLocation(std::ifstream &fileStream, \
@@ -188,6 +200,7 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
       throw std::runtime_error("Error in location");
     }
   }
+  redirectCheck(newLocation);
 }
 
 void InputHandler::serverNameAdd(std::ifstream &fileStream, \
@@ -196,7 +209,7 @@ void InputHandler::serverNameAdd(std::ifstream &fileStream, \
   fileStream >> word;
 
   if (!(word.find_first_of(";") == word.size() - 1))
-    throw std::runtime_error("no ; in end of line");
+    throw std::runtime_error("no ; at the end of line");
 
   word.resize(word.size() - 1);
 

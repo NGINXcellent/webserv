@@ -83,6 +83,11 @@ TEST(CheckConfTests, BasicTest)
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
+  {
+    const char *configFile = "../../InputTests/test_files/returnOk.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_NO_THROW(InputHandler input(configFileMutable));
+  }
 }
 
 TEST(CheckConfTests, MultipleServersTest)
@@ -140,6 +145,11 @@ TEST(CheckConfTests, FailTests)
   }
   {
     const char *configFile = "../../InputTests/test_files/fail/multipleServername.conf";
+    char *configFileMutable = const_cast<char*>(configFile);
+    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
+  }
+  {
+    const char *configFile = "../../InputTests/test_files/fail/returnNotAlone.conf";
     char *configFileMutable = const_cast<char*>(configFile);
     EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
   }
