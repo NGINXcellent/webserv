@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/16 08:35:09 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/16 09:22:03 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ void InputHandler::addToPair(std::ifstream &fileStream, \
   if ((word.find_first_not_of("0123456789")) != std::string::npos)
     throw std::runtime_error("bad number");
 
-  int statusCode = std::stoi(word);
+  int statusCode = std::atoi(word.c_str());
   fileStream >> word;
 
   if (!(word.find_first_of(";") == word.size() - 1))
