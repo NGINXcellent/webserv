@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 15:51:21 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/15 16:04:34 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,15 @@
 HttpRequest::HttpRequest(void) {
   protocolMainVersion = -1;
   protocolSubVersion = -1;
+  responseStatusCode = 0;
+}
+
+void HttpRequest::setResponseStatusCode(int toset) {
+  responseStatusCode = toset;
+}
+
+int HttpRequest::getResponseStatusCode() {
+  return responseStatusCode;
 }
 
 HttpRequest::~HttpRequest(void) {}

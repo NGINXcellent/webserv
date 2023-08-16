@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/09 08:45:53 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/15 08:11:00 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ struct s_locationConfig {
   std::string                 index;
   std::string                 max_body_size;
   std::string                 root;
-  std::map<int, std::string>  redirect;
+  std::pair<int, std::string> redirect;
   std::vector<std::string>    allowed_method;
 };
 
@@ -52,6 +52,7 @@ class InputHandler {
   void checkConfFile(char *fileArg);
   void newServerCheck(std::ifstream &fileStream, s_serverConfig &server);
   void printLocations(std::vector<s_locationConfig> location);
+  void addToPair(std::ifstream &fileStream, std::pair<int, std::string> &mapi);
 
  public:
   std::vector<s_serverConfig> *serverVector;
