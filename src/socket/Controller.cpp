@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/14 19:00:54 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/15 23:00:43 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Controller::Controller(const InputHandler &input) {
   while (it != end) {
     const struct s_serverConfig &serverConfig = *it;
     Server *newServer = new Server(serverConfig);
-    this->serverList.push_back(newServer);
+    this->serverList.insert(std::make_pair(newServer->getPort(), newServer));
     ++it;
   }
 }
@@ -51,10 +51,14 @@ void Controller::init(void) {
   }
 
   // start sockets
-  for (size_t i = 0; i < serverList.size(); i++) {
-    TCPServerSocket *socket = new TCPServerSocket(serverList[i]->getPort());
+  std::map<int, Server*>::iterator it = serverList.begin();
+  std::map<int, Server*>::iterator ite = serverList.end();
+
+  for (; it != ite; ++it) {
+    int port = it->second->getPort();;
+    TCPServerSocket *socket = new TCPServerSocket(port);
     socket->bindAndListen();
-    socketList.push_back(socket);
+    socketList.insert(std::make_pair(port, socket));
     std::cout << "[LOG]\tlistening on port: " << socket->getPort() << std::endl;
 
     // Bind sockfd on epoll event
@@ -111,16 +115,21 @@ void Controller::handleConnections(void) {
 void Controller::checkTimeOut() {
   time_t currentTime = time(NULL);
   std::vector<int> clientsToRemove;
-  for (std::map<int, time_t>::iterator it = timeoutList.begin(); it != timeoutList.end(); ) {
+  std::map<int, time_t>::iterator it = timeoutList.begin();
+
+  for (; it != timeoutList.end(); ++it) {
     if (currentTime - it->second > TIMEOUT) {
-      std::cout << "removing client: " << it->first << " due to timeout" << std::endl;
+      std::cout << "removing client: " << it->first;
+      std::cout << " due to timeout" << std::endl;
       clientsToRemove.push_back(it->first);
     }
-    ++it;
   }
- for (std::vector<int>::iterator it = clientsToRemove.begin(); it != clientsToRemove.end(); ++it) {
-    closeConnection(*it);
-    timeoutList.erase(*it);
+
+  std::vector<int>::iterator ite = clientsToRemove.begin();
+
+  for (; ite != clientsToRemove.end(); ++ite) {
+    closeConnection(*ite);
+    timeoutList.erase(*ite);
   }
 }
 
@@ -147,8 +156,10 @@ void Controller::addNewConnection(int socketFD) {
     // adding new buffer
     std::map<int, char*>::iterator it = bufferList.find(newConnection);
 
-    if (it == bufferList.end())  // no existing buffer for current fd
+    if (it == bufferList.end()) { // no existing buffer for current fd
       bufferList[newConnection] = new char[1024];
+    }
+
     *bufferList[newConnection] = '\0';
 
     time_t currentTime = time(NULL);
@@ -177,10 +188,14 @@ void  Controller::closeConnection(int currentFd) {
 }
 
 bool Controller::isNewConnection(int currentFD) {
-  for (size_t i = 0; i < socketList.size(); i++) {
-    if (currentFD == socketList[i]->getFD())
+  std::map<int, TCPServerSocket*>::iterator it = socketList.begin();
+  std::map<int, TCPServerSocket*>::iterator ite = socketList.end();
+
+  for (; it != ite; ++it) {
+    if (currentFD == it->second->getFD())
       return (true);
   }
+
   return (false);
 }
 
@@ -188,8 +203,9 @@ void Controller::readFromClient(int currentFd) {
   bzero(bufferList[currentFd], 1024);
   int bytesRead = read(currentFd, bufferList[currentFd], 1024);
 
-  if (bytesRead > 0)
+  if (bytesRead > 0) {
     return;
+  }
 
   // Connection error or close, we remove from epoll
   std::cout << "Connection with FD -> " << currentFd;
@@ -207,33 +223,14 @@ void Controller::sendToClient(int currentFd) {
     }
 
     int port = ntohs(address.sin_port);
-    Server *server = NULL;
-
-    // todo: Needs a better logic to handle multiple sites with the same port!
-    for (size_t i = 0; i < serverList.size(); i++) {
-      server = serverList[i];
-      if (server != NULL && port == server->getPort())
-        break;
-      else
-        server = NULL;
-    }
+    Server *server = serverList[port];
 
     std::cout << "======BUFFER:=======\n";
     std::cout << bufferList[currentFd];
     std::cout << "====================" << std::endl;
+
     std::string response = server->process(bufferList[currentFd]);
-    TCPServerSocket *socket = NULL;
-
-    // todo: use a map<int, socket>
-    for (size_t i = 0; i < socketList.size(); i++) {
-      socket = socketList[i];
-
-      if (static_cast<int>(socket->getPort()) == port)
-        break;
-      else
-        socket = NULL;
-    }
-
+    TCPServerSocket *socket = socketList[port];
     socket->sendData(currentFd, response.c_str(), response.size());
     *bufferList[currentFd] = '\0';
 }
