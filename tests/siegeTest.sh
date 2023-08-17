@@ -13,19 +13,19 @@ else
 fi
 
 echo "Siege 10 users sending 1000 requests"
-siege -c 10 -r 1000 "$TARGET_URL"
+siege -c 10 -r 1000 -R <(echo connection = keep-alive) "$TARGET_URL"
 
 sleep 20
 
 echo "Siege 100 users sending 1000 requests"
-siege -c 100 -r 1000 "$TARGET_URL"
+siege -c 100 -r 1000 -R <(echo connection = keep-alive) "$TARGET_URL"
 
 sleep 20
 
 echo "Siege 200 users sending 100 requests"
-siege -c 200 -r 50 "$TARGET_URL"
+siege -c 200 -r 50 -R <(echo connection = keep-alive) "$TARGET_URL"
 
 sleep 60
 
 echo "Siege 10 users sending requests for 1Minute"
-siege -c 10 -t1M "$TARGET_URL"
+siege -c 10 -t1M -R <(echo connection = keep-alive) "$TARGET_URL"
