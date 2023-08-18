@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 16:04:34 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/18 17:49:50 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,27 +28,27 @@ int HttpRequest::getResponseStatusCode() {
 
 HttpRequest::~HttpRequest(void) {}
 
-std::string HttpRequest::getResource(void) {
+const std::string &HttpRequest::getResource(void) {
   return (this->resource);
 }
 
-void HttpRequest::setResource(std::string resource) {
+void HttpRequest::setResource(const std::string &resource) {
   this->resource = resource;
 }
 
-std::string HttpRequest::getMethod(void) {
+const std::string &HttpRequest::getMethod(void) {
   return (this->method);
 }
 
-void HttpRequest::setMethod(std::string method) {
+void HttpRequest::setMethod(const std::string &method) {
   this->method = method;
 }
 
-std::string HttpRequest::getProtocolName(void) {
+const std::string &HttpRequest::getProtocolName(void) {
   return (this->protocolName);
 }
 
-void HttpRequest::setProtocolName(std::string protocol) {
+void HttpRequest::setProtocolName(const std::string &protocol) {
   protocolName = protocol;
 }
 
@@ -65,34 +65,34 @@ void HttpRequest::setProtocolVersion(int main, int sub) {
   protocolSubVersion = sub;
 }
 
-std::string HttpRequest::getHost(void) {
+const std::string &HttpRequest::getHost(void) {
   return (this->host);
 }
 
-void HttpRequest::setHost(std::string nHost) {
+void HttpRequest::setHost(const std::string &nHost) {
   host = nHost;
 }
 
-void HttpRequest::setModifiedTimestampCheck(std::string timestamp) {
+void HttpRequest::setModifiedTimestampCheck(const std::string &timestamp) {
   modifiedTimestampCheck = timestamp;
 }
 
-std::string HttpRequest::getModifiedTimestampCheck(void) {
+const std::string &HttpRequest::getModifiedTimestampCheck(void) {
   return (this->modifiedTimestampCheck);
 }
 
-std::string HttpRequest::getUnmodifiedSinceTimestamp(void) {
+const std::string &HttpRequest::getUnmodifiedSinceTimestamp(void) {
   return (this->unmodifiedSinceTimestamp);
 }
 
-void HttpRequest::setUnmodifiedSinceTimestamp(std::string unmodifiedTimestamp) {
+void HttpRequest::setUnmodifiedSinceTimestamp(const std::string &unmodifiedTimestamp) {
   unmodifiedSinceTimestamp = unmodifiedTimestamp;
 }
 
-std::vector<std::string> HttpRequest::getAllowedMethods(void) {
+const std::vector<std::string> &HttpRequest::getAllowedMethods(void) {
   return (this->allowedMethodList);
 }
 
-void HttpRequest::setAllowedMethods(std::vector<std::string> allowedList) {
+void HttpRequest::setAllowedMethods(const std::vector<std::string> &allowedList) {
   allowedMethodList = allowedList;
 }
