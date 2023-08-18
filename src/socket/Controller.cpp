@@ -6,12 +6,13 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 18:44:45 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/18 18:45:30 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/socket/Controller.hpp"
 #include "../../include/socket/TcpServerSocket.hpp"
+#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <fcntl.h>
 
@@ -88,6 +89,7 @@ void Controller::init(void) {
 void Controller::handleConnections(void) {
   // create just one pool of events, its like a line, if is a new conection, add
   // to poll, if not, handle the client conection.
+  //struct epoll_event events[100];
   while (true) {
     int numEvents = epoll_wait(epollfd, events.data(), events.size(), -1);
 
@@ -196,6 +198,7 @@ bool  Controller::closeConnection(int currentFd) {
       return true;
     }
   }
+
   return false;
 }
 
@@ -212,7 +215,6 @@ bool Controller::isNewConnection(int currentFD) {
 }
 
 void Controller::readFromClient(int currentFd) {
-  bzero(buffer, 1024);
   int bytesRead = read(currentFd, buffer, 1024);
 
   if (bytesRead > 0) {

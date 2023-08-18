@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 22:24:51 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 17:29:13 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,8 @@ std::string   HttpResponse::getHeaders(void) {
   return responseHeader;
 }
 
-void HttpResponse::setProtocol(std::string protoName, int mainVer, int subVer) {
+void HttpResponse::setProtocol(const std::string &protoName,
+                                    int mainVer, int subVer) {
   std::stringstream ss;
   std::string stringProtocol = protoName + "/";
   ss << mainVer;
@@ -64,7 +65,7 @@ void HttpResponse::setProtocol(std::string protoName, int mainVer, int subVer) {
   this->protocol = stringProtocol;
 }
 
-void HttpResponse::setMsgBody(const std::vector<char>&data) {
+void HttpResponse::setMsgBody(const std::vector<char> &data) {
   msgBody = data;
 }
 
@@ -81,6 +82,6 @@ void HttpResponse::setStatusCode(int httpCode) {
   statusMessage = HttpStatus::getMessage(httpCode);
 }
 
-void HttpResponse::setLastModifiedTime(std::string lmfTime) {
+void HttpResponse::setLastModifiedTime(const std::string &lmfTime) {
   modifiedTime = lmfTime;
 }

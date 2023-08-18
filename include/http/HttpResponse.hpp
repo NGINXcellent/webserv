@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:52:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/10 22:25:51 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 17:22:22 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,12 +25,12 @@ class HttpResponse {
   ~HttpResponse(void);
 
   std::string   getHeaders(void);
-  void          setProtocol(std::string protoName, int mainVer, int subVer);
+  void          setProtocol(const std::string &protoName, int mainVer, int subVer);
   void          setStatusCode(int responseCode);
   void          setContentType(const std::string &mimeType);
   void          setContentLength(size_t fileSize);
   void          setMsgBody(const std::vector<char>& data);
-  void          setLastModifiedTime(std::string lmfTime);
+  void          setLastModifiedTime(const std::string &lmfTime);
 
  private:
   std::string       protocol;

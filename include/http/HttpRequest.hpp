@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 09:24:12 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/18 17:48:19 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,25 +21,25 @@ class HttpRequest {
   HttpRequest(void);
   ~HttpRequest(void);
 
-  std::string   getMethod(void);
-  void          setMethod(std::string method);
-  std::string   getResource(void);
-  void          setResource(std::string resource);
-  void          setProtocolName(std::string protocol);
-  std::string   getProtocolName(void);
-  void          setProtocolVersion(int main, int sub);
-  int           getProtocolMainVersion(void);
-  int           getProtocolSubVersion(void);
-  std::string   getHost(void);
-  void          setHost(std::string nHost);
-  std::string   getModifiedTimestampCheck(void);
-  void          setModifiedTimestampCheck(std::string timestamp);
-  std::string   getUnmodifiedSinceTimestamp(void);
-  void          setUnmodifiedSinceTimestamp(std::string timestamp);
-  std::vector<std::string>   getAllowedMethods(void);
-  void          setAllowedMethods(std::vector<std::string> allowedList);
-  void setResponseStatusCode(int toset);
-  int getResponseStatusCode();
+  const std::string     &getMethod(void);
+  void                  setMethod(const std::string &method);
+  const std::string     &getResource(void);
+  void                  setResource(const std::string &resource);
+  void                  setProtocolName(const std::string &protocol);
+  const std::string     &getProtocolName(void);
+  void                  setProtocolVersion(int main, int sub);
+  int                   getProtocolMainVersion(void);
+  int                   getProtocolSubVersion(void);
+  const std::string     &getHost(void);
+  void                  setHost(const std::string &nHost);
+  const std::string     &getModifiedTimestampCheck(void);
+  void                  setModifiedTimestampCheck(const std::string &timestamp);
+  const std::string     &getUnmodifiedSinceTimestamp(void);
+  void                  setUnmodifiedSinceTimestamp(const std::string &timestamp);
+  const std::vector<std::string>   &getAllowedMethods(void);
+  void                  setAllowedMethods(const std::vector<std::string> &allowedList);
+  void                  setResponseStatusCode(int toset);
+  int                   getResponseStatusCode(void);
 
  private:
   std::string               protocolName;
