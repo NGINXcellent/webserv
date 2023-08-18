@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 16:49:29 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 17:00:14 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,19 +116,27 @@ void Controller::checkTimeOut() {
   time_t currentTime = time(NULL);
   std::vector<int> clientsToRemove;
   std::map<int, time_t>::iterator it = timeoutPool.begin();
+  std::map<int, time_t>::iterator ite = timeoutPool.begin();
 
-  for (; it != timeoutPool.end(); ++it) {
+  for (; it != ite; ++it) {
     if (currentTime - it->second > TIMEOUT) {
       std::cout << "removing client: " << it->first;
       std::cout << " due to timeout" << std::endl;
       clientsToRemove.push_back(it->first);
     }
   }
- for (std::vector<int>::iterator it = clientsToRemove.begin(); it != clientsToRemove.end(); ++it) {
-    timeoutList.erase(*it);
-    if(closeConnection(*it))
-      std::cout << "removing client: " << *it << " due to timeout" << std::endl;
- }
+
+  std::vector<int>::iterator c_it = clientsToRemove.begin();
+  std::vector<int>::iterator c_ite = clientsToRemove.end();
+
+  for (; c_it != c_ite; ++c_it) {
+    timeoutPool.erase(*c_it);
+
+    if (closeConnection(*c_it)) {
+      std::cout << "removing client: " << *c_it;
+      std::cout << " due to timeout" << std::endl;
+    }
+  }
 }
 
 int Controller::findConnectionSocket (int socketFD) {

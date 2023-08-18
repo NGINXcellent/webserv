@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 16:50:47 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 17:02:14 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,7 +120,7 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
     return;
   }
 // TEM QUE CHECAR AQUI PRA VER SE VAI FICAR ASSIM.
-  if(request->getResponseStatusCode() != 0)
+  if (request->getResponseStatusCode() != 0)
     response->setStatusCode(request->getResponseStatusCode());
   else
     response->setStatusCode(200);
@@ -134,8 +134,8 @@ void Server::head(HttpRequest *request, HttpResponse *response) {
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
   response->setProtocol("HTTP", protoMain, protoSub);
-
   int opStatus = 0;
+
   if (access(request->getResource().c_str(), F_OK) == -1) {
     opStatus = 404;
   } else if (access(request->getResource().c_str(), R_OK) == -1) {
