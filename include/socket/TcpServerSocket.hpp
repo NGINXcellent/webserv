@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 15:29:55 by dvargas           #+#    #+#             */
-/*   Updated: 2023/08/11 08:48:03 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/15 15:00:49 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 #include <iostream>
 #include <vector>
 
-#define MAX_EVENTS 10
+#define MAX_EVENTS 1000
 
 class Server;
 

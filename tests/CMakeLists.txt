@@ -29,6 +29,8 @@ set(Includes
     ../include/http/HttpRequest.hpp
     ../include/http/HttpTime.hpp
     ../include/http/HttpStatus.hpp
+    ../include/http/MimeType.hpp
+    ../include/http/Server.hpp
 )
 
 set(Sources
@@ -39,6 +41,8 @@ set(Sources
     ../src/http/HttpTime.cpp
     ../src/http/HttpStatus.cpp
     ../src/http/HttpRequestFactory.cpp
+    ../src/http/MimeType.cpp
+    ../src/http/Server.cpp
 )
 
 # add_library(${This} ${Sources} ${Libft} ${Headers})
@@ -48,3 +52,5 @@ add_library(${This} ${Sources} ${Includes})
 add_subdirectory(InputTests)
 add_subdirectory(RequestTests)
 add_subdirectory(ResponseTests)
+add_subdirectory(FileTests)
+add_subdirectory(HttpTests)

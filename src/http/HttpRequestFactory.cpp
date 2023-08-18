@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/14 15:47:29 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/15 09:30:17 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #include "../../include/http/Server.hpp"
 
 void parseRequestLine(std::string *msg, HttpRequest *request, std::string location);
-void parseHeaders(std::string *msg, HttpRequest *request);
+bool parseHeaders(std::string *msg, HttpRequest *request);
 bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
 std::string createLocation(char *buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
 std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
@@ -40,17 +40,29 @@ HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, \
     return request;
   }
 
+  // extract request line
   std::string reqLine = msg.substr(0, pos);
   msg.erase(0, pos + 1);
   parseRequestLine(&reqLine, request, location);
-  parseHeaders(&msg, request);
+
+  // extract the headers
+  if (!parseHeaders(&msg, request))
+    request->setProtocolName("");
   return (request);
 }
 
-bool tokensValidator(std::vector<s_locationConfig> locations,
-                     std::vector<std::string> tokens) {
+// this function verify if the tokens are in the right order and deals with redirection
+// if fails we are dealing whith location "/"
+bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *request,
+                     std::vector<std::string> &tokens) {
   for (size_t i = 0; i < locations.size(); ++i) {
-    if (locations[i].location == tokens[0]) return true;
+    if (locations[i].location == tokens[0]){
+      if(!locations[i].redirect.second.empty()) {
+        tokens[0] = locations[i].redirect.second;
+        request->setResponseStatusCode(locations[i].redirect.first);
+      }
+    return true;
+    }
   }
   return false;
 }
@@ -63,6 +75,7 @@ bool isDirectory(const char* path) {
     return S_ISDIR(fileInfo.st_mode);
 }
 
+
 std::string createLocation(char *buffer,
                            std::vector<s_locationConfig> locations,
                            HttpRequest *request) {
@@ -71,10 +84,10 @@ std::string createLocation(char *buffer,
     std::string line;
     streaming >> line >> line;
     std::vector<std::string> tokens;
-
+    if(line.empty())
+      return "";
     std::istringstream iss(line);
     std::string token;
-
     if (line == "/") {
         tokens.push_back("/");
     } else {
@@ -86,7 +99,7 @@ std::string createLocation(char *buffer,
         }
     }
 
-    if (!tokensValidator(locations, tokens))
+    if (!tokensValidator(locations, request, tokens))
       tokens.insert(tokens.begin(), "/");
 
     for (size_t i = 0; i < locations.size(); ++i) {
@@ -107,6 +120,7 @@ std::string createLocation(char *buffer,
               ret += locations[i].index;
           }
           request->setAllowedMethods(locations[i].allowed_method);
+          std::cout << "ret de location " << ret << std::endl;
           return ret;
         }
     }
@@ -124,6 +138,7 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request,
     if (begin == std::string::npos) {
       break;
     }
+
     fields.push_back(requestLine->substr(begin, end - begin));
     requestLine->erase(0, end);
   }
@@ -155,34 +170,51 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request,
   // std::cout << msg << std::endl;
 }
 
-void parseHeaders(std::string *msg, HttpRequest *request) {
+bool parseHeaders(std::string *msg, HttpRequest *request) {
   std::map<std::string, std::string> headers;
+  bool emptyLineFound = false;
+  std::istringstream msgStream(*msg);
+  std::string line;
 
-  while (msg->size() != 0) {
-    size_t pos = msg->find(':');
-    size_t ws_pos = msg->find_first_of(" \t");
-    size_t char_pos = msg->find_first_not_of(" \t");
+  while (std::getline(msgStream, line)) {
+    if (line.size() > 0 && line[line.size() - 1] == '\r') {
+      line.erase(line.size() - 1);
+    }
 
-    if (pos == std::string::npos) {
+    if (line.empty() && !emptyLineFound) {
+      emptyLineFound = true;
+      continue;
+    } else if (line.empty() && emptyLineFound) {
+      continue;
+    } else if (!line.empty() && emptyLineFound) {
+      if (request->getMethod() != "POST")
+        return false;
+      else
+        break;
+    }
+
+    size_t delim_pos = line.find(':');
+    size_t ws_pos = line.find_first_of(" \t");
+    size_t char_pos = line.find_first_not_of(" \t");
+
+    if (delim_pos == std::string::npos)
       break;
+
+    if (ws_pos != std::string::npos && \
+        (ws_pos < char_pos || ws_pos != delim_pos + 1)) {
+      return false;
     }
 
-    if (ws_pos < char_pos) {
-      request->setProtocolName("");  // invalidates the request
-      return;
-    }
+    std::string key = toLowerStr(line.substr(0, delim_pos));
+    std::string value;
+    size_t val_start = line.find_first_not_of(" \t", delim_pos + 1);
+    size_t val_end = line.find_last_not_of(" \t", delim_pos + 1);
 
-    std::string key = toLowerStr(msg->substr(0, pos));
-    msg->erase(0, pos + 1);
-    pos = msg->find('\n');
+    if (val_start != std::string::npos)
+      value = line.substr(val_start, val_end - val_start);
+    else
+      value = "";
 
-    if (pos == std::string::npos) {
-      request->setProtocolName("");  // invalidates the request
-      return;
-    }
-
-    std::string value = msg->substr(0, pos);
-    msg->erase(0, pos + 1);
     headers.insert(std::make_pair(key, value));
   }
 
@@ -191,6 +223,8 @@ void parseHeaders(std::string *msg, HttpRequest *request) {
                                 getHeaderValue("if-modified-since", headers));
   request->setUnmodifiedSinceTimestamp( \
                                 getHeaderValue("if-unmodified-since", headers));
+
+  return true;
 }
 
 bool parseProtocolVersion(const std::string &input, int *mainVersion,

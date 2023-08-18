@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/14 15:57:51 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/14 22:22:50 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ TEST(RequestTests, BasicBehaviourTest) {
   s_locationConfig locationOne;
   locationOne.location = "/index.html";
   locations.push_back(locationOne);
+
   for (size_t i = 0; i < reqLines.size(); i++) {
     testRequestLine(reqLines[i].c_str(), 0, locations);
   }
@@ -122,6 +123,7 @@ TEST(RequestTests, RequestLineMethodTest) {
   s_locationConfig locationOne;
   locationOne.location = "/index.html";
   locations.push_back(locationOne);
+
   for (size_t i = 0; i < msgs.size(); i++) {
     testRequestLine(msgs[i].c_str(), 400, locations);
   }
@@ -184,6 +186,7 @@ TEST(RequestTests, RequestLineProtocolTest) {
   s_locationConfig locationOne;
   locationOne.location = "/index.html";
   locations.push_back(locationOne);
+
   for (size_t i = 0; i < msgs.size(); i++) {
     testRequestLine(msgs[i].c_str(), 400, locations);
   }
@@ -200,6 +203,7 @@ TEST(RequestTests, RequestMissingFieldsTest) {
   s_locationConfig locationOne;
   locationOne.location = "/index.html";
   locations.push_back(locationOne);
+
   for (size_t i = 0; i < msgs.size(); i++) {
     testRequestLine(msgs[i].c_str(), 400, locations);
   }
@@ -236,6 +240,7 @@ TEST(RequestTests, RequestExtraSpacesTests) {
   s_locationConfig locationOne;
   locationOne.location = "/index.html";
   locations.push_back(locationOne);
+
   for (size_t i = 0; i < msgs.size(); i++) {
     testRequestLine(msgs[i].c_str(), 0, locations);
   }
@@ -261,6 +266,7 @@ TEST(RequestTests, HttpVersionNotSupportedTest) {
   s_locationConfig locationOne;
   locationOne.location = "/index.html";
   locations.push_back(locationOne);
+
   for (size_t i = 0; i < msgs.size(); i++) {
     testRequestLine(msgs[i].c_str(), 505, locations);
   }
@@ -277,12 +283,18 @@ TEST(RequestTests, HttpVersionOnePointZeroTest) {
   s_locationConfig locationOne;
   locationOne.location = "/index.html";
   locations.push_back(locationOne);
+
   for (size_t i = 0; i < msgs.size(); i++) {
     testRequestLine(msgs[i].c_str(), 0, locations);
   }
 }
 
 TEST(RequestTests, HttpRequestAttributesFormat) {
+  std::vector<s_locationConfig> locations;
+  s_locationConfig locationOne;
+  locationOne.location = "/index.html";
+  locations.push_back(locationOne);
+
   {
     std::string request;
     request += "GET localhost:8080/index.html HTTP/1.1\n";
@@ -290,10 +302,6 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "Connection: keep-alive\n";
     request += "Accept-Language: en-US,en\n";
 
-    std::vector<s_locationConfig> locations;
-    s_locationConfig locationOne;
-    locationOne.location = "/index.html";
-    locations.push_back(locationOne);
     testRequestLine(request.c_str(), 0, locations);
   }
   {
@@ -303,10 +311,6 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "Connection: keep-alive\n";
     request += "Accept-Language: en-US,en\n";
 
-    std::vector<s_locationConfig> locations;
-    s_locationConfig locationOne;
-    locationOne.location = "/index.html";
-    locations.push_back(locationOne);
     testRequestLine(request.c_str(), 400, locations);
   }
   {
@@ -316,10 +320,6 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "\tConnection: keep-alive\n";
     request += "Accept-Language: en-US,en\n";
 
-    std::vector<s_locationConfig> locations;
-    s_locationConfig locationOne;
-    locationOne.location = "/index.html";
-    locations.push_back(locationOne);
     testRequestLine(request.c_str(), 400, locations);
   }
   {
@@ -329,10 +329,6 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "Connection: keep-alive\n";
     request += "   \tAccept-Language: en-US,en\n";
 
-    std::vector<s_locationConfig> locations;
-    s_locationConfig locationOne;
-    locationOne.location = "/index.html";
-    locations.push_back(locationOne);
     testRequestLine(request.c_str(), 400, locations);
   }
   {
@@ -340,10 +336,6 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "GET localhost:8080/index.html HTTP/1.1\n";
     request += "host:       localhost:8080\n";
 
-    std::vector<s_locationConfig> locations;
-    s_locationConfig locationOne;
-    locationOne.location = "/index.html";
-    locations.push_back(locationOne);
     testRequestLine(request.c_str(), 0, locations);
   }
   {
@@ -351,10 +343,157 @@ TEST(RequestTests, HttpRequestAttributesFormat) {
     request += "GET localhost:8080/index.html HTTP/1.1\n";
     request += "host:\t\tlocalhost:8080\n";
 
-    std::vector<s_locationConfig> locations;
-    s_locationConfig locationOne;
-    locationOne.location = "/index.html";
-    locations.push_back(locationOne);
+    testRequestLine(request.c_str(), 0, locations);
+  }
+  {
+    std::string request;
+    request += "GET localhost:8080/index.html HTTP/1.1\n";
+    request += "host:localhost:8080\n";
+
+    testRequestLine(request.c_str(), 400, locations);
+  }
+}
+
+TEST(RequestTests, CRLFParsingTest) {
+  std::vector<s_locationConfig> locations;
+  s_locationConfig locationOne;
+  locationOne.location = "/index.html";
+  locations.push_back(locationOne);
+
+  {
+    std::string request;
+    request += "GET /index.html HTTP/1.1\r\n";
+    request += "host: localhost:8080\r\n";
+    request += "Connection: keep-alive\r\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 0, locations);
+  }
+
+  {
+    std::string request;
+    request += "HEAD /index.html HTTP/1.1\r\n";
+    request += "host: localhost:8080\r\n";
+    request += "Connection: keep-alive\r\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 0, locations);
+  }
+
+  {
+    std::string request;
+    request += "DEL /index.html HTTP/1.1\r\n";
+    request += "host: localhost:8080\r\n";
+    request += "Connection: keep-alive\r\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 0, locations);
+  }
+
+  {
+    std::string request;
+    request += "HEAD /index.html HTTP/1.1\r\n";
+    request += "host: localhost:8080\r\n";
+    request += "Connection: keep-alive\r\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 0, locations);
+  }
+
+  // mixed
+  {
+    std::string request;
+    request += "HEAD /index.html HTTP/1.1\n";
+    request += "host: localhost:8080\r\n";
+    request += "Connection: keep-alive\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 0, locations);
+  }
+}
+
+TEST(RequestTests, BlankLinesTest) {
+  std::vector<s_locationConfig> locations;
+  s_locationConfig locationOne;
+  locationOne.location = "/index.html";
+  locations.push_back(locationOne);
+
+  {
+    std::string request;
+    request += "GET /index.html HTTP/1.1\r\n";
+    request += "\n";
+    request += "host: localhost:8080\r\n";
+    request += "Connection: keep-alive\r\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 400, locations);
+  }
+
+  {
+    std::string request;
+    request += "HEAD /index.html HTTP/1.1\r\n";
+    request += "\n";
+    request += "host: localhost:8080\r\n";
+    request += "Connection: keep-alive\r\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 400, locations);
+  }
+
+  {
+    std::string request;
+    request += "HEAD /index.html HTTP/1.1\r\n";
+    request += "host: localhost:8080\r\n";
+    request += "\n";
+    request += "Connection: keep-alive\r\n";
+    request += "\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 400, locations);
+  }
+
+  {
+    std::string request;
+    request += "POST /index.html HTTP/1.1\r\n";
+    request += "host: localhost:8080\r\n";
+    request += "\n";
+    request += "Connection: keep-alive\r\n";
+    request += "\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 0, locations);
+  }
+
+  {
+    std::string request;
+    request += "DEL /index.html HTTP/1.1\r\n";
+    request += "host: localhost:8080\r\n";
+    request += "\n";
+    request += "Connection: keep-alive\r\n";
+    request += "\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 400, locations);
+  }
+
+  {
+    std::string request;
+    request += "DEL /index.html HTTP/1.1\r\n";
+    request += "host: localhost:8080\r\n";
+    request += "\n\n\n\n\n\n\n";
+    request += "Connection: keep-alive\r\n";
+    request += "\n";
+    request += "Accept-Language: en-US,en\r\n";
+
+    testRequestLine(request.c_str(), 400, locations);
+  }
+
+  {
+    std::string request;
+    request += "GET /index.html HTTP/1.1\r\n";
+    request += "host: localhost:8080\r\n";
+    request += "\n\n\n\n\n\n\n";
+
     testRequestLine(request.c_str(), 0, locations);
   }
 }

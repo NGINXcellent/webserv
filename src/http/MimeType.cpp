@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/29 12:12:09 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 17:59:29 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/14 22:20:07 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,17 +18,25 @@ std::map<std::string, std::string> MimeType::types;
 
 std::string MimeType::identify(const std::string &str) {
   init_table();
-  size_t pos = str.rfind('.');
-  std::string type;
+  size_t lastChar = str.find_last_not_of(" \t");
 
-  if (pos != std::string::npos) {
-    std::string extension = str.substr(pos, std::string::npos);
-    type = types[extension];
-  } else {
-    type = "application/octet-stream";
+  if (str.empty() || lastChar == std::string::npos) {
+    return ("");
   }
 
-  return type;
+  std::string filename = str.substr(0, lastChar + 1);
+  size_t pos = filename.rfind('.');
+
+  if (pos != std::string::npos) {
+    std::string extension = filename.substr(pos, std::string::npos);
+    std::map<std::string, std::string>::iterator it = types.find(extension);
+
+    if (it != types.end()) {
+      return it->second;
+    }
+  }
+
+  return "application/octet-stream";
 }
 
 void MimeType::init_table(void) {
@@ -90,6 +98,7 @@ void MimeType::init_table(void) {
   types.insert(std::make_pair(".ts", "video/mp2t"));
   types.insert(std::make_pair(".ttf", "font/ttf"));
   types.insert(std::make_pair(".text", "text/plain"));
+  types.insert(std::make_pair(".txt", "text/plain"));
   types.insert(std::make_pair(".vsd", "application/vnd.visio"));
   types.insert(std::make_pair(".wav", "audio/wav"));
   types.insert(std::make_pair(".weba", "audio/webm"));

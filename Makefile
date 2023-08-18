@@ -6,7 +6,7 @@
 #    By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/08/10 21:13:05 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/08/16 09:24:35 by dvargas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -77,5 +77,8 @@ retest: cleantest test
 
 site:
 	./webserv ./config_files/default.conf
+
+siegetest:
+	./tests/siegeTest.sh
 
 .PHONY: all fclean clean re test cleantest retest site

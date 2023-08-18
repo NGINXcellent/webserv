@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:15:50 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 10:24:54 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/15 09:02:15 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,12 @@ void HttpStatus::init(void) {
   messages.insert(std::make_pair(204, "No Content"));
 
   // 300 class - redirection
+  messages.insert(std::make_pair(301, "Moved Permanently"));
   messages.insert(std::make_pair(304, "Not Modified"));
+  messages.insert(std::make_pair(308, "Permanent Redirect"));
+  messages.insert(std::make_pair(302, "Found"));
+  messages.insert(std::make_pair(303, "See Other"));
+  messages.insert(std::make_pair(307, "Temporary Redirect"));
 
   // 400 class - client errors
   messages.insert(std::make_pair(400, "Bad Request"));
