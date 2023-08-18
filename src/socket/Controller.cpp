@@ -6,13 +6,17 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 17:00:14 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 18:44:45 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/socket/Controller.hpp"
 #include "../../include/socket/TcpServerSocket.hpp"
 #include <sys/socket.h>
+#include <fcntl.h>
+
+int   setToNonBlock(int sock);
+void initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd);
 
 Controller::Controller(const InputHandler &input) {
   std::vector<struct s_serverConfig>::iterator it = input.serverVector->begin();
@@ -24,6 +28,7 @@ Controller::Controller(const InputHandler &input) {
     this->serverPool.insert(std::make_pair(newServer->getPort(), newServer));
     ++it;
   }
+  events.reserve(100);
 }
 
 void Controller::endServer() {
@@ -44,7 +49,8 @@ Controller::~Controller(void) {
 void Controller::init(void) {
   //  Create epollfd
   std::signal(SIGINT, signalHandler);
-  epollfd = epoll_create1(0);
+  struct epoll_event ev;
+  epollfd = epoll_create(1);
   if (epollfd == -1) {
     std::cerr << "Failed to create epoll. errno: " << errno << std::endl;
       exit(EXIT_FAILURE);
@@ -62,14 +68,18 @@ void Controller::init(void) {
     std::cout << "[LOG]\tlistening on port: " << socket->getPort() << std::endl;
 
     // Bind sockfd on epoll event
-    events->events = EPOLLIN;
-    events->data.fd = socket->getFD();
+    initEpollEvent(&ev, EPOLLIN, socket->getFD());
 
-    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket->getFD(), events) == -1) {
+    if (setToNonBlock(socket->getFD())) {
+      throw std::runtime_error("Non Block Error");
+    }
+
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket->getFD(), &ev) == -1) {
       std::cerr << "Failed to add sockfd to epoll. errno: ";
       std::cout << errno << std::endl;
       exit(EXIT_FAILURE);
-    }
+    } else
+        events.push_back(ev);
   }
 
   handleConnections();
@@ -79,7 +89,7 @@ void Controller::handleConnections(void) {
   // create just one pool of events, its like a line, if is a new conection, add
   // to poll, if not, handle the client conection.
   while (true) {
-    int numEvents = epoll_wait(epollfd, events, MAX_EVENTS, 0);
+    int numEvents = epoll_wait(epollfd, events.data(), events.size(), -1);
 
     if (numEvents == -1) {
       std::cerr << "epoll_wait error. errno: " << errno << std::endl;
@@ -149,6 +159,7 @@ int Controller::findConnectionSocket (int socketFD) {
 
 void Controller::addNewConnection(int socketFD) {
   int newConnection;
+  struct epoll_event ev;
   struct sockaddr_in clientToAdd;
   socklen_t len = sizeof(clientToAdd);
   newConnection = accept(socketFD, (struct sockaddr *)&clientToAdd, &len);
@@ -156,17 +167,20 @@ void Controller::addNewConnection(int socketFD) {
   if (newConnection < 0) {
     std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
   } else {
-    events->events = EPOLLIN | EPOLLRDHUP | EPOLLOUT;
-    events->data.fd = newConnection;
+    initEpollEvent(&ev, EPOLLIN | EPOLLRDHUP | EPOLLOUT, newConnection);
     bufferPool[newConnection];  // hacky way to initialize a buffer
     time_t currentTime = time(NULL);
     timeoutPool[newConnection] = currentTime;
-    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, events) == -1) {
+    if (setToNonBlock(newConnection))
+      throw std::runtime_error ("Nonblock setup error");
+
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, &ev) == -1) {
       std::cerr << "Failed to add new connection to epoll. errno: " << errno
                 << std::endl;
       close(newConnection);
     } else {
       connections.push_back(newConnection);
+      events.push_back(ev);
     }
   }
 }
@@ -232,3 +246,22 @@ void Controller::sendToClient(int currentFd) {
   std::vector<char>().swap(bufferPool[currentFd]);  // release memory and clean buffer
 }
 
+int   setToNonBlock(int sock) {
+  int flag = fcntl(sock, F_GETFL, 0);
+
+  if (flag < 0)   {
+    return (-1);
+  }
+
+  if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0)  {
+    return (-1);
+  }
+
+  return (0);
+}
+
+void initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd) {
+  bzero(ev, sizeof(*ev));
+  ev->events = flag;
+  ev->data.fd = fd;
+}
