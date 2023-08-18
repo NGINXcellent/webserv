@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 23:00:43 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 14:51:00 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Controller::Controller(const InputHandler &input) {
   while (it != end) {
     const struct s_serverConfig &serverConfig = *it;
     Server *newServer = new Server(serverConfig);
-    this->serverList.insert(std::make_pair(newServer->getPort(), newServer));
+    this->serverPool.insert(std::make_pair(newServer->getPort(), newServer));
     ++it;
   }
 }
@@ -51,14 +51,14 @@ void Controller::init(void) {
   }
 
   // start sockets
-  std::map<int, Server*>::iterator it = serverList.begin();
-  std::map<int, Server*>::iterator ite = serverList.end();
+  std::map<int, Server*>::iterator it = serverPool.begin();
+  std::map<int, Server*>::iterator ite = serverPool.end();
 
   for (; it != ite; ++it) {
     int port = it->second->getPort();;
     TCPServerSocket *socket = new TCPServerSocket(port);
     socket->bindAndListen();
-    socketList.insert(std::make_pair(port, socket));
+    socketPool.insert(std::make_pair(port, socket));
     std::cout << "[LOG]\tlistening on port: " << socket->getPort() << std::endl;
 
     // Bind sockfd on epoll event
@@ -100,7 +100,7 @@ void Controller::handleConnections(void) {
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         readFromClient(currentFd);
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        if (*bufferList[currentFd] == '\0') {
+        if (*bufferPool[currentFd] == '\0') {
             i++;
             continue;
         } else {
@@ -115,9 +115,9 @@ void Controller::handleConnections(void) {
 void Controller::checkTimeOut() {
   time_t currentTime = time(NULL);
   std::vector<int> clientsToRemove;
-  std::map<int, time_t>::iterator it = timeoutList.begin();
+  std::map<int, time_t>::iterator it = timeoutPool.begin();
 
-  for (; it != timeoutList.end(); ++it) {
+  for (; it != timeoutPool.end(); ++it) {
     if (currentTime - it->second > TIMEOUT) {
       std::cout << "removing client: " << it->first;
       std::cout << " due to timeout" << std::endl;
@@ -129,13 +129,13 @@ void Controller::checkTimeOut() {
 
   for (; ite != clientsToRemove.end(); ++ite) {
     closeConnection(*ite);
-    timeoutList.erase(*ite);
+    timeoutPool.erase(*ite);
   }
 }
 
 int Controller::findConnectionSocket (int socketFD) {
-    for (size_t i = 0; i < socketList.size(); i++) {
-    if (socketFD == socketList[i]->getFD())
+    for (size_t i = 0; i < socketPool.size(); i++) {
+    if (socketFD == socketPool[i]->getFD())
       return (i);
   }
   return (-1);
@@ -154,16 +154,16 @@ void Controller::addNewConnection(int socketFD) {
     events->data.fd = newConnection;
 
     // adding new buffer
-    std::map<int, char*>::iterator it = bufferList.find(newConnection);
+    std::map<int, char*>::iterator it = bufferPool.find(newConnection);
 
-    if (it == bufferList.end()) { // no existing buffer for current fd
-      bufferList[newConnection] = new char[1024];
+    if (it == bufferPool.end()) { // no existing buffer for current fd
+      bufferPool[newConnection] = new char[1024];
     }
 
-    *bufferList[newConnection] = '\0';
+    *bufferPool[newConnection] = '\0';
 
     time_t currentTime = time(NULL);
-    timeoutList[newConnection] = currentTime;
+    timeoutPool[newConnection] = currentTime;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, events) == -1) {
       std::cerr << "Failed to add new connection to epoll. errno: " << errno
                 << std::endl;
@@ -188,8 +188,8 @@ void  Controller::closeConnection(int currentFd) {
 }
 
 bool Controller::isNewConnection(int currentFD) {
-  std::map<int, TCPServerSocket*>::iterator it = socketList.begin();
-  std::map<int, TCPServerSocket*>::iterator ite = socketList.end();
+  std::map<int, TCPServerSocket*>::iterator it = socketPool.begin();
+  std::map<int, TCPServerSocket*>::iterator ite = socketPool.end();
 
   for (; it != ite; ++it) {
     if (currentFD == it->second->getFD())
@@ -200,8 +200,8 @@ bool Controller::isNewConnection(int currentFD) {
 }
 
 void Controller::readFromClient(int currentFd) {
-  bzero(bufferList[currentFd], 1024);
-  int bytesRead = read(currentFd, bufferList[currentFd], 1024);
+  bzero(bufferPool[currentFd], 1024);
+  int bytesRead = read(currentFd, bufferPool[currentFd], 1024);
 
   if (bytesRead > 0) {
     return;
@@ -223,15 +223,15 @@ void Controller::sendToClient(int currentFd) {
     }
 
     int port = ntohs(address.sin_port);
-    Server *server = serverList[port];
+    Server *server = serverPool[port];
 
     std::cout << "======BUFFER:=======\n";
-    std::cout << bufferList[currentFd];
+    std::cout << bufferPool[currentFd];
     std::cout << "====================" << std::endl;
 
-    std::string response = server->process(bufferList[currentFd]);
-    TCPServerSocket *socket = socketList[port];
+    std::string response = server->process(bufferPool[currentFd]);
+    TCPServerSocket *socket = socketPool[port];
     socket->sendData(currentFd, response.c_str(), response.size());
-    *bufferList[currentFd] = '\0';
+    *bufferPool[currentFd] = '\0';
 }
 

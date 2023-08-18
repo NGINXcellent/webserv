@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 22:54:18 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 14:49:49 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,10 +34,10 @@ class Controller {
 
  private:
   std::vector<int>                connections;
-  std::map<int, Server*>          serverList;
-  std::map<int, TCPServerSocket*> socketList;
-  std::map<int, char *>           bufferList;  // connectionFD, buffer
-  std::map<int, time_t>           timeoutList;
+  std::map<int, Server*>          serverPool;
+  std::map<int, TCPServerSocket*> socketPool;
+  std::map<int, char *>           bufferPool;  // connectionFD, buffer
+  std::map<int, time_t>           timeoutPool;
   int                             epollfd;
   struct epoll_event              events[MAX_EVENTS];
 
