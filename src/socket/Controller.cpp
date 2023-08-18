@@ -124,13 +124,11 @@ void Controller::checkTimeOut() {
       clientsToRemove.push_back(it->first);
     }
   }
-
-  std::vector<int>::iterator ite = clientsToRemove.begin();
-
-  for (; ite != clientsToRemove.end(); ++ite) {
-    closeConnection(*ite);
-    timeoutPool.erase(*ite);
-  }
+ for (std::vector<int>::iterator it = clientsToRemove.begin(); it != clientsToRemove.end(); ++it) {
+    timeoutList.erase(*it);
+    if(closeConnection(*it))
+      std::cout << "removing client: " << *it << " due to timeout" << std::endl;
+ }
 }
 
 int Controller::findConnectionSocket (int socketFD) {
@@ -174,7 +172,7 @@ void Controller::addNewConnection(int socketFD) {
   }
 }
 
-void  Controller::closeConnection(int currentFd) {
+bool  Controller::closeConnection(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
   close(currentFd);
   std::vector<int>::iterator it = connections.begin();
@@ -182,9 +180,10 @@ void  Controller::closeConnection(int currentFd) {
   for (; it != connections.end(); ++it) {
     if (*it == currentFd) {
       connections.erase(it);
-      break;
+      return true;
     }
   }
+  return false;
 }
 
 bool Controller::isNewConnection(int currentFD) {

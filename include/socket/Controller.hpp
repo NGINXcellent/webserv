@@ -49,7 +49,7 @@ class Controller {
   void  addNewConnection(int socketFD);
   void  readFromClient(int currentFd);
   void  sendToClient(int currentFd);
-  void  closeConnection(int currentFd);
+  bool  closeConnection(int currentFd);
 
   //signal handler
   static void endServer();
