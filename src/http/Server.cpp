@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 16:03:42 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/18 16:50:47 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,8 +77,9 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
                        request->getProtocolSubVersion());
 }
 
-std::string Server::process(char *buffer) {
-  HttpRequest *request = HttpRequestFactory::createFrom(buffer, locations);
+std::string Server::process(const std::vector<char> &buffer) {
+  char *bf = const_cast<char *>(buffer.data());
+  HttpRequest *request = HttpRequestFactory::createFrom(bf, locations);
   HttpResponse response;
 
   int status = HttpRequestFactory::check(request);
@@ -106,10 +107,9 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
   std::string unmodifiedTimestmap = request->getModifiedTimestampCheck();
 
   if (!HttpTime::isModifiedSince(unmodifiedTimestmap, request->getResource())) {
-    response->setStatusCode(request->getResponseStatusCode());
+    response->setStatusCode(304);
     return;
   }
-
 
   std::vector<char> resourceData;
   int opStatus = FileReader::getContent(request->getResource(), &resourceData);
@@ -124,6 +124,7 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
     response->setStatusCode(request->getResponseStatusCode());
   else
     response->setStatusCode(200);
+
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);
   response->setContentLength(resourceData.size());

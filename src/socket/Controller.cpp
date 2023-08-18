@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 14:51:00 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 16:49:29 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,7 @@ void Controller::handleConnections(void) {
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         readFromClient(currentFd);
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        if (*bufferPool[currentFd] == '\0') {
+        if (bufferPool[currentFd].empty()) {
             i++;
             continue;
         } else {
@@ -150,16 +150,7 @@ void Controller::addNewConnection(int socketFD) {
   } else {
     events->events = EPOLLIN | EPOLLRDHUP | EPOLLOUT;
     events->data.fd = newConnection;
-
-    // adding new buffer
-    std::map<int, char*>::iterator it = bufferPool.find(newConnection);
-
-    if (it == bufferPool.end()) { // no existing buffer for current fd
-      bufferPool[newConnection] = new char[1024];
-    }
-
-    *bufferPool[newConnection] = '\0';
-
+    bufferPool[newConnection];  // hacky way to initialize a buffer
     time_t currentTime = time(NULL);
     timeoutPool[newConnection] = currentTime;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, events) == -1) {
@@ -199,10 +190,13 @@ bool Controller::isNewConnection(int currentFD) {
 }
 
 void Controller::readFromClient(int currentFd) {
-  bzero(bufferPool[currentFd], 1024);
-  int bytesRead = read(currentFd, bufferPool[currentFd], 1024);
+  bzero(buffer, 1024);
+  int bytesRead = read(currentFd, buffer, 1024);
 
   if (bytesRead > 0) {
+    for (int i = 0; i < bytesRead; i++) {
+        bufferPool[currentFd].push_back(buffer[i]);
+    }
     return;
   }
 
@@ -213,24 +207,20 @@ void Controller::readFromClient(int currentFd) {
 }
 
 void Controller::sendToClient(int currentFd) {
-    struct sockaddr_in address;
-    socklen_t sockAddrLen = sizeof(address);
+  struct sockaddr_in address;
+  socklen_t sockAddrLen = sizeof(address);
 
-    if (getsockname(currentFd, (struct sockaddr *)&address, &sockAddrLen) < 0) {
-      std::cout << "Error trying to get socket name" << std::endl;
-      exit(1);
-    }
+  if (getsockname(currentFd, (struct sockaddr *)&address, &sockAddrLen) < 0) {
+    std::cout << "Error trying to get socket name" << std::endl;
+    exit(1);
+  }
 
-    int port = ntohs(address.sin_port);
-    Server *server = serverPool[port];
-
-    std::cout << "======BUFFER:=======\n";
-    std::cout << bufferPool[currentFd];
-    std::cout << "====================" << std::endl;
-
-    std::string response = server->process(bufferPool[currentFd]);
-    TCPServerSocket *socket = socketPool[port];
-    socket->sendData(currentFd, response.c_str(), response.size());
-    *bufferPool[currentFd] = '\0';
+  bufferPool[currentFd].push_back('\0');
+  int port = ntohs(address.sin_port);
+  Server *server = serverPool[port];
+  std::string response = server->process(bufferPool[currentFd]);
+  TCPServerSocket *socket = socketPool[port];
+  socket->sendData(currentFd, response.c_str(), response.size());
+  std::vector<char>().swap(bufferPool[currentFd]);  // release memory and clean buffer
 }
 
