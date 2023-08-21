@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 18:15:31 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 02:32:41 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ void HttpResponseComposer::buildErrorResponse(HttpResponse *response, \
   }
 
   response->setContentType("text/html");
-  response->setMsgBody(responseContent);
+  response->setMsgBody(responseContent.data());
   response->setContentLength(responseContent.size());
 }
 
@@ -63,8 +63,9 @@ bool HttpResponseComposer::getCustomPage(HttpResponse *response, \
     return (false);
 
   std::string filename = error_pages[error_code];
-  std::vector<char> resourceData;
-  int readStatus = FileReader::getContent(filename, &resourceData);
+  char *resourceData;
+  long long resourceSize;
+  int readStatus = FileReader::getContent(filename, &resourceData, &resourceSize);
 
   if (readStatus != 0) {
     std::cout << "[ERROR]\tCan't find or read custom error page:";
@@ -74,6 +75,6 @@ bool HttpResponseComposer::getCustomPage(HttpResponse *response, \
 
   response->setContentType(MimeType::identify(filename));
   response->setMsgBody(resourceData);
-  response->setContentLength(resourceData.size());
+  response->setContentLength(resourceSize);
   return (true);
 }

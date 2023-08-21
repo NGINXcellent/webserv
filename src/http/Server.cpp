@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 17:02:14 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 02:37:28 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,25 +77,25 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
                        request->getProtocolSubVersion());
 }
 
-std::string Server::process(const std::vector<char> &buffer) {
+HttpResponse *Server::process(const std::vector<char> &buffer) {
   char *bf = const_cast<char *>(buffer.data());
   HttpRequest *request = HttpRequestFactory::createFrom(bf, locations);
-  HttpResponse response;
+  HttpResponse *response = new HttpResponse();
 
   int status = HttpRequestFactory::check(request);
 
   if (status != 0) {
-    HttpResponseComposer::buildErrorResponse(&response, \
+    HttpResponseComposer::buildErrorResponse(response, \
                                           status, \
                                           error_pages, \
                                           request->getProtocolMainVersion(), \
                                           request->getProtocolSubVersion());
   } else {
-    resolve(request, &response);
+    resolve(request, response);
   }
 
   delete request;
-  return response.getHeaders();
+  return response;
 }
 
 void Server::get(HttpRequest *request, HttpResponse *response) {
@@ -111,8 +111,9 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
     return;
   }
 
-  std::vector<char> resourceData;
-  int opStatus = FileReader::getContent(request->getResource(), &resourceData);
+  char *resourceData;
+  long long resourceSize;
+  int opStatus = FileReader::getContent(request->getResource(), &resourceData, &resourceSize);
 
   if (opStatus != 0) {
     HttpResponseComposer::buildErrorResponse(response, opStatus, error_pages, \
@@ -127,7 +128,7 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
 
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);
-  response->setContentLength(resourceData.size());
+  response->setContentLength(resourceSize);
 }
 
 void Server::head(HttpRequest *request, HttpResponse *response) {
@@ -189,12 +190,13 @@ void Server::del(HttpRequest *request, HttpResponse *response) {
     return;
   }
 
-  std::string msgBody = "File succefully deleted\n";
+  char msgBody[] = {"File succefully deleted\n"};
+  long long msgBodySize = strlen(msgBody);
 
   response->setStatusCode(204);
-  response->setMsgBody(std::vector<char>(msgBody.begin(), msgBody.end()));
+  response->setMsgBody(msgBody);
   response->setProtocol("HTTP", protoMain, protoSub);
-  response->setContentLength(msgBody.size());
+  response->setContentLength(msgBodySize);
 }
 
 int   Server::getPort(void) {

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 17:29:13 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 02:28:29 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,10 +45,6 @@ std::string   HttpResponse::getHeaders(void) {
   responseHeader += "Content-length: " + ss.str() + "\n";
   responseHeader += "Connection: close\n\n";
 
-  for (size_t i = 0; i < msgBody.size(); i++) {
-    responseHeader += msgBody[i];
-  }
-
   return responseHeader;
 }
 
@@ -65,16 +61,24 @@ void HttpResponse::setProtocol(const std::string &protoName,
   this->protocol = stringProtocol;
 }
 
-void HttpResponse::setMsgBody(const std::vector<char> &data) {
-  msgBody = data;
+void HttpResponse::setMsgBody(char *resourceData) {
+  msgBody = resourceData;
+}
+
+char *HttpResponse::getMsgBody(void) {
+  return msgBody;
 }
 
 void HttpResponse::setContentType(const std::string &mime) {
   contentType = mime;
 }
 
-void HttpResponse::setContentLength(size_t fileSize) {
+void HttpResponse::setContentLength(long long fileSize) {
   contentLength = fileSize;
+}
+
+long long HttpResponse::getContentLength(void) {
+  return contentLength;
 }
 
 void HttpResponse::setStatusCode(int httpCode) {

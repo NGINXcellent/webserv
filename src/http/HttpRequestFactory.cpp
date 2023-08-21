@@ -61,7 +61,7 @@ bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *reque
         tokens[0] = locations[i].redirect.second;
         request->setResponseStatusCode(locations[i].redirect.first);
       }
-    return true;
+      return true;
     }
   }
   return false;
@@ -84,10 +84,14 @@ std::string createLocation(char *buffer,
     std::string line;
     streaming >> line >> line;
     std::vector<std::string> tokens;
-    if(line.empty())
+
+    if(line.empty()) {
       return "";
+    }
+
     std::istringstream iss(line);
     std::string token;
+
     if (line == "/") {
         tokens.push_back("/");
     } else {
@@ -124,6 +128,7 @@ std::string createLocation(char *buffer,
           return ret;
         }
     }
+
     return "";
 }
 

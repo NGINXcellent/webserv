@@ -6,10 +6,9 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 18:30:25 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/21 01:44:22 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #ifndef CONTROLLER_HPP
 # define CONTROLLER_HPP
@@ -17,6 +16,7 @@
 #include "../input/InputHandler.hpp"
 #include "../http/Server.hpp"
 #include "./TcpServerSocket.hpp"
+#include "./Client.hpp"
 
 #include <csignal>
 #include <vector>
@@ -33,30 +33,28 @@ class Controller {
   void  handleConnections(void);
 
  private:
-  std::vector<int>                  connections;
+  int                               epollfd;
+  char                              buffer[1024];
+  std::map<int, Client*>            connectedClients;
   std::map<int, Server*>            serverPool;
   std::map<int, TCPServerSocket*>   socketPool;
-  std::map<int, std::vector<char> > bufferPool;  // connectionFD, buffer
-  char                              buffer[1024];
-  std::map<int, time_t>             timeoutPool;
-  int                               epollfd;
   std::vector<epoll_event> events;
 
   Controller(const Controller& f);
   Controller& operator=(const Controller& t);
 
   // event handlers
-  bool  isNewConnection(int currentFD);
-  void  addNewConnection(int socketFD);
-  void  readFromClient(int currentFd);
-  void  sendToClient(int currentFd);
-  bool  closeConnection(int currentFd);
+  bool  isNewConnection(int connectionFd);
+  void  addNewConnection(int connectionFd);
+  void  readFromClient(int connectionFd);
+  void  sendToClient(int connectionFd);
+  bool  closeConnection(int connectionFd);
 
   //signal handler
   static void endServer();
   static void signalHandler(int signal);
 
-  int findConnectionSocket(int socketFD);
+  int getSocketPort(int socketFd);
   void checkTimeOut();
 };
 #endif
