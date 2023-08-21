@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 02:29:17 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 15:57:50 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,32 @@ Controller::Controller(const InputHandler &input) {
   events.reserve(100);
 }
 
+Controller::~Controller(void) {
+  // todo: Implement resource liberation logic
+  // implement logic to close the epollfd 
+  
+  std::map<int, Client*>::iterator clientIt = connectedClients.begin();
+  std::map<int, Client*>::iterator clientIte = connectedClients.end();
+
+  for (; clientIt != clientIte; clientIt++) {
+    closeConnection(clientIt->first);
+  }
+
+  std::map<int, Server*>::iterator serverIt = serverPool.begin();
+  std::map<int, Server*>::iterator serverIte = serverPool.end();
+
+  for (; serverIt != serverIte; serverIt++) {
+    delete serverIt->second;
+  }
+
+  std::map<int, TCPServerSocket*>::iterator socketIt = socketPool.begin();
+  std::map<int, TCPServerSocket*>::iterator socketIte = socketPool.end();
+
+  for (; socketIt != socketIte; serverIt++) {
+    delete socketIte->second;
+  }
+}
+
 void Controller::endServer() {
   exit(0);
 }
@@ -45,15 +71,12 @@ void Controller::signalHandler(int signal) {
   }
 }
 
-Controller::~Controller(void) {
-  // todo: Implement resource liberation logic
-}
-
 void Controller::init(void) {
   //  Create epollfd
   std::signal(SIGINT, signalHandler);
   struct epoll_event ev;
   epollfd = epoll_create(1);
+
   if (epollfd == -1) {
     std::cerr << "Failed to create epoll. errno: " << errno << std::endl;
       exit(EXIT_FAILURE);
@@ -136,11 +159,9 @@ void Controller::checkTimeOut() {
     int connectionFd = it->first;
     Client *client = it->second;
 
-    if (currentTime > client->getTimeout()) {
+    if (client != NULL && currentTime > client->getTimeout()) {
       std::cout << "removing client: " << it->first;
       std::cout << " due to timeout" << std::endl;
-      delete client;
-      connectedClients.erase(connectionFd);
       closeConnection(connectionFd);
     }
   }
@@ -182,6 +203,7 @@ bool  Controller::closeConnection(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
   close(currentFd);
   delete connectedClients[currentFd];
+  connectedClients.erase(currentFd);
   return false;
 }
 
