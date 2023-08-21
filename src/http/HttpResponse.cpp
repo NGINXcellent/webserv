@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 02:28:29 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 13:54:49 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ std::string   HttpResponse::getHeaders(void) {
   ss.clear();
   ss.str("");
   ss << contentLength;
+
   responseHeader += "Content-length: " + ss.str() + "\n";
   responseHeader += "Connection: close\n\n";
 

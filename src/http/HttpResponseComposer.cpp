@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 02:32:41 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 14:06:11 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,25 +33,26 @@ void HttpResponseComposer::buildErrorResponse(HttpResponse *response, \
   if (HttpResponseComposer::getCustomPage(response, error_code, error_pages))
     return;
 
-  std::string content;
-  content += "<html><head><title>";
+  std::string content = "<html><head><title>";
   std::stringstream ss;
   ss << error_code;
   std::string errorMsg = HttpStatus::getMessage(error_code);
+  std::cout << errorMsg << std::endl;
 
   content += ss.str() + " " + errorMsg + "</title></head>";
   content += "<body><center><h1>" + ss.str() + " " + errorMsg + \
     "</h1></center></body>";
   content += "<hr><center>webserv/0.1</center></body></html>";
 
-  std::vector<char> responseContent;
+  char *responseContent = new char[content.size()];
+
   for (size_t i = 0; i < content.size(); i++) {
-    responseContent.push_back(content[i]);
+    responseContent[i] = content[i];
   }
 
   response->setContentType("text/html");
-  response->setMsgBody(responseContent.data());
-  response->setContentLength(responseContent.size());
+  response->setMsgBody(responseContent);
+  response->setContentLength(content.size());
 }
 
 bool HttpResponseComposer::getCustomPage(HttpResponse *response, \
