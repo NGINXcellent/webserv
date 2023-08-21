@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 17:48:19 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 08:24:34 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,13 @@ class HttpRequest {
   void                  setAllowedMethods(const std::vector<std::string> &allowedList);
   void                  setResponseStatusCode(int toset);
   int                   getResponseStatusCode(void);
+  void                  setupContentType(std::string msg, HttpRequest *request);
+  const std::string     &getPostType(void);
+  void                  setPostType(std::string type);
+  void                  setRequestBody(std::string body);
+  std::string           getRequestBody(void);
+      void                  setlocationTest(std::string loc);
+      std::string           getlocationTest(void);
 
  private:
   std::string               protocolName;
@@ -52,6 +59,11 @@ class HttpRequest {
   std::string               unmodifiedSinceTimestamp;
   int                       responseStatusCode;
   std::vector<std::string>  allowedMethodList;
+  std::string               requestBody;
+      std::string                locationTest;
+
+  //TESTANDO COM O METODO POST
+  std::string               postType;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 09:30:17 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/21 08:25:33 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,53 @@ std::string createLocation(char *buffer, std::vector<s_locationConfig> locations
 std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
 std::string toLowerStr(std::string str);
 
+void setupContentType(std::string msg, HttpRequest *request) {
+  size_t pos = msg.find("Transfer-Encoding:");
+  if (pos != std::string::npos) {
+    if (msg.find("chunked", pos) != std::string::npos) {
+      request->setPostType("CHUNK");
+      return;
+    }
+  }
+
+  pos = msg.find("Content-Type:");
+  if (pos != std::string::npos) {
+    if (msg.find("multipart/form-data", pos) != std::string::npos) {
+      request->setPostType("MULTIPART");
+      return;
+    }
+  }
+  request->setPostType("NONE");
+}
+
+
+void setupRequestBody(std::string msg, HttpRequest *request) {
+      size_t pos, count = 1;
+    std::string ret;
+    // Encontra a posição após os headers da requisição
+    if ((pos = msg.find("\r\n\r\n")) == std::string::npos) // Verifica se há pelo menos os headers
+        return;
+    pos += 2;
+    while (count) {
+        pos += 2; // Ajusta a posição para pular os caracteres de quebra de linha
+        
+        // Extrai o tamanho do chunk (em hexadecimal) e adiciona ao _c->clen
+        count = strtol(&msg[pos], NULL, 16);
+        // content-len += count;
+        
+        // Encontra a posição do próximo caractere de nova linha (\n)
+        pos = msg.find_first_of("\n", pos) + 1;
+        
+        // Extrai o corpo do chunk e o armazena em _body
+        ret.append(msg, pos, count);
+        
+        pos += count; // Move a posição para o próximo chunk
+    }
+    // MAX BODY SIZE CHECK POSSIVELMENTE VEM AQUI
+    if (!ret.empty())
+        request->setRequestBody(ret);
+}
+
 HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, \
                                     std::vector<s_locationConfig> locations) {
   // shim
@@ -39,6 +86,13 @@ HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, \
   if (pos == std::string::npos) {
     return request;
   }
+
+  setupContentType(msg, request);
+  setupRequestBody(msg, request);
+
+//  TODO TALVEZ TENHA QUE FAZXER UM LOCATION ESPECIRFICO PARA ESSA SITUACAO AQUI
+  request->setlocationTest(location);
+
 
   // extract request line
   std::string reqLine = msg.substr(0, pos);

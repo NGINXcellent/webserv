@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 17:49:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 08:24:22 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,4 +95,28 @@ const std::vector<std::string> &HttpRequest::getAllowedMethods(void) {
 
 void HttpRequest::setAllowedMethods(const std::vector<std::string> &allowedList) {
   allowedMethodList = allowedList;
+}
+
+const std::string &HttpRequest::getPostType(void) {
+  return (this->postType);
+}
+
+void HttpRequest::setPostType(std::string type) {
+  postType = type;
+}
+
+void HttpRequest::setRequestBody(std::string body) {
+  requestBody = body;
+}
+
+std::string HttpRequest::getRequestBody(void) {
+  return requestBody;
+}
+
+void HttpRequest::setlocationTest(std::string loc) {
+  locationTest = loc;
+}
+
+std::string HttpRequest::getlocationTest(void) {
+  return locationTest;
 }

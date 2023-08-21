@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 18:45:30 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 09:59:13 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,9 +89,8 @@ void Controller::init(void) {
 void Controller::handleConnections(void) {
   // create just one pool of events, its like a line, if is a new conection, add
   // to poll, if not, handle the client conection.
-  //struct epoll_event events[100];
   while (true) {
-    int numEvents = epoll_wait(epollfd, events.data(), events.size(), -1);
+    int numEvents = epoll_wait(epollfd, events.data(), events.size() + 10, -1);
 
     if (numEvents == -1) {
       std::cerr << "epoll_wait error. errno: " << errno << std::endl;
@@ -128,27 +127,25 @@ void Controller::checkTimeOut() {
   time_t currentTime = time(NULL);
   std::vector<int> clientsToRemove;
   std::map<int, time_t>::iterator it = timeoutPool.begin();
-  std::map<int, time_t>::iterator ite = timeoutPool.begin();
+  std::map<int, time_t>::iterator ite = timeoutPool.end();
 
-  for (; it != ite; ++it) {
-    if (currentTime - it->second > TIMEOUT) {
-      std::cout << "removing client: " << it->first;
-      std::cout << " due to timeout" << std::endl;
-      clientsToRemove.push_back(it->first);
+    while (it != ite) {
+        if (currentTime - it->second > TIMEOUT) {
+            clientsToRemove.push_back(it->first);
+        }
+        ++it;
     }
-  }
-
   std::vector<int>::iterator c_it = clientsToRemove.begin();
   std::vector<int>::iterator c_ite = clientsToRemove.end();
 
-  for (; c_it != c_ite; ++c_it) {
-    timeoutPool.erase(*c_it);
-
-    if (closeConnection(*c_it)) {
-      std::cout << "removing client: " << *c_it;
-      std::cout << " due to timeout" << std::endl;
+    while (c_it != c_ite) {
+        timeoutPool.erase(*c_it);
+        if (closeConnection(*c_it)) {
+            std::cout << "removing client: " << *c_it;
+            std::cout << " due to timeout" << std::endl;
+        }
+        ++c_it;
     }
-  }
 }
 
 int Controller::findConnectionSocket (int socketFD) {

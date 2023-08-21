@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 17:02:14 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 10:10:24 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,11 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
     head(request, response);
   else if (requestMethod == "DELETE")
     del(request, response);
+// --------------------------------------------
+    //IMPLEMENT POST POST POST POST HERE HERE
+// --------------------------------------------
+  else if (requestMethod == "POST")
+    post(request, response);
   else
     HttpResponseComposer::buildErrorResponse(response, 501, \
                        error_pages,
@@ -96,6 +101,45 @@ std::string Server::process(const std::vector<char> &buffer) {
 
   delete request;
   return response.getHeaders();
+}
+
+void Server::post(HttpRequest *request, HttpResponse *response) {
+  int protoMain = request->getProtocolMainVersion();
+  int protoSub = request->getProtocolSubVersion();
+  int opStatus = 0;
+  response->setProtocol("HTTP", protoMain, protoSub);
+  response->setLastModifiedTime(HttpTime::getLastModifiedTime(request->getResource()));
+
+  if (request->getPostType() == "NONE")
+    throw std::runtime_error("Wront POST REQUEST, NONE");
+
+  else if (request->getPostType() == "CHUNK") {
+    std::ofstream file(request->getlocationTest().c_str(), std::ofstream::out | std::ofstream::trunc);
+    if(file.is_open()) {
+      file.write(request->getRequestBody().c_str(), request->getRequestBody().size());
+      file.close();
+      opStatus = 201;
+    }
+    std::cout << " FILE CREATED MY LINDO" << std::endl;
+  }
+
+  else if (request->getPostType() == "MULTIPART") {
+    std::cout << " MULTIPART TODO" << std::endl;
+  }
+
+  if (opStatus != 0) {
+    HttpResponseComposer::buildErrorResponse(response, opStatus, error_pages, \
+                                             protoMain, protoSub);
+    return;
+  }
+  // NEED TO CREATE LOGIC FOR THIS, WE CAN HAVE 204 AND 201
+  // 204 for files that already exist
+  // 201 for files created
+  response->setStatusCode(201);
+  response->setContentType(MimeType::identify(request->getResource()));
+  //TODO , need to check if this logic works . . .
+  response->setContentLength(request->getRequestBody().size());
+  return;
 }
 
 void Server::get(HttpRequest *request, HttpResponse *response) {
