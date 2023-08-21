@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 18:45:30 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 15:57:50 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,8 @@
 #include <fcntl.h>
 
 int   setToNonBlock(int sock);
-void initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd);
+void  initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd);
+int   getPortFromFd(int connectionFd);
 
 Controller::Controller(const InputHandler &input) {
   std::vector<struct s_serverConfig>::iterator it = input.serverVector->begin();
@@ -29,7 +30,34 @@ Controller::Controller(const InputHandler &input) {
     this->serverPool.insert(std::make_pair(newServer->getPort(), newServer));
     ++it;
   }
+
   events.reserve(100);
+}
+
+Controller::~Controller(void) {
+  // todo: Implement resource liberation logic
+  // implement logic to close the epollfd 
+  
+  std::map<int, Client*>::iterator clientIt = connectedClients.begin();
+  std::map<int, Client*>::iterator clientIte = connectedClients.end();
+
+  for (; clientIt != clientIte; clientIt++) {
+    closeConnection(clientIt->first);
+  }
+
+  std::map<int, Server*>::iterator serverIt = serverPool.begin();
+  std::map<int, Server*>::iterator serverIte = serverPool.end();
+
+  for (; serverIt != serverIte; serverIt++) {
+    delete serverIt->second;
+  }
+
+  std::map<int, TCPServerSocket*>::iterator socketIt = socketPool.begin();
+  std::map<int, TCPServerSocket*>::iterator socketIte = socketPool.end();
+
+  for (; socketIt != socketIte; serverIt++) {
+    delete socketIte->second;
+  }
 }
 
 void Controller::endServer() {
@@ -43,15 +71,12 @@ void Controller::signalHandler(int signal) {
   }
 }
 
-Controller::~Controller(void) {
-  // todo: Implement resource liberation logic
-}
-
 void Controller::init(void) {
   //  Create epollfd
   std::signal(SIGINT, signalHandler);
   struct epoll_event ev;
   epollfd = epoll_create(1);
+
   if (epollfd == -1) {
     std::cerr << "Failed to create epoll. errno: " << errno << std::endl;
       exit(EXIT_FAILURE);
@@ -62,7 +87,7 @@ void Controller::init(void) {
   std::map<int, Server*>::iterator ite = serverPool.end();
 
   for (; it != ite; ++it) {
-    int port = it->second->getPort();;
+    int port = it->second->getPort();
     TCPServerSocket *socket = new TCPServerSocket(port);
     socket->bindAndListen();
     socketPool.insert(std::make_pair(port, socket));
@@ -79,8 +104,9 @@ void Controller::init(void) {
       std::cerr << "Failed to add sockfd to epoll. errno: ";
       std::cout << errno << std::endl;
       exit(EXIT_FAILURE);
-    } else
-        events.push_back(ev);
+    } else {
+      events.push_back(ev);
+    }
   }
 
   handleConnections();
@@ -112,9 +138,9 @@ void Controller::handleConnections(void) {
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         readFromClient(currentFd);
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        if (bufferPool[currentFd].empty()) {
-            i++;
-            continue;
+        if (connectedClients[currentFd]->getBuffer().empty()) {
+          i++;
+          continue;
         } else {
           sendToClient(currentFd);
         }
@@ -126,79 +152,58 @@ void Controller::handleConnections(void) {
 
 void Controller::checkTimeOut() {
   time_t currentTime = time(NULL);
-  std::vector<int> clientsToRemove;
-  std::map<int, time_t>::iterator it = timeoutPool.begin();
-  std::map<int, time_t>::iterator ite = timeoutPool.begin();
+  std::map<int, Client *>::iterator it = connectedClients.begin();
+  std::map<int, Client *>::iterator ite = connectedClients.end();
 
   for (; it != ite; ++it) {
-    if (currentTime - it->second > TIMEOUT) {
+    int connectionFd = it->first;
+    Client *client = it->second;
+
+    if (client != NULL && currentTime > client->getTimeout()) {
       std::cout << "removing client: " << it->first;
       std::cout << " due to timeout" << std::endl;
-      clientsToRemove.push_back(it->first);
+      closeConnection(connectionFd);
     }
   }
-
-  std::vector<int>::iterator c_it = clientsToRemove.begin();
-  std::vector<int>::iterator c_ite = clientsToRemove.end();
-
-  for (; c_it != c_ite; ++c_it) {
-    timeoutPool.erase(*c_it);
-
-    if (closeConnection(*c_it)) {
-      std::cout << "removing client: " << *c_it;
-      std::cout << " due to timeout" << std::endl;
-    }
-  }
-}
-
-int Controller::findConnectionSocket (int socketFD) {
-    for (size_t i = 0; i < socketPool.size(); i++) {
-    if (socketFD == socketPool[i]->getFD())
-      return (i);
-  }
-  return (-1);
 }
 
 void Controller::addNewConnection(int socketFD) {
-  int newConnection;
   struct epoll_event ev;
   struct sockaddr_in clientToAdd;
   socklen_t len = sizeof(clientToAdd);
-  newConnection = accept(socketFD, (struct sockaddr *)&clientToAdd, &len);
+  int newConnection = accept(socketFD, (struct sockaddr *)&clientToAdd, &len);
 
   if (newConnection < 0) {
     std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
-  } else {
-    initEpollEvent(&ev, EPOLLIN | EPOLLRDHUP | EPOLLOUT, newConnection);
-    bufferPool[newConnection];  // hacky way to initialize a buffer
-    time_t currentTime = time(NULL);
-    timeoutPool[newConnection] = currentTime;
-    if (setToNonBlock(newConnection))
-      throw std::runtime_error ("Nonblock setup error");
+    return;
+  } 
 
-    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, &ev) == -1) {
-      std::cerr << "Failed to add new connection to epoll. errno: " << errno
-                << std::endl;
-      close(newConnection);
-    } else {
-      connections.push_back(newConnection);
-      events.push_back(ev);
-    }
+  initEpollEvent(&ev, EPOLLIN | EPOLLRDHUP | EPOLLOUT, newConnection);
+  int serverPort = getSocketPort(newConnection);
+  Server *server = serverPool[serverPort];
+  time_t currentTime = time(NULL);
+
+  if (setToNonBlock(newConnection)) {
+    throw std::runtime_error ("Nonblock setup error");
   }
+
+  if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, &ev) == -1) {
+    std::cerr << "Failed to add new connection to epoll. errno: "; 
+    std::cerr << errno << std::endl;
+    close(newConnection);
+    return;
+  } 
+
+  Client *newClient = new Client(newConnection, server, serverPort, currentTime);
+  connectedClients.insert(std::make_pair(newConnection, newClient));
+  events.push_back(ev);
 }
 
 bool  Controller::closeConnection(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
   close(currentFd);
-  std::vector<int>::iterator it = connections.begin();
-
-  for (; it != connections.end(); ++it) {
-    if (*it == currentFd) {
-      connections.erase(it);
-      return true;
-    }
-  }
-
+  delete connectedClients[currentFd];
+  connectedClients.erase(currentFd);
   return false;
 }
 
@@ -216,10 +221,11 @@ bool Controller::isNewConnection(int currentFD) {
 
 void Controller::readFromClient(int currentFd) {
   int bytesRead = read(currentFd, buffer, 1024);
+  std::vector<char>& clientBuffer = connectedClients[currentFd]->getBuffer();
 
   if (bytesRead > 0) {
     for (int i = 0; i < bytesRead; i++) {
-        bufferPool[currentFd].push_back(buffer[i]);
+      clientBuffer.push_back(buffer[i]);
     }
     return;
   }
@@ -231,21 +237,17 @@ void Controller::readFromClient(int currentFd) {
 }
 
 void Controller::sendToClient(int currentFd) {
-  struct sockaddr_in address;
-  socklen_t sockAddrLen = sizeof(address);
+  Client *client = connectedClients[currentFd];
+  Server *server = client->getServer();
+  client->getBuffer().push_back('\0');
+  HttpResponse *response = server->process(client->getBuffer());
+  TCPServerSocket *socket = socketPool[client->getPort()];
+  socket->sendData(currentFd, response->getHeaders().c_str(), response->getHeaders().size());
+  socket->sendData(currentFd, response->getMsgBody(), response->getContentLength()); 
 
-  if (getsockname(currentFd, (struct sockaddr *)&address, &sockAddrLen) < 0) {
-    std::cout << "Error trying to get socket name" << std::endl;
-    exit(1);
-  }
-
-  bufferPool[currentFd].push_back('\0');
-  int port = ntohs(address.sin_port);
-  Server *server = serverPool[port];
-  std::string response = server->process(bufferPool[currentFd]);
-  TCPServerSocket *socket = socketPool[port];
-  socket->sendData(currentFd, response.c_str(), response.size());
-  std::vector<char>().swap(bufferPool[currentFd]);  // release memory and clean buffer
+  // cleaning
+  delete response;
+  client->reset();
 }
 
 int   setToNonBlock(int sock) {
@@ -266,4 +268,17 @@ void initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd) {
   bzero(ev, sizeof(*ev));
   ev->events = flag;
   ev->data.fd = fd;
+}
+
+int Controller::getSocketPort(int socketFd) {
+  struct sockaddr_in address;
+  socklen_t sockAddrLen = sizeof(address);
+
+  if (getsockname(socketFd, (struct sockaddr *)&address, &sockAddrLen) < 0) {
+    std::cout << "Error trying to get socket name" << std::endl;
+    return (-1);
+  }
+
+  int port = ntohs(address.sin_port);
+  return (port);
 }

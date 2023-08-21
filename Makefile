@@ -6,7 +6,7 @@
 #    By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/08/16 09:24:35 by dvargas          ###   ########.fr        #
+#    Updated: 2023/08/21 01:06:56 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,9 +22,10 @@ INPUT = $(addprefix input/, \
 	InputHandler.cpp		\
 )
 
-SOCKET = $(addprefix socket/, \
-	TcpServerSocket.cpp 	  \
-	Controller.cpp 			  \
+SOCKET = $(addprefix socket/,    \
+	TcpServerSocket.cpp 	 \
+	Controller.cpp 	         \
+	Client.cpp		 \
 )
 
 FILE = $(addprefix utils/, \
