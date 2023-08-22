@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 22:34:12 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/20 21:33:23 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 17:52:44 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,10 +136,4 @@ long long parseToMillis(std::string dateTimeStr) {
   long long milliseconds = static_cast<long long>(timestamp) * 1000;
 
   return (milliseconds);
-}
-
-long long HttpTime::getCurrentTimeInMillis(void) {
-  std::time_t currentTime = std::time(0);   // get time now
-  long long milliseconds = static_cast<long long>(currentTime) * 1000;
-  return milliseconds;  
 }

@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:51:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 02:11:04 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/10 20:54:56 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 class FileReader {
  public:
   static int getContent(const std::string &fileName, \
-                        char **resourceData, long long *resourceSize);
+                        std::vector<char> *resourceData);
  private:
   FileReader(void);
   FileReader(const FileReader& f);

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/22 08:26:01 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/21 10:10:24 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,13 +38,17 @@ Server::~Server(void) {
   delete socket;
 }
 
-int Server::resolve(HttpRequest *request, HttpResponse *response) {
+void  Server::resolve(HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
 
   if (!uTimestamp.empty() && \
       HttpTime::isModifiedSince(uTimestamp, request->getResource())) {
     // shim
-    return 412;
+    HttpResponseComposer::buildErrorResponse(response, 412, \
+                       error_pages,
+                       request->getProtocolMainVersion(), \
+                       request->getProtocolSubVersion());
+    return;
   }
 
   std::string requestMethod = request->getMethod();
@@ -53,15 +57,17 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
   it = std::find(allowedMethods.begin(), allowedMethods.end(), requestMethod);
 
   if (!allowedMethods.empty() && it == allowedMethods.end()) {
-    return 405;
+    HttpResponseComposer::buildErrorResponse(response, 405, \
+                       error_pages,
+                       request->getProtocolMainVersion(), \
+                       request->getProtocolSubVersion());
+    return;
   }
-  
-  int opStatus = 0;
 
   if (requestMethod == "GET")
-    opStatus = get(request, response);
+    get(request, response);
   else if (requestMethod == "HEAD")
-    opStatus = head(request, response);
+    head(request, response);
   else if (requestMethod == "DELETE")
     del(request, response);
 // --------------------------------------------
@@ -70,33 +76,31 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
   else if (requestMethod == "POST")
     post(request, response);
   else
-    opStatus = 501; 
-  
-  if (opStatus != 0) {
-    return (opStatus);
-  }
-  
-  return (0);
+    HttpResponseComposer::buildErrorResponse(response, 501, \
+                       error_pages,
+                       request->getProtocolMainVersion(), \
+                       request->getProtocolSubVersion());
 }
 
-HttpResponse *Server::process(const std::vector<char> &buffer) {
-  char *bf = const_cast<char *>(buffer.data()); // this is ugly beyond imagination
+std::string Server::process(const std::vector<char> &buffer) {
+  char *bf = const_cast<char *>(buffer.data());
   HttpRequest *request = HttpRequestFactory::createFrom(bf, locations);
-  HttpResponse *response = new HttpResponse();
+  HttpResponse response;
+
   int status = HttpRequestFactory::check(request);
 
-  if (status == 0) {
-    status = resolve(request, response);
-  }    
-
   if (status != 0) {
-    HttpResponseComposer::buildErrorResponse(response, status, error_pages, \
+    HttpResponseComposer::buildErrorResponse(&response, \
+                                          status, \
+                                          error_pages, \
                                           request->getProtocolMainVersion(), \
                                           request->getProtocolSubVersion());
+  } else {
+    resolve(request, &response);
   }
 
   delete request;
-  return response;
+  return response.getHeaders();
 }
 
 void Server::post(HttpRequest *request, HttpResponse *response) {
@@ -148,15 +152,16 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
 
   if (!HttpTime::isModifiedSince(unmodifiedTimestmap, request->getResource())) {
     response->setStatusCode(304);
-    return (0);
+    return;
   }
 
-  char *resourceData;
-  long long resourceSize;
-  int opStatus = FileReader::getContent(request->getResource(), &resourceData, &resourceSize);
+  std::vector<char> resourceData;
+  int opStatus = FileReader::getContent(request->getResource(), &resourceData);
 
   if (opStatus != 0) {
-    return opStatus;
+    HttpResponseComposer::buildErrorResponse(response, opStatus, error_pages, \
+                                             protoMain, protoSub);
+    return;
   }
 // TEM QUE CHECAR AQUI PRA VER SE VAI FICAR ASSIM.
   if (request->getResponseStatusCode() != 0)
@@ -166,11 +171,10 @@ void Server::get(HttpRequest *request, HttpResponse *response) {
 
   response->setContentType(MimeType::identify(request->getResource()));
   response->setMsgBody(resourceData);
-  response->setContentLength(resourceSize);
-  return (0);
+  response->setContentLength(resourceData.size());
 }
 
-int Server::head(HttpRequest *request, HttpResponse *response) {
+void Server::head(HttpRequest *request, HttpResponse *response) {
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
   response->setProtocol("HTTP", protoMain, protoSub);
@@ -183,14 +187,17 @@ int Server::head(HttpRequest *request, HttpResponse *response) {
   }
 
   if (opStatus != 0) {
-    return (opStatus);
+    HttpResponseComposer::buildErrorResponse(response, opStatus, error_pages, \
+                                             request->getProtocolMainVersion(), \
+                                             request->getProtocolSubVersion());
+    return;
   }
 
   std::string modifiedTimestmap = request->getModifiedTimestampCheck();
 
   if (!HttpTime::isModifiedSince(modifiedTimestmap, request->getResource())) {
     response->setStatusCode(304);
-    return (0);
+    return;
   }
 
   response->setLastModifiedTime(HttpTime::getLastModifiedTime(request->getResource()));
@@ -204,10 +211,9 @@ int Server::head(HttpRequest *request, HttpResponse *response) {
   response->setStatusCode(200);
   response->setContentType(MimeType::identify(request->getResource()));
   response->setContentLength(fileSize);
-  return (0);
 }
 
-int Server::del(HttpRequest *request, HttpResponse *response) {
+void Server::del(HttpRequest *request, HttpResponse *response) {
   std::ifstream inputFile;
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
@@ -222,19 +228,20 @@ int Server::del(HttpRequest *request, HttpResponse *response) {
   }
 
   if (opStatus != 0) {
-    return (opStatus);
+    HttpResponseComposer::buildErrorResponse(response, opStatus, error_pages, \
+                                             protoMain, protoSub);
+    return;
   }
 
-  char msgBody[] = {"File succefully deleted\n"};
-  long long msgBodySize = strlen(msgBody);
+  std::string msgBody = "File succefully deleted\n";
 
   response->setStatusCode(204);
-  response->setMsgBody(msgBody);
+  response->setMsgBody(std::vector<char>(msgBody.begin(), msgBody.end()));
   response->setProtocol("HTTP", protoMain, protoSub);
-  response->setContentLength(msgBodySize);
-  return (0);
+  response->setContentLength(msgBody.size());
 }
 
 int   Server::getPort(void) {
   return (port);
 }
+

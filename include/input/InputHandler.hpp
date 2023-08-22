@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 21:56:33 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/15 08:11:00 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ class InputHandler {
  private:
   void serverNameAdd(std::ifstream &fileStream, std::string &string);
   void printMap(std::map<int, std::string> mapi);
-  bool isAMethod(const std::string &word);
+  bool isAMethod(std::string word);
   void addLocation(std::ifstream &fileStream, s_locationConfig &newLocation);
   void addPort(std::ifstream &fileStream, std::string &string);
   void addToString(std::ifstream &fileStream, std::string &string);
@@ -51,7 +51,7 @@ class InputHandler {
   void addToVector(std::ifstream &fileStream, std::vector<std::string> &vec);
   void checkConfFile(char *fileArg);
   void newServerCheck(std::ifstream &fileStream, s_serverConfig &server);
-  void printLocations(const std::vector<s_locationConfig> &location);
+  void printLocations(std::vector<s_locationConfig> location);
   void addToPair(std::ifstream &fileStream, std::pair<int, std::string> &mapi);
 
  public:

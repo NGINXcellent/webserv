@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:52:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 02:28:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 17:22:22 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,8 @@ class HttpResponse {
   void          setProtocol(const std::string &protoName, int mainVer, int subVer);
   void          setStatusCode(int responseCode);
   void          setContentType(const std::string &mimeType);
-  void          setContentLength(long long fileSize);
-  long long     getContentLength(void);
-  void          setMsgBody(char *data);
-  char          *getMsgBody(void);
+  void          setContentLength(size_t fileSize);
+  void          setMsgBody(const std::vector<char>& data);
   void          setLastModifiedTime(const std::string &lmfTime);
 
  private:
@@ -41,8 +39,8 @@ class HttpResponse {
   std::string       serverVersion;
   std::string       modifiedTime;
   std::string       contentType;
-  long long         contentLength;
-  char*             msgBody;
+  size_t            contentLength;
+  std::vector<char> msgBody;
 
   HttpResponse(const HttpResponse& f);
   HttpResponse& operator=(const HttpResponse& t);

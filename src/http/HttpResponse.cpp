@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 16:29:45 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/18 17:29:13 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,7 @@ HttpResponse::HttpResponse(void) {
   serverVersion = "webserv/0.1";
 }
 
-HttpResponse::~HttpResponse(void) {
-  delete[] msgBody;
-}
+HttpResponse::~HttpResponse(void) {}
 
 std::string   HttpResponse::getHeaders(void) {
   std::stringstream ss;
@@ -44,9 +42,12 @@ std::string   HttpResponse::getHeaders(void) {
   ss.clear();
   ss.str("");
   ss << contentLength;
-
   responseHeader += "Content-length: " + ss.str() + "\n";
   responseHeader += "Connection: close\n\n";
+
+  for (size_t i = 0; i < msgBody.size(); i++) {
+    responseHeader += msgBody[i];
+  }
 
   return responseHeader;
 }
@@ -64,24 +65,16 @@ void HttpResponse::setProtocol(const std::string &protoName,
   this->protocol = stringProtocol;
 }
 
-void HttpResponse::setMsgBody(char *resourceData) {
-  msgBody = resourceData;
-}
-
-char *HttpResponse::getMsgBody(void) {
-  return msgBody;
+void HttpResponse::setMsgBody(const std::vector<char> &data) {
+  msgBody = data;
 }
 
 void HttpResponse::setContentType(const std::string &mime) {
   contentType = mime;
 }
 
-void HttpResponse::setContentLength(long long fileSize) {
+void HttpResponse::setContentLength(size_t fileSize) {
   contentLength = fileSize;
-}
-
-long long HttpResponse::getContentLength(void) {
-  return contentLength;
 }
 
 void HttpResponse::setStatusCode(int httpCode) {

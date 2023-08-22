@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 21:58:00 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/16 09:22:03 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ void InputHandler::addToString(std::ifstream &fileStream, \
   string = word;
 }
 
-bool InputHandler::isAMethod(const std::string &word) {
+bool InputHandler::isAMethod(std::string word) {
   if (word == "GET" || word == "POST" || word == "DELETE" || word == "HEAD")
     return true;
   return false;
@@ -310,7 +310,7 @@ void InputHandler::printMap(std::map<int, std::string> mapi) {
   }
 }
 
-void InputHandler::printLocations(const std::vector<s_locationConfig> &location) {
+void InputHandler::printLocations(std::vector<s_locationConfig> location) {
   for (size_t i = 0; i <= location.size() - 1; i++) {
     s_locationConfig toprint = location[i];
     std::cout << " location: " << toprint.location << std::endl;
