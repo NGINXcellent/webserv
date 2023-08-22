@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 16:29:45 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/22 12:41:22 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,13 @@ HttpResponse::HttpResponse(void) {
   statusMessage = "OK";
   contentLength = 0;
   serverVersion = "webserv/0.1";
+  msgBody = NULL;
 }
 
 HttpResponse::~HttpResponse(void) {
-  delete[] msgBody;
+  if (msgBody != NULL) {
+    delete[] msgBody;
+  }
 }
 
 std::string   HttpResponse::getHeaders(void) {

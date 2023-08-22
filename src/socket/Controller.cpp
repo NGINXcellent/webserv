@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 15:57:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/22 16:16:06 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ void Controller::init(void) {
     std::cout << "[LOG]\tlistening on port: " << socket->getPort() << std::endl;
 
     // Bind sockfd on epoll event
-    initEpollEvent(&ev, EPOLLIN, socket->getFD());
+    initEpollEvent(&ev, EPOLLIN | EPOLLOUT, socket->getFD());
 
     if (setToNonBlock(socket->getFD())) {
       throw std::runtime_error("Non Block Error");
@@ -136,12 +136,10 @@ void Controller::handleConnections(void) {
         std::cout << " is closed by client" << std::endl;
         closeConnection(currentFd);
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
+        std::cout << "stuck on epollin" << std::endl;
         readFromClient(currentFd);
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        if (connectedClients[currentFd]->getBuffer().empty()) {
-          i++;
-          continue;
-        } else {
+        if (!connectedClients[currentFd]->getBuffer().empty()) {
           sendToClient(currentFd);
         }
       }
@@ -154,16 +152,22 @@ void Controller::checkTimeOut() {
   time_t currentTime = time(NULL);
   std::map<int, Client *>::iterator it = connectedClients.begin();
   std::map<int, Client *>::iterator ite = connectedClients.end();
+  std::vector<int> clientsToDelete;
 
   for (; it != ite; ++it) {
     int connectionFd = it->first;
     Client *client = it->second;
 
     if (client != NULL && currentTime > client->getTimeout()) {
-      std::cout << "removing client: " << it->first;
-      std::cout << " due to timeout" << std::endl;
-      closeConnection(connectionFd);
+      std::cout << "client dead" << std::endl;
+      clientsToDelete.push_back(connectionFd);    
     }
+  }
+
+  for (size_t i = 0; i < clientsToDelete.size(); i++) {
+    closeConnection(clientsToDelete[i]);
+    std::cout << "Connection with FD -> " << clientsToDelete[i];
+    std::cout << " close due to timeout" << std::endl;
   }
 }
 
@@ -201,6 +205,15 @@ void Controller::addNewConnection(int socketFD) {
 
 bool  Controller::closeConnection(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
+  std::vector<struct epoll_event>::iterator it = events.begin();
+
+  for (; it < events.end(); it++) {
+    if (currentFd == it->data.fd) {
+      events.erase(it);
+      break;
+    }
+  }
+
   close(currentFd);
   delete connectedClients[currentFd];
   connectedClients.erase(currentFd);
@@ -229,11 +242,6 @@ void Controller::readFromClient(int currentFd) {
     }
     return;
   }
-
-  // Connection error or close, we remove from epoll
-  std::cout << "Connection with FD -> " << currentFd;
-  std::cout << " is closed by server" << std::endl;
-  closeConnection(currentFd);
 }
 
 void Controller::sendToClient(int currentFd) {
