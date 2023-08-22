@@ -6,11 +6,13 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 08:24:22 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/22 19:17:31 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequest.hpp"
+
+#include <sstream>
 
 HttpRequest::HttpRequest(void) {
   protocolMainVersion = -1;
@@ -28,7 +30,7 @@ int HttpRequest::getResponseStatusCode() {
 
 HttpRequest::~HttpRequest(void) {}
 
-const std::string &HttpRequest::getResource(void) {
+const std::string& HttpRequest::getResource(void) {
   return (this->resource);
 }
 
@@ -36,7 +38,7 @@ void HttpRequest::setResource(const std::string &resource) {
   this->resource = resource;
 }
 
-const std::string &HttpRequest::getMethod(void) {
+const std::string& HttpRequest::getMethod(void) {
   return (this->method);
 }
 
@@ -44,7 +46,7 @@ void HttpRequest::setMethod(const std::string &method) {
   this->method = method;
 }
 
-const std::string &HttpRequest::getProtocolName(void) {
+const std::string& HttpRequest::getProtocolName(void) {
   return (this->protocolName);
 }
 
@@ -65,7 +67,7 @@ void HttpRequest::setProtocolVersion(int main, int sub) {
   protocolSubVersion = sub;
 }
 
-const std::string &HttpRequest::getHost(void) {
+const std::string& HttpRequest::getHost(void) {
   return (this->host);
 }
 
@@ -77,11 +79,11 @@ void HttpRequest::setModifiedTimestampCheck(const std::string &timestamp) {
   modifiedTimestampCheck = timestamp;
 }
 
-const std::string &HttpRequest::getModifiedTimestampCheck(void) {
+const std::string& HttpRequest::getModifiedTimestampCheck(void) {
   return (this->modifiedTimestampCheck);
 }
 
-const std::string &HttpRequest::getUnmodifiedSinceTimestamp(void) {
+const std::string& HttpRequest::getUnmodifiedSinceTimestamp(void) {
   return (this->unmodifiedSinceTimestamp);
 }
 
@@ -89,7 +91,7 @@ void HttpRequest::setUnmodifiedSinceTimestamp(const std::string &unmodifiedTimes
   unmodifiedSinceTimestamp = unmodifiedTimestamp;
 }
 
-const std::vector<std::string> &HttpRequest::getAllowedMethods(void) {
+const std::vector<std::string>& HttpRequest::getAllowedMethods(void) {
   return (this->allowedMethodList);
 }
 
@@ -97,26 +99,54 @@ void HttpRequest::setAllowedMethods(const std::vector<std::string> &allowedList)
   allowedMethodList = allowedList;
 }
 
-const std::string &HttpRequest::getPostType(void) {
+const std::string& HttpRequest::getPostType(void) {
   return (this->postType);
 }
 
-void HttpRequest::setPostType(std::string type) {
+void HttpRequest::setPostType(const std::string &type) {
   postType = type;
 }
 
-void HttpRequest::setRequestBody(std::string body) {
+const std::string& HttpRequest::getRequestBody(void) {
+  return (requestBody);
+}
+
+void HttpRequest::setRequestBody(const std::string &body) {
   requestBody = body;
 }
 
-std::string HttpRequest::getRequestBody(void) {
-  return requestBody;
+
+const std::string& HttpRequest::getLocationTest(void) {
+  return (locationTest);
 }
 
-void HttpRequest::setlocationTest(std::string loc) {
+void HttpRequest::setLocationTest(const std::string &loc) {
   locationTest = loc;
 }
 
-std::string HttpRequest::getlocationTest(void) {
-  return locationTest;
+size_t HttpRequest::getContentLength(void) {
+  return (bodySize);
+}
+
+void HttpRequest::setContentLength(const std::string& sizeStr) {
+  if (sizeStr.empty()) {
+    bodySize = 0; 
+  }
+
+  size_t number;
+  std::stringstream ss(sizeStr);
+  ss >> number;
+  
+  if (!ss.fail()) {
+    char leftover;
+    ss >> leftover;
+
+    if (!ss.fail()) {
+      bodySize = -1;
+    } else {
+      bodySize = number;
+    }
+  } else {
+    bodySize = -1;
+  }
 }

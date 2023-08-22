@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 10:10:24 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/22 19:38:05 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,9 +82,8 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
                        request->getProtocolSubVersion());
 }
 
-std::string Server::process(const std::vector<char> &buffer) {
-  char *bf = const_cast<char *>(buffer.data());
-  HttpRequest *request = HttpRequestFactory::createFrom(bf, locations);
+std::string Server::process(std::vector<char> &buffer) {
+  HttpRequest *request = HttpRequestFactory::createFrom(buffer, locations);
   HttpResponse response;
 
   int status = HttpRequestFactory::check(request);
@@ -114,7 +113,7 @@ void Server::post(HttpRequest *request, HttpResponse *response) {
     throw std::runtime_error("Wront POST REQUEST, NONE");
 
   else if (request->getPostType() == "CHUNK") {
-    std::ofstream file(request->getlocationTest().c_str(), std::ofstream::out | std::ofstream::trunc);
+    std::ofstream file(request->getLocationTest().c_str(), std::ofstream::out | std::ofstream::trunc);
     if(file.is_open()) {
       file.write(request->getRequestBody().c_str(), request->getRequestBody().size());
       file.close();
