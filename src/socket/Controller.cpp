@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/22 16:07:48 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/22 16:16:06 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,6 @@ void Controller::handleConnections(void) {
     }
 
     for (int i = 0; i < numEvents; ++i) {
-      std::cout << "event num: " << numEvents << std::endl;
       int currentFd = events[i].data.fd;    // this client fd
       int currentEvent = events[i].events;  // this client event state
 
@@ -140,11 +139,10 @@ void Controller::handleConnections(void) {
         std::cout << "stuck on epollin" << std::endl;
         readFromClient(currentFd);
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        std::cout << "epollout is trying to run" << std::endl;
         if (!connectedClients[currentFd]->getBuffer().empty()) {
           sendToClient(currentFd);
         }
-      } 
+      }
     }
     checkTimeOut();
   }
