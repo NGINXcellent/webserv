@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 15:57:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/22 13:42:49 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,16 +154,22 @@ void Controller::checkTimeOut() {
   time_t currentTime = time(NULL);
   std::map<int, Client *>::iterator it = connectedClients.begin();
   std::map<int, Client *>::iterator ite = connectedClients.end();
+  std::vector<int> clientsToDelete;
 
   for (; it != ite; ++it) {
     int connectionFd = it->first;
     Client *client = it->second;
 
     if (client != NULL && currentTime > client->getTimeout()) {
-      std::cout << "removing client: " << it->first;
-      std::cout << " due to timeout" << std::endl;
-      closeConnection(connectionFd);
+      std::cout << "client dead" << std::endl;
+      clientsToDelete.push_back(connectionFd);    
     }
+  }
+
+  for (size_t i = 0; i < clientsToDelete.size(); i++) {
+    closeConnection(clientsToDelete[i]);
+    std::cout << "Connection with FD -> " << clientsToDelete[i];
+    std::cout << " close due to timeout" << std::endl;
   }
 }
 

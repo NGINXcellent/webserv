@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 13:39:32 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/22 13:25:07 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,13 +181,17 @@ int Server::del(HttpRequest *request, HttpResponse *response) {
     return (opStatus);
   }
 
-  char msgBody[] = {"File succefully deleted\n"};
-  long long msgBodySize = strlen(msgBody);
+  std::string msg = "File succefully deleted\n";
+  char *msgBody = new char[msg.size()];
+
+  for (size_t i = 0; i < msg.size(); i++) {
+    msgBody[i] = msg[i];
+  }
 
   response->setStatusCode(204);
   response->setMsgBody(msgBody);
   response->setProtocol("HTTP", protoMain, protoSub);
-  response->setContentLength(msgBodySize);
+  response->setContentLength(msg.size());
   return (0);
 }
 
