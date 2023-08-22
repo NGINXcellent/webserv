@@ -5,13 +5,11 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 07:10:37 by dvargas          ###   ########.fr       */
+/*   Created: 2023/08/22 08:24:07 by dvargas           #+#    #+#             */
+/*   Updated: 2023/08/22 08:24:12 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-
-#ifndef SERVER_HPP
 # define SERVER_HPP
 
 #include "./HttpRequest.hpp"
@@ -29,13 +27,13 @@ class Server {
   Server(const struct s_serverConfig& config);
   ~Server(void);
 
-  std::string      process(const std::vector<char> &buffer);
-  void             resolve(HttpRequest *request, HttpResponse *response);
-  void             get(HttpRequest *request, HttpResponse *response);
-  void             head(HttpRequest *request, HttpResponse *response);
-  void             post(HttpRequest *request, HttpResponse *response);
-  void             del(HttpRequest *request, HttpResponse *response);
-  int              getPort(void);
+  HttpResponse     *process(const std::vector<char> &buffer);
+  int             resolve(HttpRequest *request, HttpResponse *response);
+  int             get(HttpRequest *request, HttpResponse *response);
+  int             head(HttpRequest *request, HttpResponse *response);
+  int             post(HttpRequest *request, HttpResponse *response);
+  int             del(HttpRequest *request, HttpResponse *response);
+  int             getPort(void);
 
  private:
   size_t                        port;

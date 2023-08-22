@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:32:28 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/12 18:37:09 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/21 02:11:49 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,10 +19,7 @@
 
 bool isRegularFile(const std::string &filename);
 
-int FileReader::getContent(const std::string &fileName, std::vector<char> *resourceData) {
-  std::ifstream inputFile;
-
-
+int FileReader::getContent(const std::string &fileName, char **resourceData, long long *resourceSize) {
   if (access(fileName.c_str(), F_OK) == -1) {
     return 404;
   }
@@ -34,6 +31,7 @@ int FileReader::getContent(const std::string &fileName, std::vector<char> *resou
   if (!isRegularFile(fileName.c_str()))
     return (404);
 
+  std::ifstream inputFile;
   inputFile.open(fileName.c_str(), std::ios::binary);
 
   if (!inputFile.is_open()) {
@@ -41,12 +39,15 @@ int FileReader::getContent(const std::string &fileName, std::vector<char> *resou
     return -1;
   }
 
-  char byte = 0;
+  // Determine the size of the file
+  inputFile.seekg(0, std::ios::end);
+  std::streampos fileSize = inputFile.tellg();
+  inputFile.seekg(0, std::ios::beg);
 
-  while (inputFile.get(byte)) {
-    resourceData->push_back(byte);
-  }
-
+  // Allocate a buffer to hold the entire content
+  *resourceData = new char[fileSize];
+  *resourceSize = static_cast<long long>(fileSize);
+  inputFile.read(*resourceData, fileSize);
   inputFile.close();
   return (0);
 }
