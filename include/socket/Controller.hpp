@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 09:59:38 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/22 23:51:18 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class Controller {
   std::vector<int>                  connections;
   std::map<int, Server*>            serverPool;
   std::map<int, TCPServerSocket*>   socketPool;
-  std::map<int, std::vector<char> > bufferPool;  // connectionFD, buffer
+  std::map<int, std::string> 	    bufferPool;  // connectionFD, buffer
   char                              buffer[1024];
   std::map<int, time_t>             timeoutPool;
   int                               epollfd;

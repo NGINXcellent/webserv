@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 09:59:13 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/22 23:55:21 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,7 +216,7 @@ void Controller::readFromClient(int currentFd) {
 
   if (bytesRead > 0) {
     for (int i = 0; i < bytesRead; i++) {
-        bufferPool[currentFd].push_back(buffer[i]);
+        bufferPool[currentFd] += buffer[i];
     }
     return;
   }
@@ -242,7 +242,7 @@ void Controller::sendToClient(int currentFd) {
   std::string response = server->process(bufferPool[currentFd]);
   TCPServerSocket *socket = socketPool[port];
   socket->sendData(currentFd, response.c_str(), response.size());
-  std::vector<char>().swap(bufferPool[currentFd]);  // release memory and clean buffer
+  bufferPool[currentFd].clear();  // release memory and clean buffer
 }
 
 int   setToNonBlock(int sock) {
