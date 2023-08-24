@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:15:50 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 09:02:15 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/23 23:10:10 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ void HttpStatus::init(void) {
   messages.insert(std::make_pair(100, "Continue"));
   // 200 class
   messages.insert(std::make_pair(200, "OK"));
+  messages.insert(std::make_pair(201, "Created"));
   messages.insert(std::make_pair(204, "No Content"));
 
   // 300 class - redirection

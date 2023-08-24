@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/23 22:26:07 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/23 22:34:24 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,10 +57,9 @@ class HttpRequest {
   const std::string&    getLocationWithoutIndex(void);
   void                  setLocationWithoutIndex(const std::string &loc);
   void                  setBoundary(const std::string &boundary);
-  const std::string&    getBoundary();
+  const std::string&    getBoundary(void);
   void                  setMultipartStruct(const std::vector<s_multipartStruct>& parts);
   const std::vector<s_multipartStruct>& getMultipartStruct();
-
 
  private:
   std::string               protocolName;

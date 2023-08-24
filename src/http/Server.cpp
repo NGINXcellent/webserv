@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/23 22:26:11 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/23 23:19:00 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,34 +104,45 @@ void Server::post(HttpRequest *request, HttpResponse *response) {
   int protoSub = request->getProtocolSubVersion();
   int opStatus = 0;
   response->setProtocol("HTTP", protoMain, protoSub);
-  response->setLastModifiedTime(HttpTime::getLastModifiedTime(request->getResource()));
+  response->setLastModifiedTime(
+      HttpTime::getLastModifiedTime(request->getResource()));
 
-  if (request->getPostType() == "NONE")
-    throw std::runtime_error("Wront POST REQUEST, NONE");
+  if (request->getPostType() == "NONE") {
+    throw std::runtime_error("Wrong POST REQUEST, NONE");
+  }
 
   else if (request->getPostType() == "CHUNK") {
-    std::ofstream file(request->getLocationWithoutIndex().c_str(), std::ofstream::out | std::ofstream::trunc);
-    if(file.is_open()) {
-      file.write(request->getRequestBody().c_str(), request->getRequestBody().size());
+    std::ofstream file(request->getLocationWithoutIndex().c_str(),
+                       std::ofstream::out | std::ofstream::trunc);
+
+    if (file.is_open()) {
+      file.write(request->getRequestBody().c_str(),
+                 request->getRequestBody().size());
       file.close();
-      opStatus = 201;
+      opStatus = 201; // chunk does not work properlly
+    } else {
+      opStatus = 500;
     }
   }
 
   else if (request->getPostType() == "MULTIPART") {
     std::vector<s_multipartStruct> multiParts = request->getMultipartStruct();
 
-// CREATE FILES AND INSERT CONTENT INSIDE;
+    // CREATE FILES AND INSERT CONTENT INSIDE;
     for (size_t i = 1; i < multiParts.size(); i++) {
       std::string location = request->getLocationWithoutIndex();
-      std::string filename_ = location + '/' + multiParts[i].name + "_fromClient";
+      std::string filename_ =
+          location + '/' + multiParts[i].name + "_fromClient";
       std::cout << filename_ << std::endl;
-      std::ofstream file(filename_.c_str(), std::ofstream::out | std::ofstream::trunc);
+      std::ofstream file(filename_.c_str(),
+                         std::ofstream::out | std::ofstream::trunc);
+
       if (file.is_open()) {
         file << multiParts[i].content;
         file.close();
-      } else
-          opStatus = 500;
+      } else {
+        opStatus = 500;
+      }
     }
   }
 
