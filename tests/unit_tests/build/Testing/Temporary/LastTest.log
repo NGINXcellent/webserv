@@ -1,0 +1,152 @@
+Start testing: Aug 24 20:36 -03
+----------------------------------------------------------
+1/5 Testing: InputTests
+1/5 Test: InputTests
+Command: "/home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/InputTests/InputTests"
+Directory: /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/InputTests
+"InputTests" start time: Aug 24 20:36 -03
+Output:
+----------------------------------------------------------
+Running main() from /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 8 tests from 3 test suites.
+[----------] Global test environment set-up.
+[----------] 3 tests from InputTests
+[ RUN      ] InputTests.BasicTests
+[       OK ] InputTests.BasicTests (0 ms)
+[ RUN      ] InputTests.ExtensionTests
+[       OK ] InputTests.ExtensionTests (0 ms)
+[ RUN      ] InputTests.ArgcTests
+[       OK ] InputTests.ArgcTests (0 ms)
+[----------] 3 tests from InputTests (0 ms total)
+
+[----------] 3 tests from CheckConfTests
+[ RUN      ] CheckConfTests.BasicTest
+[       OK ] CheckConfTests.BasicTest (0 ms)
+[ RUN      ] CheckConfTests.MultipleServersTest
+[       OK ] CheckConfTests.MultipleServersTest (0 ms)
+[ RUN      ] CheckConfTests.FailTests
+[       OK ] CheckConfTests.FailTests (0 ms)
+[----------] 3 tests from CheckConfTests (0 ms total)
+
+[----------] 2 tests from LocationConfTests
+[ RUN      ] LocationConfTests.BasicTests
+[       OK ] LocationConfTests.BasicTests (0 ms)
+[ RUN      ] LocationConfTests.FailTests
+[       OK ] LocationConfTests.FailTests (0 ms)
+[----------] 2 tests from LocationConfTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 8 tests from 3 test suites ran. (1 ms total)
+[  PASSED  ] 8 tests.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"InputTests" end time: Aug 24 20:36 -03
+"InputTests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/5 Testing: RequestTests
+2/5 Test: RequestTests
+Command: "/home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/RequestTests/RequestTests"
+Directory: /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/RequestTests
+"RequestTests" start time: Aug 24 20:36 -03
+Output:
+----------------------------------------------------------
+Running main() from /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 0 tests from 0 test suites.
+[==========] 0 tests from 0 test suites ran. (0 ms total)
+[  PASSED  ] 0 tests.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"RequestTests" end time: Aug 24 20:36 -03
+"RequestTests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/5 Testing: ResponseTests
+3/5 Test: ResponseTests
+Command: "/home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/ResponseTests/ResponseTests"
+Directory: /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/ResponseTests
+"ResponseTests" start time: Aug 24 20:36 -03
+Output:
+----------------------------------------------------------
+Running main() from /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ResponseTests
+[ RUN      ] ResponseTests.ServerHeaderTests
+[       OK ] ResponseTests.ServerHeaderTests (0 ms)
+[----------] 1 test from ResponseTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"ResponseTests" end time: Aug 24 20:36 -03
+"ResponseTests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/5 Testing: FileTests
+4/5 Test: FileTests
+Command: "/home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/FileTests/FileTests"
+Directory: /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/FileTests
+"FileTests" start time: Aug 24 20:36 -03
+Output:
+----------------------------------------------------------
+Running main() from /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 3 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 3 tests from FileTests
+[ RUN      ] FileTests.BasicMimeTypeTests
+[       OK ] FileTests.BasicMimeTypeTests (0 ms)
+[ RUN      ] FileTests.NonExistentMimeTypes
+[       OK ] FileTests.NonExistentMimeTypes (0 ms)
+[ RUN      ] FileTests.WeirdNameFormats
+[       OK ] FileTests.WeirdNameFormats (0 ms)
+[----------] 3 tests from FileTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 3 tests.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"FileTests" end time: Aug 24 20:36 -03
+"FileTests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/5 Testing: HttpTests
+5/5 Test: HttpTests
+Command: "/home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/HttpTests/HttpTests"
+Directory: /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/HttpTests
+"HttpTests" start time: Aug 24 20:36 -03
+Output:
+----------------------------------------------------------
+Running main() from /home/freemanc14/Projects/42cursus/webserv/tests/unit_tests/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 2 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 2 tests from HttpTests
+[ RUN      ] HttpTests.BasicStatusTests
+[       OK ] HttpTests.BasicStatusTests (0 ms)
+[ RUN      ] HttpTests.NonExistentStatus
+[       OK ] HttpTests.NonExistentStatus (0 ms)
+[----------] 2 tests from HttpTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 2 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 2 tests.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"HttpTests" end time: Aug 24 20:36 -03
+"HttpTests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 24 20:36 -03

@@ -6,7 +6,7 @@
 #    By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/08/24 18:00:37 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/08/24 19:51:10 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ CXX 		= c++
 
 CXXFLAGS	= -Wall -Werror -Wextra -std=c++98 -g
 
-TEST_BUILD 	= tests/build
+TEST_BUILD 	= tests/unit_tests/build
 
 CONFIG = $(addprefix config/, \
 	InputHandler.cpp		\
@@ -62,10 +62,10 @@ fclean: clean
 re: fclean all
 
 $(TEST_BUILD):
-	@cd tests && cmake -S . -B build
+	@cd tests/unit_tests && cmake -S . -B build
 
 test: $(TEST_BUILD)
-	@cd tests && cmake --build build && cd build && ctest --output-on-failure 
+	@cd tests/unit_tests && cmake --build build && cd build && ctest --output-on-failure 
 
 cleantest:
 	rm -rf $(TEST_BUILD)

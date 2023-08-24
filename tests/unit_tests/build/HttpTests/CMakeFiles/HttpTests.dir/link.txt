@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/HttpTests.dir/HttpStatusTests.cpp.o CMakeFiles/HttpTests.dir/ServerTests.cpp.o -o HttpTests  ../lib/libgtest_main.a ../libwebserv.a ../lib/libgtest.a 
