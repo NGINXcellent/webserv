@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/23 22:08:13 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/24 08:47:45 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,8 +139,6 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
     return request;
   }
 
-//  TODO TALVEZ TENHA QUE FAZXER UM LOCATION ESPECIRFICO PARA ESSA SITUACAO AQUI
-
   // extract request line
   std::string reqLine = requestMsg.substr(0, pos);
   requestMsg.erase(0, pos + 1);
@@ -184,7 +182,7 @@ bool isDirectory(const char* path) {
 }
 
 
-void HttpRequestFactory::createLocation(std::string &buffer,
+void HttpRequestFactory::createLocation(std::string buffer,
                            std::vector<s_locationConfig> locations,
                            HttpRequest *request) {
     std::istringstream streaming(buffer);
@@ -236,8 +234,8 @@ void HttpRequestFactory::createLocation(std::string &buffer,
 
           request->setAllowedMethods(locations[i].allowed_method);
           request->setLocation(ret);
-          std::cout << "ret de location " << request->getLocation() << std::endl;
-          std::cout << "ret de location " << request->getLocationWithoutIndex() << std::endl;
+          // std::cout << "ret de location " << request->getLocation() << std::endl;
+          // std::cout << "ret de location " << request->getLocationWithoutIndex() << std::endl;
           return;
         }
     }
@@ -303,9 +301,10 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
     } else if (line.empty() && emptyLineFound) {
       continue;
     } else if (!line.empty() && emptyLineFound) {
-      if (request->getMethod() != "POST") {
-        return false;
-      }
+      // CAN WE RETIRE THIS COMMENTED CODE ?
+      // if (request->getMethod() != "POST") {
+      //   return false;
+      // }
 
       break;
     }

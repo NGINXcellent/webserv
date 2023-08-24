@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/23 23:19:00 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/24 08:57:11 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,6 +99,10 @@ std::string Server::process(std::string &buffer) {
   return response.getHeaders();
 }
 
+bool fileExists(const std::string& filename) {
+    return (access(filename.c_str(), F_OK) != -1);
+}
+
 void Server::post(HttpRequest *request, HttpResponse *response) {
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
@@ -112,14 +116,19 @@ void Server::post(HttpRequest *request, HttpResponse *response) {
   }
 
   else if (request->getPostType() == "CHUNK") {
-    std::ofstream file(request->getLocationWithoutIndex().c_str(),
+    std::string location = request->getLocationWithoutIndex();
+
+    if (fileExists(location))
+      response->setStatusCode(204);
+    else
+      response->setStatusCode(201);
+
+    std::ofstream file(location.c_str(),
                        std::ofstream::out | std::ofstream::trunc);
 
     if (file.is_open()) {
-      file.write(request->getRequestBody().c_str(),
-                 request->getRequestBody().size());
+      file << request->getRequestBody();
       file.close();
-      opStatus = 201; // chunk does not work properlly
     } else {
       opStatus = 500;
     }
@@ -131,10 +140,15 @@ void Server::post(HttpRequest *request, HttpResponse *response) {
     // CREATE FILES AND INSERT CONTENT INSIDE;
     for (size_t i = 1; i < multiParts.size(); i++) {
       std::string location = request->getLocationWithoutIndex();
-      std::string filename_ =
+      std::string filename =
           location + '/' + multiParts[i].name + "_fromClient";
-      std::cout << filename_ << std::endl;
-      std::ofstream file(filename_.c_str(),
+      std::cout << filename << std::endl;
+
+      if(fileExists(filename))
+        response->setStatusCode(204);
+      else
+        response->setStatusCode(201);
+      std::ofstream file(filename.c_str(),
                          std::ofstream::out | std::ofstream::trunc);
 
       if (file.is_open()) {
@@ -151,13 +165,9 @@ void Server::post(HttpRequest *request, HttpResponse *response) {
                                              protoMain, protoSub);
     return;
   }
-  // NEED TO CREATE LOGIC FOR THIS, WE CAN HAVE 204 AND 201
-  // 204 for files that already exist
-  // 201 for files created
-  response->setStatusCode(201);
   response->setContentType(MimeType::identify(request->getResource()));
-  //TODO , need to check if this logic works . . .
-  response->setContentLength(request->getRequestBody().size());
+  // TODO: SETUP CORRECT CONTENT LENGHT IN POST;
+  response->setContentLength(0);
   return;
 }
 
