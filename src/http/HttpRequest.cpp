@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/23 21:31:17 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/23 22:07:42 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,12 +116,20 @@ void HttpRequest::setRequestBody(const std::string &body) {
 }
 
 
-const std::string& HttpRequest::getLocationTest(void) {
-  return (locationTest);
+const std::string& HttpRequest::getLocation(void) {
+  return (location);
 }
 
-void HttpRequest::setLocationTest(const std::string &loc) {
-  locationTest = loc;
+void HttpRequest::setLocation(const std::string &loc) {
+  location = loc;
+}
+
+const std::string& HttpRequest::getLocationWithoutIndex(void) {
+  return (this->locationWithoutIndex);
+}
+
+void HttpRequest::setLocationWithoutIndex(const std::string &locWithoutIndex) {
+  this->locationWithoutIndex = locWithoutIndex;
 }
 
 size_t HttpRequest::getContentLength(void) {

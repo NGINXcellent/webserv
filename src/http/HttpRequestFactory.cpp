@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/23 21:45:19 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/23 22:08:13 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
                                     std::vector<s_locationConfig> locations) {
   // shim
   HttpRequest *request = new HttpRequest();
-  std::string location = createLocation(requestMsg, locations, request);
+  createLocation(requestMsg, locations, request);
   size_t pos = requestMsg.find_first_of('\n');
 
   if (pos == std::string::npos) {
@@ -140,12 +140,11 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   }
 
 //  TODO TALVEZ TENHA QUE FAZXER UM LOCATION ESPECIRFICO PARA ESSA SITUACAO AQUI
-  request->setLocationTest(location);
 
   // extract request line
   std::string reqLine = requestMsg.substr(0, pos);
   requestMsg.erase(0, pos + 1);
-  parseRequestLine(&reqLine, request, location);
+  parseRequestLine(&reqLine, request, request->getLocation());
 
   // extract the headers
   if (!parseHeaders(&requestMsg, request)) {
@@ -185,7 +184,7 @@ bool isDirectory(const char* path) {
 }
 
 
-std::string createLocation(std::string &buffer,
+void HttpRequestFactory::createLocation(std::string &buffer,
                            std::vector<s_locationConfig> locations,
                            HttpRequest *request) {
     std::istringstream streaming(buffer);
@@ -194,7 +193,7 @@ std::string createLocation(std::string &buffer,
     std::vector<std::string> tokens;
 
     if(line.empty()) {
-      return "";
+      return;
     }
 
     std::istringstream iss(line);
@@ -227,7 +226,7 @@ std::string createLocation(std::string &buffer,
               ret += tokens[j];
             }
           }
-
+          request->setLocationWithoutIndex(ret);
           if (isDirectory(ret.c_str()) && !locations[i].index.empty()) {
             if (ret != "./")
               ret += '/' + locations[i].index;
@@ -236,12 +235,13 @@ std::string createLocation(std::string &buffer,
           }
 
           request->setAllowedMethods(locations[i].allowed_method);
-          std::cout << "ret de location " << ret << std::endl;
-          return ret;
+          request->setLocation(ret);
+          std::cout << "ret de location " << request->getLocation() << std::endl;
+          std::cout << "ret de location " << request->getLocationWithoutIndex() << std::endl;
+          return;
         }
     }
-
-    return "";
+    return;
 }
 
 void parseRequestLine(std::string *requestLine, HttpRequest *request,

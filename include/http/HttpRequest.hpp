@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/23 21:16:07 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/23 22:26:07 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,8 +52,10 @@ class HttpRequest {
   void                  setRequestBody(const std::string &body);
   size_t                getContentLength(void);
   void                  setContentLength(const std::string &sizeStr);
-  const std::string&    getLocationTest(void);
-  void                  setLocationTest(const std::string &loc);
+  const std::string&    getLocation(void);
+  void                  setLocation(const std::string &loc);
+  const std::string&    getLocationWithoutIndex(void);
+  void                  setLocationWithoutIndex(const std::string &loc);
   void                  setBoundary(const std::string &boundary);
   const std::string&    getBoundary();
   void                  setMultipartStruct(const std::vector<s_multipartStruct>& parts);
@@ -73,11 +75,10 @@ class HttpRequest {
   std::vector<std::string>  allowedMethodList;
   size_t                    bodySize;
   std::string               requestBody;
-  std::string               locationTest;
+  std::string               location;
+  std::string               locationWithoutIndex;
   std::string               boundary;
   std::vector<s_multipartStruct>  multipartStructVector;
-
-  //TESTANDO COM O METODO POST
   std::string               postType;
 
   HttpRequest(const HttpRequest& f);
