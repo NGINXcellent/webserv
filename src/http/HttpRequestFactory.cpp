@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/15 09:30:17 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/24 16:37:00 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,30 +24,34 @@
 void parseRequestLine(std::string *msg, HttpRequest *request, std::string location);
 bool parseHeaders(std::string *msg, HttpRequest *request);
 bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
-std::string createLocation(char *buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
+std::string createLocation(std::string &buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
 std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
 std::string toLowerStr(std::string str);
 
-HttpRequest *HttpRequestFactory::createFrom(char *requestMsg, \
+HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
                                     std::vector<s_locationConfig> locations) {
   // shim
   HttpRequest *request = new HttpRequest();
   std::string location = createLocation(requestMsg, locations, request);
-  std::string msg(requestMsg);
-  size_t pos = msg.find_first_of('\n');
+  std::cout << requestMsg << std::endl;
+  size_t pos = 0;
+  pos = requestMsg.find_first_of("\n", 0);
+  //std::cout << "hey hey >>>>" << pos << std::endl;
 
   if (pos == std::string::npos) {
+    std::cout << "debug: no newline on requestline" << std::endl;
     return request;
   }
 
   // extract request line
-  std::string reqLine = msg.substr(0, pos);
-  msg.erase(0, pos + 1);
+  std::string reqLine = requestMsg.substr(0, pos);
+  requestMsg.erase(0, pos + 1);
   parseRequestLine(&reqLine, request, location);
 
   // extract the headers
-  if (!parseHeaders(&msg, request))
+  if (!parseHeaders(&requestMsg, request)) {
     request->setProtocolName("");
+  }
   return (request);
 }
 
@@ -76,10 +80,9 @@ bool isDirectory(const char* path) {
 }
 
 
-std::string createLocation(char *buffer,
+std::string createLocation(std::string &buffer,
                            std::vector<s_locationConfig> locations,
                            HttpRequest *request) {
-    (void)request;
     std::istringstream streaming(buffer);
     std::string line;
     streaming >> line >> line;
@@ -192,10 +195,12 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
     } else if (line.empty() && emptyLineFound) {
       continue;
     } else if (!line.empty() && emptyLineFound) {
-      if (request->getMethod() != "POST")
+      /*if (request->getMethod() != "POST") {
+        std::cout << "debug: bad request body" << std::endl;
         return false;
+      }
       else
-        break;
+        break */;
     }
 
     size_t delim_pos = line.find(':');
@@ -207,6 +212,7 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
 
     if (ws_pos != std::string::npos && \
         (ws_pos < char_pos || ws_pos != delim_pos + 1)) {
+      std::cout << "debug: line starts with white space" << std::endl;
       return false;
     }
 

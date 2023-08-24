@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/22 13:25:07 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 16:27:33 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,9 +74,11 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
   return (0);
 }
 
-HttpResponse *Server::process(const std::vector<char> &buffer) {
-  char *bf = const_cast<char *>(buffer.data()); // this is ugly beyond imagination
-  HttpRequest *request = HttpRequestFactory::createFrom(bf, locations);
+HttpResponse *Server::process(std::string &buffer) {
+  std::cout << "BUFFER" << std::endl;
+  std::cout << buffer << std::endl;
+  //std::cout << "hey hey >>>>" << buffer.find_first_of('\n') << std::endl;
+  HttpRequest *request = HttpRequestFactory::createFrom(buffer, locations);
   HttpResponse *response = new HttpResponse();
   int status = HttpRequestFactory::check(request);
 

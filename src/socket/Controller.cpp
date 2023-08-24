@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/22 16:16:06 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/24 16:04:10 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -234,21 +234,22 @@ bool Controller::isNewConnection(int currentFD) {
 
 void Controller::readFromClient(int currentFd) {
   int bytesRead = read(currentFd, buffer, 1024);
-  std::vector<char>& clientBuffer = connectedClients[currentFd]->getBuffer();
+  std::string& clientBuffer = connectedClients[currentFd]->getBuffer();
 
   if (bytesRead > 0) {
     for (int i = 0; i < bytesRead; i++) {
-      clientBuffer.push_back(buffer[i]);
+      // clientBuffer.push_back(buffer[i]);
+      clientBuffer += buffer[i];
     }
-    return;
   }
 }
 
 void Controller::sendToClient(int currentFd) {
   Client *client = connectedClients[currentFd];
   Server *server = client->getServer();
-  client->getBuffer().push_back('\0');
-  HttpResponse *response = server->process(client->getBuffer());
+  //client->getBuffer().push_back('\0');
+  client->getBuffer() += '\0';
+  HttpResponse *response = server->process(client->getBuffer()); // alterar server pra receber string
   TCPServerSocket *socket = socketPool[client->getPort()];
   socket->sendData(currentFd, response->getHeaders().c_str(), response->getHeaders().size());
   socket->sendData(currentFd, response->getMsgBody(), response->getContentLength()); 

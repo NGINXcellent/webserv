@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 13:30:28 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 15:21:10 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ class Server {
   Server(const struct s_serverConfig& config);
   ~Server(void);
 
-  HttpResponse     *process(const std::vector<char> &buffer);
+  HttpResponse     *process(std::string &buffer);
   int             resolve(HttpRequest *request, HttpResponse *response);
   int             get(HttpRequest *request, HttpResponse *response);
   int             head(HttpRequest *request, HttpResponse *response);
