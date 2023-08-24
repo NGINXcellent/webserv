@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/22 19:03:22 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/23 21:16:07 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,11 @@
 
 #include <string>
 #include <vector>
+
+struct s_multipartStruct {
+  std::string                 name;
+  std::string                 content;
+};
 
 class HttpRequest {
  public:
@@ -49,6 +54,11 @@ class HttpRequest {
   void                  setContentLength(const std::string &sizeStr);
   const std::string&    getLocationTest(void);
   void                  setLocationTest(const std::string &loc);
+  void                  setBoundary(const std::string &boundary);
+  const std::string&    getBoundary();
+  void                  setMultipartStruct(const std::vector<s_multipartStruct>& parts);
+  const std::vector<s_multipartStruct>& getMultipartStruct();
+
 
  private:
   std::string               protocolName;
@@ -64,6 +74,8 @@ class HttpRequest {
   size_t                    bodySize;
   std::string               requestBody;
   std::string               locationTest;
+  std::string               boundary;
+  std::vector<s_multipartStruct>  multipartStructVector;
 
   //TESTANDO COM O METODO POST
   std::string               postType;

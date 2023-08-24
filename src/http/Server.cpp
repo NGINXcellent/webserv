@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/22 19:38:05 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/23 21:25:35 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,9 +70,6 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
     head(request, response);
   else if (requestMethod == "DELETE")
     del(request, response);
-// --------------------------------------------
-    //IMPLEMENT POST POST POST POST HERE HERE
-// --------------------------------------------
   else if (requestMethod == "POST")
     post(request, response);
   else
@@ -82,7 +79,7 @@ void  Server::resolve(HttpRequest *request, HttpResponse *response) {
                        request->getProtocolSubVersion());
 }
 
-std::string Server::process(std::vector<char> &buffer) {
+std::string Server::process(std::string &buffer) {
   HttpRequest *request = HttpRequestFactory::createFrom(buffer, locations);
   HttpResponse response;
 
@@ -119,11 +116,22 @@ void Server::post(HttpRequest *request, HttpResponse *response) {
       file.close();
       opStatus = 201;
     }
-    std::cout << " FILE CREATED MY LINDO" << std::endl;
   }
 
   else if (request->getPostType() == "MULTIPART") {
-    std::cout << " MULTIPART TODO" << std::endl;
+    std::vector<s_multipartStruct> multiParts = request->getMultipartStruct();
+
+// CREATE FILES AND INSERT CONTENT INSIDE;
+    for (size_t i = 1; i < multiParts.size(); i++) {
+      std::string location = request->getLocationTest().substr(1);
+      std::string filename_ = location + '/' + multiParts[i].name + "_fromClient";
+      std::ofstream file(filename_.c_str(), std::ofstream::out | std::ofstream::trunc);
+      if (file.is_open()) {
+        file << multiParts[i].content;
+        file.close();
+      } else
+          opStatus = 500;
+    }
   }
 
   if (opStatus != 0) {

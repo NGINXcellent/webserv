@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/22 19:43:49 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/23 07:30:38 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 
 class HttpRequestFactory {
  public:
-  static HttpRequest *createFrom(std::vector<char> &requestMsg, \
+  static HttpRequest *createFrom(std::string &buffer, \
                                  std::vector<s_locationConfig> locations);
 
   static int          check(HttpRequest *request);

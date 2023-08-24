@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/22 19:17:31 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/23 21:31:17 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,13 +130,13 @@ size_t HttpRequest::getContentLength(void) {
 
 void HttpRequest::setContentLength(const std::string& sizeStr) {
   if (sizeStr.empty()) {
-    bodySize = 0; 
+    bodySize = 0;
   }
 
   size_t number;
   std::stringstream ss(sizeStr);
   ss >> number;
-  
+
   if (!ss.fail()) {
     char leftover;
     ss >> leftover;
@@ -150,3 +150,19 @@ void HttpRequest::setContentLength(const std::string& sizeStr) {
     bodySize = -1;
   }
 }
+
+ const std::string& HttpRequest::getBoundary() {
+   return boundary;
+ }
+
+ void HttpRequest::setBoundary(const std::string& boundary) {
+   this->boundary = boundary;
+ }
+ const std::vector<s_multipartStruct>& HttpRequest::getMultipartStruct() {
+   return multipartStructVector;
+ }
+
+ void HttpRequest::setMultipartStruct(const std::vector<s_multipartStruct>& parts) {
+   multipartStructVector.clear();
+   multipartStructVector.insert(multipartStructVector.end(), parts.begin(), parts.end());
+ }
