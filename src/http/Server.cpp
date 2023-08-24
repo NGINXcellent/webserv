@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 16:27:33 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 17:45:11 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,14 +64,12 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
     opStatus = head(request, response);
   else if (requestMethod == "DELETE")
     opStatus = del(request, response);
+  else if (requestMethod == "POST")
+    opStatus = post(request, response);
   else
     opStatus = 501; 
-  
-  if (opStatus != 0) {
-    return (opStatus);
-  }
-  
-  return (0);
+
+ return (opStatus);
 }
 
 HttpResponse *Server::process(std::string &buffer) {
@@ -96,6 +94,76 @@ HttpResponse *Server::process(std::string &buffer) {
   return response;
 }
 
+bool fileExists(const std::string& filename) {
+    return (access(filename.c_str(), F_OK) != -1);
+}
+
+int Server::post(HttpRequest *request, HttpResponse *response) {
+  int protoMain = request->getProtocolMainVersion();
+  int protoSub = request->getProtocolSubVersion();
+  int opStatus = 0;
+  response->setProtocol("HTTP", protoMain, protoSub);
+  response->setLastModifiedTime(
+      HttpTime::getLastModifiedTime(request->getResource()));
+
+  if (request->getPostType() == "NONE") {
+    throw std::runtime_error("Wrong POST REQUEST, NONE");
+  } else if (request->getPostType() == "CHUNK") {
+    std::string location = request->getLocationWithoutIndex();
+
+    if (fileExists(location)) {
+      response->setStatusCode(204);
+    } else {
+      response->setStatusCode(201);
+    }
+
+    std::ofstream file(location.c_str(),
+                       std::ofstream::out | std::ofstream::trunc);
+
+    if (file.is_open()) {
+      file << request->getRequestBody();
+      file.close();
+    } else {
+      opStatus = 500;
+    }
+  } else if (request->getPostType() == "MULTIPART") {
+    std::vector<s_multipartStruct> multiParts = request->getMultipartStruct();
+
+    // CREATE FILES AND INSERT CONTENT INSIDE;
+    for (size_t i = 1; i < multiParts.size(); i++) {
+      std::string location = request->getLocationWithoutIndex();
+      std::string filename =
+          location + '/' + multiParts[i].name + "_fromClient";
+      std::cout << filename << std::endl;
+
+      if(fileExists(filename)) {
+        response->setStatusCode(204);
+      }
+      else {
+        response->setStatusCode(201);
+      }
+
+      std::ofstream file(filename.c_str(),
+                         std::ofstream::out | std::ofstream::trunc);
+
+      if (file.is_open()) {
+        file << multiParts[i].content;
+        file.close();
+      } else {
+        opStatus = 500;
+      }
+    }
+  }
+
+  if (opStatus != 0) {
+    return opStatus;
+  }
+  response->setContentType(MimeType::identify(request->getResource()));
+  // TODO: SETUP CORRECT CONTENT LENGHT IN POST;
+  response->setContentLength(0);
+  return (0);
+}
+
 int Server::get(HttpRequest *request, HttpResponse *response) {
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
@@ -114,7 +182,7 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
   int opStatus = FileReader::getContent(request->getResource(), &resourceData, &resourceSize);
 
   if (opStatus != 0) {
-    return opStatus;
+    return (opStatus);
   }
 // TEM QUE CHECAR AQUI PRA VER SE VAI FICAR ASSIM.
   if (request->getResponseStatusCode() != 0)

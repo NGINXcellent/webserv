@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 17:48:19 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 16:59:42 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,11 @@
 
 #include <string>
 #include <vector>
+
+struct s_multipartStruct {
+  std::string                 name;
+  std::string                 content;
+};
 
 class HttpRequest {
  public:
@@ -40,6 +45,21 @@ class HttpRequest {
   void                  setAllowedMethods(const std::vector<std::string> &allowedList);
   void                  setResponseStatusCode(int toset);
   int                   getResponseStatusCode(void);
+ void                  setupContentType(const std::string &msg, HttpRequest *request);
+  const std::string&    getPostType(void);
+  void                  setPostType(const std::string &type);
+  const std::string&    getRequestBody(void);
+  void                  setRequestBody(const std::string &body);
+  size_t                getContentLength(void);
+  void                  setContentLength(const std::string &sizeStr);
+  const std::string&    getLocation(void);
+  void                  setLocation(const std::string &loc);
+  const std::string&    getLocationWithoutIndex(void);
+  void                  setLocationWithoutIndex(const std::string &loc);
+  void                  setBoundary(const std::string &boundary);
+  const std::string&    getBoundary(void);
+  void                  setMultipartStruct(const std::vector<s_multipartStruct>& parts);
+  const std::vector<s_multipartStruct>& getMultipartStruct();
 
  private:
   std::string               protocolName;
@@ -52,6 +72,13 @@ class HttpRequest {
   std::string               unmodifiedSinceTimestamp;
   int                       responseStatusCode;
   std::vector<std::string>  allowedMethodList;
+  size_t                    bodySize;
+  std::string               requestBody;
+  std::string               location;
+  std::string               locationWithoutIndex;
+  std::string               boundary;
+  std::vector<s_multipartStruct>  multipartStructVector;
+  std::string               postType;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);

@@ -6,11 +6,13 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 17:49:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 17:00:09 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequest.hpp"
+
+#include <sstream>
 
 HttpRequest::HttpRequest(void) {
   protocolMainVersion = -1;
@@ -95,4 +97,80 @@ const std::vector<std::string> &HttpRequest::getAllowedMethods(void) {
 
 void HttpRequest::setAllowedMethods(const std::vector<std::string> &allowedList) {
   allowedMethodList = allowedList;
+}
+
+const std::string& HttpRequest::getPostType(void) {
+  return (this->postType);
+}
+
+void HttpRequest::setPostType(const std::string &type) {
+  postType = type;
+}
+
+const std::string& HttpRequest::getRequestBody(void) {
+  return (requestBody);
+}
+
+void HttpRequest::setRequestBody(const std::string &body) {
+  requestBody = body;
+}
+
+
+const std::string& HttpRequest::getLocation(void) {
+  return (location);
+}
+
+void HttpRequest::setLocation(const std::string &loc) {
+  location = loc;
+}
+
+const std::string& HttpRequest::getLocationWithoutIndex(void) {
+  return (this->locationWithoutIndex);
+}
+
+void HttpRequest::setLocationWithoutIndex(const std::string &locWithoutIndex) {
+  this->locationWithoutIndex = locWithoutIndex;
+}
+
+size_t HttpRequest::getContentLength(void) {
+  return (bodySize);
+}
+
+void HttpRequest::setContentLength(const std::string& sizeStr) {
+  if (sizeStr.empty()) {
+    bodySize = 0;
+  }
+
+  size_t number;
+  std::stringstream ss(sizeStr);
+  ss >> number;
+
+  if (!ss.fail()) {
+    char leftover;
+    ss >> leftover;
+
+    if (!ss.fail()) {
+      bodySize = -1;
+    } else {
+      bodySize = number;
+    }
+  } else {
+    bodySize = -1;
+  }
+}
+
+const std::string& HttpRequest::getBoundary() {
+ return boundary;
+}
+
+void HttpRequest::setBoundary(const std::string& boundary) {
+ this->boundary = boundary;
+}
+const std::vector<s_multipartStruct>& HttpRequest::getMultipartStruct() {
+ return multipartStructVector;
+}
+
+void HttpRequest::setMultipartStruct(const std::vector<s_multipartStruct>& parts ) {
+ multipartStructVector.clear();
+ multipartStructVector.insert(multipartStructVector.end(), parts.begin(), parts.end());
 }
