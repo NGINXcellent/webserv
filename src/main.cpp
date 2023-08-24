@@ -6,13 +6,13 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/08/12 17:01:25 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 18:04:59 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/input/InputHandler.hpp"
+#include "../include/config/InputHandler.hpp"
 #include "../include/http/Server.hpp"
-#include "../include/socket/Controller.hpp"
+#include "../include/io/Controller.hpp"
 
 #include <iostream>
 

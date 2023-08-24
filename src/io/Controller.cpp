@@ -6,12 +6,12 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 16:04:10 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 17:51:13 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/socket/Controller.hpp"
-#include "../../include/socket/TcpServerSocket.hpp"
+#include "../../include/io/Controller.hpp"
+#include "../../include/io/TcpServerSocket.hpp"
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <fcntl.h>

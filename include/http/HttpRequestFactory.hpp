@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 15:25:26 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 17:56:21 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,9 @@
 # define HTTPREQUESTFACTORY_HPP
 
 #include "./HttpRequest.hpp"
-#include <vector>
 #include "./Server.hpp"
+
+#include <vector>
 
 class HttpRequestFactory {
  public:

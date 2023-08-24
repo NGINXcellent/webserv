@@ -6,14 +6,14 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 14:06:11 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 18:02:49 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpResponseComposer.hpp"
 #include "../../include/http/HttpStatus.hpp"
 #include "../../include/http/MimeType.hpp"
-#include "../../include/utils/FileReader.hpp"
+#include "../../include/io/FileReader.hpp"
 
 #include <sstream>
 #include <fstream>

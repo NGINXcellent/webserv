@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 17:45:11 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 18:03:08 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,8 @@
 #include "../../include/http/HttpRequestFactory.hpp"
 #include "../../include/http/HttpResponseComposer.hpp"
 #include "../../include/http/MimeType.hpp"
-#include "../../include/socket/TcpServerSocket.hpp"
-#include "../../include/utils/FileReader.hpp"
+#include "../../include/io/TcpServerSocket.hpp"
+#include "../../include/io/FileReader.hpp"
 
 #include <iostream>
 #include <fstream>

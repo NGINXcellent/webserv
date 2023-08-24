@@ -6,11 +6,11 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 21:58:00 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 18:05:18 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/input/InputHandler.hpp"
+#include "../../include/config/InputHandler.hpp"
 
 #include <sstream>
 #include <cstring>

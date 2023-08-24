@@ -6,11 +6,11 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:32:28 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 02:11:49 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 17:51:39 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/utils/FileReader.hpp"
+#include "../../include/io/FileReader.hpp"
 
 #include <fstream>
 #include <iostream>

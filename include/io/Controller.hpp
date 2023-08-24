@@ -6,14 +6,14 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 01:44:22 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 18:04:02 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONTROLLER_HPP
 # define CONTROLLER_HPP
 
-#include "../input/InputHandler.hpp"
+#include "../config/InputHandler.hpp"
 #include "../http/Server.hpp"
 #include "./TcpServerSocket.hpp"
 #include "./Client.hpp"

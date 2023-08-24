@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 17:19:48 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 17:55:38 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,8 @@
 
 #include "./HttpRequest.hpp"
 #include "./HttpResponse.hpp"
-#include "../socket/TcpServerSocket.hpp"
-#include "../input/InputHandler.hpp"
+#include "../io/TcpServerSocket.hpp"
+#include "../config/InputHandler.hpp"
 
 #include <cstddef>
 #include <string>

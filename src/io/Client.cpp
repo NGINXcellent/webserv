@@ -6,11 +6,11 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 16:07:52 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 17:51:27 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/socket/Client.hpp"
+#include "../../include/io/Client.hpp"
 #include "../../include/http/HttpTime.hpp"
 #include "../../include/http/Server.hpp"
 
