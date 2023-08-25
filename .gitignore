@@ -3,7 +3,7 @@
 
 ### app specific
 webserv
-tests/build
+tests/unit_tests/build
 
 ### C++ ###
 # Prerequisites

@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/FileTests.dir/MimeTypeTests.cpp.o -o FileTests  ../lib/libgtest_main.a ../libwebserv.a ../lib/libgtest.a 

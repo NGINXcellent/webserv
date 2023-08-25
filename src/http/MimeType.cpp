@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/29 12:12:09 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 00:28:48 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/25 12:21:03 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ const std::string& MimeType::identify(const std::string &str) {
   size_t lastChar = str.find_last_not_of(" \t");
 
   if (str.empty() || lastChar == std::string::npos) {
-    return types[".bin"]; // octet-stream
+    return types[""];
   }
 
   std::string filename = str.substr(0, lastChar + 1);
@@ -42,7 +42,8 @@ const std::string& MimeType::identify(const std::string &str) {
 void MimeType::init_table(void) {
   if (is_set)
     return;
-  
+
+  types.insert(std::make_pair("", ""));  
   types.insert(std::make_pair(".aac", "audio/aac"));
   types.insert(std::make_pair(".abw", "application/x-abiword"));
   types.insert(std::make_pair(".arc", "application/x-freearc"));
