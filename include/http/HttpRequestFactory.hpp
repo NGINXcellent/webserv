@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 10:21:54 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/25 10:54:30 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,10 @@
 
 #include <vector>
 
-#define P(msg) \
-    std::cout << __func__ << "() l. " << __LINE__ << ": " << (msg) << '\n' \
-              << msg << std::endl
+void P(const std::string& msg, const std::string& str) {
+    std::cout << __func__ << "() l. " << __LINE__ << ": " << str << std::endl;
+    std::cout << msg << std::endl;
+}
 
 class HttpRequestFactory {
  public:
