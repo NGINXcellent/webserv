@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 22:10:14 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/25 09:00:16 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
   if (!allowedMethods.empty() && it == allowedMethods.end()) {
     return 405;
   }
-  
+
   int opStatus = 0;
 
   if (requestMethod == "GET")
@@ -67,7 +67,7 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
   else if (requestMethod == "POST")
     opStatus = post(request, response);
   else
-    opStatus = 501; 
+    opStatus = 501;
 
  return (opStatus);
 }

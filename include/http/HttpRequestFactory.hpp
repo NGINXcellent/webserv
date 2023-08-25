@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 17:56:21 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/25 10:21:54 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,13 @@
 
 #include <vector>
 
+#define P(msg) \
+    std::cout << __func__ << "() l. " << __LINE__ << ": " << (msg) << '\n' \
+              << msg << std::endl
+
 class HttpRequestFactory {
  public:
+  static void createLocation(const std::string &buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
   static HttpRequest *createFrom(std::string &requestMsg, std::vector<s_locationConfig> locations);
   static int          check(HttpRequest *request);
 

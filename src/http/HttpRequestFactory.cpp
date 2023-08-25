@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 22:08:07 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/25 10:36:35 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,8 @@
 void parseRequestLine(std::string *msg, HttpRequest *request, std::string location);
 bool parseHeaders(std::string *msg, HttpRequest *request);
 bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
-void setupContentType(std::string &msg, HttpRequest *request);
-void setupRequestBody(std::string &msg, HttpRequest *request);
+void setupContentType(const std::string &msg, HttpRequest *request);
+void setupRequestBody(const std::string &msg, HttpRequest *request);
 
 std::string createLocation(std::string &buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
 std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
@@ -35,7 +35,7 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
                                     std::vector<s_locationConfig> locations) {
   // shim
   HttpRequest *request = new HttpRequest();
-  request->setLocation(createLocation(requestMsg, locations, request));
+  createLocation(requestMsg, locations, request);
   // std::cout << requestMsg << std::endl;
   size_t pos = 0;
   pos = requestMsg.find_first_of("\n", 0);
@@ -61,7 +61,7 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   return (request);
 }
 
-void setupContentType(std::string &msg, HttpRequest *request) {
+void setupContentType(const std::string &msg, HttpRequest *request) {
   size_t pos = msg.find("Transfer-Encoding:");
 
   if (pos != std::string::npos) {
@@ -91,8 +91,8 @@ void setupContentType(std::string &msg, HttpRequest *request) {
   request->setPostType("NONE");
 }
 
-void MultipartBodyType(std::string &msg, HttpRequest *request) {
-    std::cout << msg << std::endl;
+void MultipartBodyType(const std::string &msg, HttpRequest *request) {
+  P("DENTRO DO EXTRATOR");
     std::vector<s_multipartStruct> bodyParts;
     std::string boundary = request->getBoundary();
     size_t startPos = msg.find(boundary);
@@ -130,7 +130,7 @@ void MultipartBodyType(std::string &msg, HttpRequest *request) {
     }
 }
 
-void chunkBodyType (std::string msg, HttpRequest *request) {
+void chunkBodyType (const std::string &msg, HttpRequest *request) {
     size_t pos, count = 1;
     std::string ret;
 
@@ -152,22 +152,30 @@ void chunkBodyType (std::string msg, HttpRequest *request) {
         request->setRequestBody(ret);
 }
 
-void setupRequestBody(std::string &msg, HttpRequest *request) {
-    // std::cout << msg << "\n\n\n\n\n\n\n" << std::endl;
-    std::string type = request->getPostType();
-    // std::cout << msg << std::endl;
-  if(request->getPostType() == "NONE") {
-    return;
-  }
-  else if(type == "MULTIPART") {
-    // chunkBodyType(msg, request);
-    //  std::cout << "\n\n DENTRO\n\n\n" << msg << std::endl;
-    MultipartBodyType(msg, request);
-    return;
-  }
-  // std::cout << msg << std::endl;
-  // MultipartBodyType(msg, request);
+void setupRequestBody(const std::string &msg, HttpRequest *request) {
+    // P("Início");
+    std::cout << msg << std::endl;
+    if(request->getPostType() == "NONE") {
+        return;
+    }
+    if(request->getPostType() == "MULTIPART") {
+        // P("if MULTIPART");
+        MultipartBodyType(msg, request);
+        return;
+    }
+    chunkBodyType(msg, request);
 }
+//   if(request->getPostType() == "NONE") {
+//     return;
+//   }
+//   if(request->getPostType() == "MULTIPART") {
+//     std::cout << "entrou aqui" << std::endl;
+//     // std::cout << msg << std::endl;
+//     MultipartBodyType(msg, request);
+//     return;
+//   }
+//   chunkBodyType(msg, request);
+// }
 
 // this function verify if the tokens are in the right order and deals with redirection
 // if fails we are dealing whith location "/"
@@ -194,7 +202,7 @@ bool isDirectory(const char* path) {
 }
 
 
-std::string createLocation(std::string &buffer,
+void HttpRequestFactory::createLocation(const std::string &buffer,
                            std::vector<s_locationConfig> locations,
                            HttpRequest *request) {
     std::istringstream streaming(buffer);
@@ -203,7 +211,7 @@ std::string createLocation(std::string &buffer,
     std::vector<std::string> tokens;
 
     if(line.empty()) {
-      return "";
+      return;
     }
 
     std::istringstream iss(line);
@@ -243,11 +251,11 @@ std::string createLocation(std::string &buffer,
           }
           request->setAllowedMethods(locations[i].allowed_method);
           // std::cout << "ret de location " << ret << std::endl;
-          return ret;
+          request->setLocation(ret);
         }
     }
 
-    return "";
+    return;
 }
 
 void parseRequestLine(std::string *requestLine, HttpRequest *request,
