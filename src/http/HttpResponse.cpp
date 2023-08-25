@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/22 12:41:22 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/25 14:08:40 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,14 +43,16 @@ std::string   HttpResponse::getHeaders(void) {
     responseHeader += modifiedTime;
   }
 
-  responseHeader += "Content-Type: " + contentType + "\n";
-  ss.clear();
-  ss.str("");
-  ss << contentLength;
+  if (msgBody != NULL) {
+    responseHeader += "Content-Type: " + contentType + "\n";
+    ss.clear();
+    ss.str("");
+    ss << contentLength;
 
-  responseHeader += "Content-length: " + ss.str() + "\n";
+    responseHeader += "Content-length: " + ss.str() + "\n";
+  }
+  
   responseHeader += "Connection: close\n\n";
-
   return responseHeader;
 }
 
