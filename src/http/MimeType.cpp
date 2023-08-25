@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/29 12:12:09 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/14 22:20:07 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/25 00:28:48 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,12 @@
 bool MimeType::is_set = false;
 std::map<std::string, std::string> MimeType::types;
 
-std::string MimeType::identify(const std::string &str) {
+const std::string& MimeType::identify(const std::string &str) {
   init_table();
   size_t lastChar = str.find_last_not_of(" \t");
 
   if (str.empty() || lastChar == std::string::npos) {
-    return ("");
+    return types[".bin"]; // octet-stream
   }
 
   std::string filename = str.substr(0, lastChar + 1);
@@ -36,13 +36,13 @@ std::string MimeType::identify(const std::string &str) {
     }
   }
 
-  return "application/octet-stream";
+  return types[".bin"]; // octet-stream
 }
 
 void MimeType::init_table(void) {
   if (is_set)
     return;
-
+  
   types.insert(std::make_pair(".aac", "audio/aac"));
   types.insert(std::make_pair(".abw", "application/x-abiword"));
   types.insert(std::make_pair(".arc", "application/x-freearc"));

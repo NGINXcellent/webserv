@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/29 12:02:25 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/07/29 14:01:32 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/25 00:28:26 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 
 class MimeType {
  public:
-  static std::string identify(const std::string &str);
+  static const std::string& identify(const std::string &str);
 
  private:
   static std::map<std::string, std::string> types;
