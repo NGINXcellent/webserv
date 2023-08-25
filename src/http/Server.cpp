@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 18:03:08 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 22:10:14 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,8 +73,8 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
 }
 
 HttpResponse *Server::process(std::string &buffer) {
-  std::cout << "BUFFER" << std::endl;
-  std::cout << buffer << std::endl;
+  // std::cout << "BUFFER" << std::endl;
+  // std::cout << buffer << std::endl;
   //std::cout << "hey hey >>>>" << buffer.find_first_of('\n') << std::endl;
   HttpRequest *request = HttpRequestFactory::createFrom(buffer, locations);
   HttpResponse *response = new HttpResponse();
@@ -82,7 +82,7 @@ HttpResponse *Server::process(std::string &buffer) {
 
   if (status == 0) {
     status = resolve(request, response);
-  }    
+  }
 
   if (status != 0) {
     HttpResponseComposer::buildErrorResponse(response, status, error_pages, \
@@ -108,6 +108,7 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
 
   if (request->getPostType() == "NONE") {
     throw std::runtime_error("Wrong POST REQUEST, NONE");
+
   } else if (request->getPostType() == "CHUNK") {
     std::string location = request->getLocationWithoutIndex();
 

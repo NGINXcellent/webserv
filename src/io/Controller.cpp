@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 17:51:13 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 20:04:58 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,7 +136,6 @@ void Controller::handleConnections(void) {
         std::cout << " is closed by client" << std::endl;
         closeConnection(currentFd);
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
-        std::cout << "stuck on epollin" << std::endl;
         readFromClient(currentFd);
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         if (!connectedClients[currentFd]->getBuffer().empty()) {
