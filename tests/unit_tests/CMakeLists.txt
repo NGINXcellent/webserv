@@ -31,6 +31,7 @@ set(Includes
     ../../include/http/HttpStatus.hpp
     ../../include/http/MimeType.hpp
     ../../include/http/Server.hpp
+    ../../include/io/Client.hpp
 )
 
 set(Sources
@@ -43,6 +44,7 @@ set(Sources
     ../../src/http/HttpRequestFactory.cpp
     ../../src/http/MimeType.cpp
     ../../src/http/Server.cpp
+    ../../src/io/Client.cpp
 )
 
 # add_library(${This} ${Sources} ${Libft} ${Headers})
@@ -54,3 +56,4 @@ add_subdirectory(RequestTests)
 add_subdirectory(ResponseTests)
 add_subdirectory(FileTests)
 add_subdirectory(HttpTests)
+add_subdirectory(IOTests)
