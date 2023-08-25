@@ -41,16 +41,16 @@ TEST(ResponseTests, ContentLengthTest) {
     response.setProtocol("HTTP", 1, 1);
     response.setStatusCode(200);  
     char *msg = new char[] {"This is an awesome little message"};
+    int msgSize = strlen(msg);
     response.setMsgBody(msg);
-    response.setContentLength(strlen(msg));
+    response.setContentLength(msgSize);
+    
     std::string responseStr = response.getHeaders();
     EXPECT_NE(responseStr.find("OK"), std::string::npos);
     size_t headerPos = responseStr.find("Content-length");
     ASSERT_NE(headerPos, std::string::npos);
     size_t valuePos = responseStr.find_first_of("0123456789", headerPos); 
     int fileSize = strtol(responseStr.substr(valuePos).data(), NULL, 10);
-    int msgSize = strlen(msg);
     EXPECT_EQ(fileSize, msgSize);
   }
-  
 }
