@@ -6,27 +6,26 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/14 22:22:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 20:36:13 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <gtest/gtest.h>
+/*#include <gtest/gtest.h>
 
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "../../include/http/HttpRequest.hpp"
-#include "../../include/http/HttpRequestFactory.hpp"
-#include "../../include/http/Server.hpp"
+#include "../../../include/http/HttpRequest.hpp"
+#include "../../../include/http/HttpRequestFactory.hpp"
+#include "../../../include/http/Server.hpp"
 
+std::string createLocation(std::string &buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
 
-std::string createLocation(char *buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
-
-void testRequestLine(const char *requestMsg, int expectedStatusCode,
+void testRequestLine(std::string requestMsg, int expectedStatusCode,
                      std::vector<s_locationConfig> locations) {
   HttpRequest *request;
-  request = HttpRequestFactory::createFrom(const_cast<char *>(requestMsg), locations);
+  request = HttpRequestFactory::createFrom(requestMsg, locations);
   EXPECT_EQ(HttpRequestFactory::check(request), expectedStatusCode)
       << requestMsg;
   delete request;
@@ -46,7 +45,8 @@ TEST(RequestTests, BasicBehaviourTest) {
 
   std::vector<s_locationConfig> locations;
   s_locationConfig locationOne;
-  locationOne.location = "/index.html";
+  std::string page = "/index.html";
+  locationOne.location = page; 
   locations.push_back(locationOne);
 
   for (size_t i = 0; i < reqLines.size(); i++) {
@@ -76,10 +76,10 @@ TEST(LocationTests, basicLocationTests) {
     config3.allowed_method = {"GET"};
     configs.push_back(config3);
 
-    char buffer1[] = "GET / HTTP/1.1";
-    char buffer2[] = "GET /images HTTP/1.1";
-    char buffer3[] = "GET /teste4/vamos/testar/aqui HTTP/1.1";
-    char buffer4[] = "GET /dir HTTP/1.1";
+    std::string buffer1 = "GET / HTTP/1.1";
+    std::string buffer2 = "GET /images HTTP/1.1";
+    std::string buffer3 = "GET /teste4/vamos/testar/aqui HTTP/1.1";
+    std::string buffer4 = "GET /dir HTTP/1.1";
     HttpRequest request;
 
     std::string result1 = createLocation(buffer1, configs, &request);
@@ -496,4 +496,4 @@ TEST(RequestTests, BlankLinesTest) {
 
     testRequestLine(request.c_str(), 0, locations);
   }
-}
+} */

@@ -23,26 +23,28 @@ set(CMAKE_CXX_STANDARD 14)
 enable_testing()
 
 set(Includes
-    ../include/input/InputHandler.hpp
-    ../include/http/HttpResponse.hpp
-    ../include/http/HttpRequestFactory.hpp
-    ../include/http/HttpRequest.hpp
-    ../include/http/HttpTime.hpp
-    ../include/http/HttpStatus.hpp
-    ../include/http/MimeType.hpp
-    ../include/http/Server.hpp
+    ../../include/config/InputHandler.hpp
+    ../../include/http/HttpResponse.hpp
+    ../../include/http/HttpRequestFactory.hpp
+    ../../include/http/HttpRequest.hpp
+    ../../include/http/HttpTime.hpp
+    ../../include/http/HttpStatus.hpp
+    ../../include/http/MimeType.hpp
+    ../../include/http/Server.hpp
+    ../../include/io/Client.hpp
 )
 
 set(Sources
-	../src/main.cpp
-    ../src/input/InputHandler.cpp
-    ../src/http/HttpResponse.cpp
-    ../src/http/HttpRequest.cpp
-    ../src/http/HttpTime.cpp
-    ../src/http/HttpStatus.cpp
-    ../src/http/HttpRequestFactory.cpp
-    ../src/http/MimeType.cpp
-    ../src/http/Server.cpp
+	../../src/main.cpp
+    ../../src/config/InputHandler.cpp
+    ../../src/http/HttpResponse.cpp
+    ../../src/http/HttpRequest.cpp
+    ../../src/http/HttpTime.cpp
+    ../../src/http/HttpStatus.cpp
+    ../../src/http/HttpRequestFactory.cpp
+    ../../src/http/MimeType.cpp
+    ../../src/http/Server.cpp
+    ../../src/io/Client.cpp
 )
 
 # add_library(${This} ${Sources} ${Libft} ${Headers})
@@ -54,3 +56,4 @@ add_subdirectory(RequestTests)
 add_subdirectory(ResponseTests)
 add_subdirectory(FileTests)
 add_subdirectory(HttpTests)
+add_subdirectory(IOTests)

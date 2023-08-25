@@ -133,8 +133,7 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
     // CREATE FILES AND INSERT CONTENT INSIDE;
     for (size_t i = 1; i < multiParts.size(); i++) {
       std::string location = request->getLocationWithoutIndex();
-      std::string filename =
-          location + '/' + multiParts[i].name + "_fromClient";
+      std::string filename = location + '/' + multiParts[i].name + "_fromClient";
       std::cout << filename << std::endl;
 
       if(fileExists(filename)) {
@@ -159,8 +158,8 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
   if (opStatus != 0) {
     return opStatus;
   }
+
   response->setContentType(MimeType::identify(request->getResource()));
-  // TODO: SETUP CORRECT CONTENT LENGHT IN POST;
   response->setContentLength(0);
   return (0);
 }

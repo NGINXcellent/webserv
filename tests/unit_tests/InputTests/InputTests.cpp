@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
-#include "../../include/input/InputHandler.hpp"
+#include "../../../include/config/InputHandler.hpp"
 #include <fstream>
 #include <unistd.h>
 #include <iostream>
+
 TEST(InputTests, BasicTests)
 {
   {

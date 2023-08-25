@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-#include "../../include/http/HttpStatus.hpp"
+#include "../../../include/http/HttpStatus.hpp"
 
 TEST(HttpTests, BasicStatusTests) {
   int cont = 100;

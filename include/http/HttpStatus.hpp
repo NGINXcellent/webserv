@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:13:54 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/02 16:19:47 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/25 00:31:47 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,12 @@
 
 class HttpStatus {
  public:
-  static std::string getMessage(int statusCode);
+  static const std::string& getMessage(int statusCode);
 
  private:
   static std::map<int, std::string> messages;
-  static void init(void);
-  static bool is_init;
+  static void                       init(void);
+  static bool                       is_init;
 
   HttpStatus(void);
   HttpStatus(const HttpStatus& f);

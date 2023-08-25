@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/14 19:56:20 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/14 22:20:28 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/24 19:58:22 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <iostream>
 #include <string>
 
-#include "../../include/http/MimeType.hpp"
+#include "../../../include/http/MimeType.hpp"
 
 TEST(FileTests, BasicMimeTypeTests) {
   std::string text = "filename.txt";
