@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 10:36:35 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/26 07:34:33 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ void setupContentType(const std::string &msg, HttpRequest *request) {
 }
 
 void MultipartBodyType(const std::string &msg, HttpRequest *request) {
-  P("DENTRO DO EXTRATOR");
+  // P("DENTRO DO EXTRATOR");
     std::vector<s_multipartStruct> bodyParts;
     std::string boundary = request->getBoundary();
     size_t startPos = msg.find(boundary);
