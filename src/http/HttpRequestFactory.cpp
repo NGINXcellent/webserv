@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 10:36:35 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/25 22:35:26 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,10 +36,8 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   // shim
   HttpRequest *request = new HttpRequest();
   createLocation(requestMsg, locations, request);
-  // std::cout << requestMsg << std::endl;
   size_t pos = 0;
   pos = requestMsg.find_first_of("\n", 0);
-  //std::cout << "hey hey >>>>" << pos << std::endl;
 
   if (pos == std::string::npos) {
     std::cout << "debug: no newline on requestline" << std::endl;
@@ -92,7 +90,7 @@ void setupContentType(const std::string &msg, HttpRequest *request) {
 }
 
 void MultipartBodyType(const std::string &msg, HttpRequest *request) {
-  P("DENTRO DO EXTRATOR");
+  //P("DENTRO DO EXTRATOR");
     std::vector<s_multipartStruct> bodyParts;
     std::string boundary = request->getBoundary();
     size_t startPos = msg.find(boundary);
@@ -158,11 +156,13 @@ void setupRequestBody(const std::string &msg, HttpRequest *request) {
     if(request->getPostType() == "NONE") {
         return;
     }
+
     if(request->getPostType() == "MULTIPART") {
         // P("if MULTIPART");
         MultipartBodyType(msg, request);
         return;
     }
+
     chunkBodyType(msg, request);
 }
 //   if(request->getPostType() == "NONE") {
@@ -234,23 +234,34 @@ void HttpRequestFactory::createLocation(const std::string &buffer,
     for (size_t i = 0; i < locations.size(); ++i) {
         if (locations[i].location == tokens[0]) {
           std::string ret;
-          if (locations[i].root.empty())
+
+          if (locations[i].root.empty()) {
             ret = '.' + line;
-          else {
+          } else {
             ret += "." + locations[i].root;
+
             for (size_t j = 1; j < tokens.size(); ++j) {
               ret += tokens[j];
             }
           }
+
           request->setLocationWithoutIndex(ret);
+
           if (isDirectory(ret.c_str()) && !locations[i].index.empty()) {
-            if (ret != "./")
+            if (ret != "./") {
               ret += '/' + locations[i].index;
-            else
+            } else {
               ret += locations[i].index;
+            }
+           
+            request->setDirListActive(locations[i].autoindex);
           }
+
           request->setAllowedMethods(locations[i].allowed_method);
-          // std::cout << "ret de location " << ret << std::endl;
+          std::cout << "ret de location " << ret << std::endl;
+          std::cout << "ret de location without index" << request->getLocationWithoutIndex() << std::endl;
+          
+          // check if ret exists then, set Location to it.
           request->setLocation(ret);
         }
     }

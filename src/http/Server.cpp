@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 09:00:16 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/25 22:39:33 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 #include <sstream>  // stringstream
 #include <sys/stat.h>
 #include <algorithm>
+#include <dirent.h>
 
 Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
@@ -176,10 +177,28 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
     response->setStatusCode(304);
     return (0);
   }
-
+  
+  int opStatus = 0;
   char *resourceData;
   long long resourceSize;
-  int opStatus = FileReader::getContent(request->getResource(), &resourceData, &resourceSize);
+  // if locations is a folder
+ // build the page will all the links  
+ // attach it to the response body
+  std::cout << request->getResource() << std::endl;
+  std::cout << request->isDirListActive() << std::endl;
+  opStatus = FileReader::getContent(request->getResource(), &resourceData, &resourceSize);
+
+  if (opStatus == 404 && request->isDirListActive()) {
+    std::cout << "DIR LIST RUNNING" << std::endl;
+    // change current directory
+    if (chdir(request->getResource().data()) != -1) {
+      // open it -> get all the files informations
+      DIR* currentDir = opendir(".");
+      struct dirent* dirEntry = readdir(currentDir);  
+      std::cout << "first file that apears is " << dirEntry->d_name << std::endl;
+      closedir(currentDir);
+    }
+  } 
 
   if (opStatus != 0) {
     return (opStatus);

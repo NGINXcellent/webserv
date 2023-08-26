@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:32:28 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 17:51:39 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/25 19:05:48 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,16 @@ int FileReader::getContent(const std::string &fileName, char **resourceData, lon
   inputFile.read(*resourceData, fileSize);
   inputFile.close();
   return (0);
+}
+
+bool FileReader::isDirectory(const std::string &filename) {
+  struct stat fileInfo;
+
+  if (stat(filename.c_str(), &fileInfo) != 0) {
+      return false; // Erro ao obter informações do arquivo
+  }
+
+  return (true);
 }
 
 bool isRegularFile(const std::string &filename) {

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 16:59:42 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/25 18:26:17 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ class HttpRequest {
   HttpRequest(void);
   ~HttpRequest(void);
 
+  bool                  isDirListActive(void);
+  void                  setDirListActive(const std::string &active);
   const std::string     &getMethod(void);
   void                  setMethod(const std::string &method);
   const std::string     &getResource(void);
@@ -74,6 +76,7 @@ class HttpRequest {
   std::vector<std::string>  allowedMethodList;
   size_t                    bodySize;
   std::string               requestBody;
+  bool                      autoindex;
   std::string               location;
   std::string               locationWithoutIndex;
   std::string               boundary;
