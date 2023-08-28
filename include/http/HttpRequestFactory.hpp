@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/27 15:31:21 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 13:40:29 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
 
 class HttpRequestFactory {
  public:
-  static void         createLocation(const std::string &buffer, \
+  static void         findLocation(const std::string &buffer, \
                                      std::vector<s_locationConfig> locations, \
                                      HttpRequest *request);
 

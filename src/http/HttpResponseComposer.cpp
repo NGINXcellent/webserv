@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/27 21:36:55 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 13:22:09 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,6 @@ void HttpResponseComposer::formatDirListStyle(const std::string &path, \
  site_style += "<title>Index of " + path + "</title>";
  site_style += "<style>body,li,ul{margin:0;padding:0}body{font-family:Helvetica,sans-serif;background-color:#121212;color:#e0e0e0}header{background-color:#1e1e1e;color:#fff;padding:1em;text-align:center}main{margin:2em auto;max-width:800px;padding:1em;background-color:#1e1e1e;border-radius:5px;box-shadow:0 0 10px rgba(255,255,255,.1)}.file-list{list-style:none;padding:0}.file-list li{border-bottom:1px solid #333;padding:.75em;display:flex;align-items:center;transition:background-color .2s}.file-list a{text-decoration:none;color:#007bff}.file-list li:hover{background-color:#333}</style></head>";
  site_style += "<body><header><h1>Index of " + path + "</h1></header><main><ul class=\"file-list\">";
-
 }
 
 void HttpResponseComposer::formatEntryName(const std::string &path, \
@@ -127,7 +126,7 @@ void HttpResponseComposer::buildDirListResponse(HttpRequest *request, HttpRespon
   std::map<std::string, struct dirent *>::iterator ite = entries.end();
 
   for (; it != ite; ++it) {
-    if (it->first == ".") { // checking the entry name
+    if (it->first == ".") {
       continue;
     }
 

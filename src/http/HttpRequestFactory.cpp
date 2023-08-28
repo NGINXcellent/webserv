@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/27 16:46:38 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 14:20:53 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,9 +194,11 @@ bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *reque
 
 bool isDirectory(const char* path) {
     struct stat fileInfo;
+
     if (stat(path, &fileInfo) != 0) {
-        return false; // Erro ao obter informações do arquivo
+        return false;
     }
+
     return S_ISDIR(fileInfo.st_mode);
 }
 
@@ -219,7 +221,7 @@ std::vector<std::string> splitPath(const std::string &path) {
   return (tokens);
 }
 
-void HttpRequestFactory::createLocation(const std::string &reqLine,
+void HttpRequestFactory::findLocation(const std::string &reqLine,
                            std::vector<s_locationConfig> locations,
                            HttpRequest *request) {
   if(reqLine.empty()) {
@@ -242,8 +244,8 @@ void HttpRequestFactory::createLocation(const std::string &reqLine,
     int tokenMatches = 0;
    
     for (size_t j = 0; j < locTokens.size(); j++) {
-      std::cout << "reqTokens >>>> " << reqTokens[j] << std::endl;
-      std::cout << "locTokens >>>> " << locTokens[j] << std::endl;
+      // std::cout << "reqTokens >>>> " << reqTokens[j] << std::endl;
+      // std::cout << "locTokens >>>> " << locTokens[j] << std::endl;
       if (reqTokens[j] == locTokens[j]) {
         tokenMatches++; 
       } else {
@@ -261,6 +263,7 @@ void HttpRequestFactory::createLocation(const std::string &reqLine,
       } else {
         indexedPath = "";
       }
+
       request->setDirListActive(locations[i].autoindex);
       request->setAllowedMethods(locations[i].allowed_method);
     }
@@ -273,42 +276,7 @@ void HttpRequestFactory::createLocation(const std::string &reqLine,
   std::cout << "INDEXED PATH: " << indexedPath << std::endl;
   request->setResource(reqLine);
   request->setLocation(indexedPath);
-    /*for (size_t i = 0; i < locations.size(); ++i) {
-        if (locations[i].location == tokens[0]) {
-          std::string ret;
-
-          if (locations[i].root.empty()) {
-            ret = '.' + line;
-          } else {
-            ret += "." + locations[i].root;
-
-            for (size_t j = 1; j < tokens.size() - 1; ++j) {
-              ret += tokens[j];
-            }
-          }
-
-          request->setLocationWithoutIndex(ret);
-
-          if (isDirectory(ret.c_str()) && !locations[i].index.empty()) {
-            if (ret != "./") {
-              ret += '/' + locations[i].index;
-            } else {
-              ret += locations[i].index;
-            }
-           
-            request->setDirListActive(locations[i].autoindex);
-          }
-
-          request->setAllowedMethods(locations[i].allowed_method);
-          std::cout << "ret de location " << ret << std::endl;
-          std::cout << "ret de location without index" << request->getLocationWithoutIndex() << std::endl;
-          
-          // check if ret exists then, set Location to it.
-          request->setLocation(ret);
-        }
-    }*/
-
-    return;
+  return;
 }
 
 void parseRequestLine(std::string *requestLine, HttpRequest *request, \
@@ -332,7 +300,12 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request, \
   }
 
   request->setMethod(fields[0]);
-  HttpRequestFactory::createLocation(fields[1], locations, request);
+
+  if (fields[1].size() > 1 && fields[1].at(fields[1].size() - 1) == '/') {
+    fields[1].erase(fields[1].size() - 1, 1);
+  }
+
+  HttpRequestFactory::findLocation(fields[1], locations, request);
   size_t pos = fields[2].find('/');
 
   if (pos == std::string::npos) {
@@ -342,7 +315,6 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request, \
   std::string protocol = fields[2].substr(0, pos);
   request->setProtocolName(protocol);
   std::string protocolVersion = fields[2].substr(pos + 1);
-
   int mainVersion;
   int minorVersion;
 
@@ -350,7 +322,6 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request, \
     return;
 
   request->setProtocolVersion(mainVersion, minorVersion);
-  // std::cout << msg << std::endl;
 }
 
 bool parseHeaders(std::string *msg, HttpRequest *request) {
@@ -397,10 +368,11 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
     size_t val_start = line.find_first_not_of(" \t", delim_pos + 1);
     size_t val_end = line.find_last_not_of(" \t", delim_pos + 1);
 
-    if (val_start != std::string::npos)
+    if (val_start != std::string::npos) {
       value = line.substr(val_start, val_end - val_start);
-    else
+    } else {
       value = "";
+    }
 
     headers.insert(std::make_pair(key, value));
   }
@@ -470,14 +442,20 @@ int HttpRequestFactory::check(HttpRequest *request) {
   int version = mainVersion * 10 + minorVersion;
 
   if (request->getProtocolName() != "HTTP" ||
-      (mainVersion < 1 || minorVersion < 0))
+      (mainVersion < 1 || minorVersion < 0)) {
     return (400);
+  }
+
   if (!(version == 10 || version == 11)) return (505);
+
   if (version == 11 && request->getHost().size() == 0) return (400);
 
   std::string method = request->getMethod();
+
   for (size_t i = 0; i < method.size(); i++) {
-    if (!std::isupper(method[i])) return (400);
+    if (!std::isupper(method[i])) {
+      return (400);
+    }
   }
 
   return (0);
