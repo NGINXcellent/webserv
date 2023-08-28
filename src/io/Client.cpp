@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 17:51:27 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 08:18:39 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,15 @@ Client::Client(int conFd, Server *destServer, int serverPort, time_t conStart) :
                connectionFd(conFd), port(serverPort), server(destServer), \
                connectionTimeout(conStart + 60) {
   this->buffer = "";
+  isReady = false;
 }
 
 
 Client::~Client(void) {
 }
 
-std::string& Client::getBuffer(void) { 
-  return (this->buffer); 
+std::string& Client::getBuffer(void) {
+  return (this->buffer);
 }
 
 Server* Client::getServer(void) {
@@ -38,6 +39,7 @@ int Client::getPort(void) {
 
 void Client::reset() {
   buffer.clear();
+  isReady= false;
 }
 
 time_t Client::getTimeout(void) {
