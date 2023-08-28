@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 14:08:40 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 08:25:15 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <sstream>
 
 HttpResponse::HttpResponse(void) {
-  statusCode = 200;
+  statusCode = 666;
   statusMessage = "OK";
   contentLength = 0;
   serverVersion = "webserv/0.1";
@@ -51,7 +51,7 @@ std::string   HttpResponse::getHeaders(void) {
 
     responseHeader += "Content-length: " + ss.str() + "\n";
   }
-  
+
   responseHeader += "Connection: close\n\n";
   return responseHeader;
 }
