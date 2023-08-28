@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 18:28:15 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/27 16:50:32 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,4 +183,12 @@ const std::vector<s_multipartStruct>& HttpRequest::getMultipartStruct() {
 void HttpRequest::setMultipartStruct(const std::vector<s_multipartStruct>& parts ) {
  multipartStructVector.clear();
  multipartStructVector.insert(multipartStructVector.end(), parts.begin(), parts.end());
+}
+
+void HttpRequest::setRoot(const std::string &rootPath) {
+  root = rootPath;
+}
+
+const std::string &HttpRequest::getRoot(void) {
+  return (root);
 }

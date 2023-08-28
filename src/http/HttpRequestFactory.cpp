@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 22:35:26 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/27 16:46:38 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,23 +21,21 @@
 
 #include "../../include/http/Server.hpp"
 
-void parseRequestLine(std::string *msg, HttpRequest *request, std::string location);
+void parseRequestLine(std::string *requestLine, HttpRequest *request, \
+                      std::vector<struct s_locationConfig> locations);
 bool parseHeaders(std::string *msg, HttpRequest *request);
 bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
 void setupContentType(const std::string &msg, HttpRequest *request);
 void setupRequestBody(const std::string &msg, HttpRequest *request);
-
-std::string createLocation(std::string &buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
 std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
 std::string toLowerStr(std::string str);
+std::vector<std::string> splitPath(const std::string &path);
 
 HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
                                     std::vector<s_locationConfig> locations) {
   // shim
   HttpRequest *request = new HttpRequest();
-  createLocation(requestMsg, locations, request);
-  size_t pos = 0;
-  pos = requestMsg.find_first_of("\n", 0);
+  size_t pos = requestMsg.find_first_of("\n", 0);
 
   if (pos == std::string::npos) {
     std::cout << "debug: no newline on requestline" << std::endl;
@@ -47,12 +45,13 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   // extract request line
   std::string reqLine = requestMsg.substr(0, pos);
   requestMsg.erase(0, pos + 1);
-  parseRequestLine(&reqLine, request, request->getLocation());
+  parseRequestLine(&reqLine, request, locations);
 
   // extract the headers
   if (!parseHeaders(&requestMsg, request)) {
     request->setProtocolName("");
   }
+
   setupContentType(requestMsg, request);
   setupRequestBody(requestMsg, request);
 
@@ -201,37 +200,80 @@ bool isDirectory(const char* path) {
     return S_ISDIR(fileInfo.st_mode);
 }
 
+std::vector<std::string> splitPath(const std::string &path) {
+  std::vector<std::string> tokens;
+  std::istringstream iss(path);
+  std::string token;
 
-void HttpRequestFactory::createLocation(const std::string &buffer,
+  if (path == "/") {
+      tokens.push_back("/");
+  } else {
+      while (std::getline(iss, token, '/')) {
+        if (!token.empty()) {
+          token = token;
+          tokens.push_back(token);
+        }
+      }
+  }
+
+  return (tokens);
+}
+
+void HttpRequestFactory::createLocation(const std::string &reqLine,
                            std::vector<s_locationConfig> locations,
                            HttpRequest *request) {
-    std::istringstream streaming(buffer);
-    std::string line;
-    streaming >> line >> line;
-    std::vector<std::string> tokens;
+  if(reqLine.empty()) {
+    return;
+  }
 
-    if(line.empty()) {
-      return;
+  std::cout << "reqLine " << reqLine << std::endl;
+  std::vector<std::string> reqTokens = splitPath(reqLine);
+
+  //if (!tokensValidator(locations, request, reqTokens))
+    //reqTokens.insert(reqTokens.begin(), "/");
+
+  int locationMatch = 0; // the more specific match is the one that wins
+  std::string path;
+  std::string indexedPath;
+  std::string token;
+
+  for (size_t i = 0; i < locations.size(); ++i) {
+    std::vector<std::string> locTokens = splitPath(locations[i].location);
+    int tokenMatches = 0;
+   
+    for (size_t j = 0; j < locTokens.size(); j++) {
+      std::cout << "reqTokens >>>> " << reqTokens[j] << std::endl;
+      std::cout << "locTokens >>>> " << locTokens[j] << std::endl;
+      if (reqTokens[j] == locTokens[j]) {
+        tokenMatches++; 
+      } else {
+        break;
+      }
     }
 
-    std::istringstream iss(line);
-    std::string token;
+    if (tokenMatches > locationMatch) {
+      locationMatch = tokenMatches;
+      request->setRoot(locations[i].root);
+      path = locations[i].root + reqLine;
 
-    if (line == "/") {
-        tokens.push_back("/");
-    } else {
-        while (std::getline(iss, token, '/')) {
-          if (!token.empty()) {
-            token = '/' + token;
-            tokens.push_back(token);
-          }
-        }
+      if (isDirectory(path.c_str()) && !locations[i].index.empty()) {
+        indexedPath = path + '/' + locations[i].index;
+      } else {
+        indexedPath = "";
+      }
+      request->setDirListActive(locations[i].autoindex);
+      request->setAllowedMethods(locations[i].allowed_method);
     }
-
-    if (!tokensValidator(locations, request, tokens))
-      tokens.insert(tokens.begin(), "/");
-
-    for (size_t i = 0; i < locations.size(); ++i) {
+  }
+ 
+  // path is the junction of root + reqLine
+  // example: root = /www/html/ , reqLine = /lfarias
+  // result: /www/html/lfarias
+  std::cout << "REQ PATH: " << path << std::endl;
+  std::cout << "INDEXED PATH: " << indexedPath << std::endl;
+  request->setResource(reqLine);
+  request->setLocation(indexedPath);
+    /*for (size_t i = 0; i < locations.size(); ++i) {
         if (locations[i].location == tokens[0]) {
           std::string ret;
 
@@ -240,7 +282,7 @@ void HttpRequestFactory::createLocation(const std::string &buffer,
           } else {
             ret += "." + locations[i].root;
 
-            for (size_t j = 1; j < tokens.size(); ++j) {
+            for (size_t j = 1; j < tokens.size() - 1; ++j) {
               ret += tokens[j];
             }
           }
@@ -264,13 +306,13 @@ void HttpRequestFactory::createLocation(const std::string &buffer,
           // check if ret exists then, set Location to it.
           request->setLocation(ret);
         }
-    }
+    }*/
 
     return;
 }
 
-void parseRequestLine(std::string *requestLine, HttpRequest *request,
-                      std::string location) {
+void parseRequestLine(std::string *requestLine, HttpRequest *request, \
+                      std::vector<struct s_locationConfig> locations) {
   std::vector<std::string> fields;
 
   while (requestLine->size() != 0) {
@@ -290,8 +332,7 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request,
   }
 
   request->setMethod(fields[0]);
-  request->setResource(location);
-
+  HttpRequestFactory::createLocation(fields[1], locations, request);
   size_t pos = fields[2].find('/');
 
   if (pos == std::string::npos) {

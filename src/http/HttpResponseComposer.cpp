@@ -6,15 +6,17 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 18:02:49 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/27 21:06:04 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpResponseComposer.hpp"
 #include "../../include/http/HttpStatus.hpp"
+#include "../../include/http/HttpTime.hpp"
 #include "../../include/http/MimeType.hpp"
 #include "../../include/io/FileReader.hpp"
 
+#include <dirent.h>
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -78,4 +80,83 @@ bool HttpResponseComposer::getCustomPage(HttpResponse *response, \
   response->setMsgBody(resourceData);
   response->setContentLength(resourceSize);
   return (true);
+}
+
+void HttpResponseComposer::formatDirListStyle(const std::string &path, \
+                                              std::string &site_style) {
+  site_style += "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">";
+  site_style += "<title>Index of " + path + "</title>";
+  site_style += "<style>body,li,ul{margin:0;padding:0}body{font-family:Helvetica,sans-serif;background-color:#f7f7f7;color:#333}header{background-color:#007bff;color:#fff;padding:1em;text-align:center}main{margin:2em auto;max-width:800px;padding:1em;background-color:#fff;border-radius:5px;box-shadow:0 0 10px rgba(0,0,0,.1)}.file-list{list-style:none;padding:0}.file-list li{border-bottom:1px solid #eee;padding:.75em;display:flex;align-items:center;transition:background-color .2s}.file-list a{text-decoration:none;color:#007bff}.file-list li:hover{background-color:#f2f2f2}</style></head><body><header>";
+  site_style += "<h1> Index of " + path + "</h1></header><main><ul class=\"file-list\"><pre>";
+}
+
+void HttpResponseComposer::formatEntryName(const std::string &path, \
+                                  std::string &responseStr, \
+                                  std::map<std::string, struct dirent *>::iterator it) {
+  std::string entryName = it->first;
+  std::string icon;
+  dirent *entry = it->second;
+  responseStr += "<li>";
+
+  if (entry->d_type == DT_REG) {
+    icon = "&#128190 ";
+  } else {
+    icon = "&#128193 ";
+  }
+
+  if (entryName == "..") {
+    size_t pos = path.find_last_of('/');
+    std::string parent = path.substr(0, pos);
+    responseStr += "<a href=\"" + parent + "\">" + icon + entryName + "</a>";
+  } else {
+    responseStr += "<a href=\"" + path + "/" + entryName + "\">";
+    responseStr += icon + entryName + "</a>";
+  }
+  
+  size_t spaceQty = 30 - entryName.size();
+
+  for (size_t i = 0; i < spaceQty; ++i) {
+    responseStr += " ";
+  }
+
+  if (entry->d_type == DT_REG) {
+    responseStr += entry->d_reclen;
+  } else {
+    responseStr += "-";
+  }
+
+  responseStr += "</li>";
+}
+
+void HttpResponseComposer::buildDirListResponse(HttpRequest *request, HttpResponse *response, \
+                                                std::map<std::string, struct dirent *> &entries) {
+  std::string path = request->getResource();
+  std::string responseStr;
+  formatDirListStyle(path, responseStr);
+
+  std::map<std::string, struct dirent *>::iterator it = entries.begin();
+  std::map<std::string, struct dirent *>::iterator ite = entries.end();
+
+  for (; it != ite; ++it) {
+    if (it->first == ".") { // checking the entry name
+      continue;
+    }
+
+    formatEntryName(path, responseStr, it);
+  }
+
+  responseStr += "</pre></ul></main></body></html>";
+  char *msg = new char[responseStr.size()];
+
+  for (size_t i = 0; i < responseStr.size(); ++i) {
+    msg[i] = responseStr[i];
+  }
+
+  int protoMain = request->getProtocolMainVersion();
+  int protoSub = request->getProtocolSubVersion();
+  response->setProtocol("HTTP", protoMain, protoSub);
+  response->setStatusCode(200);
+  response->setMsgBody(msg);
+  response->setContentLength(responseStr.size());
+  response->setContentType("text/html");
 }

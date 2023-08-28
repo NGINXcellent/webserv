@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 18:26:17 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/27 16:43:55 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,8 @@ class HttpRequest {
   void                  setPostType(const std::string &type);
   const std::string&    getRequestBody(void);
   void                  setRequestBody(const std::string &body);
+  const std::string&    getRoot(void);
+  void                  setRoot(const std::string &body);
   size_t                getContentLength(void);
   void                  setContentLength(const std::string &sizeStr);
   const std::string&    getLocation(void);
@@ -82,6 +84,7 @@ class HttpRequest {
   std::string               boundary;
   std::vector<s_multipartStruct>  multipartStructVector;
   std::string               postType;
+  std::string               root;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);

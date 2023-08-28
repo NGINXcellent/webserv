@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:32:28 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 19:05:48 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/27 21:08:16 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iostream>
 #include <unistd.h>
+#include <dirent.h>
 #include <sys/stat.h>
 
 bool isRegularFile(const std::string &filename);
@@ -52,14 +53,34 @@ int FileReader::getContent(const std::string &fileName, char **resourceData, lon
   return (0);
 }
 
-bool FileReader::isDirectory(const std::string &filename) {
-  struct stat fileInfo;
+int FileReader::getDirContent(const std::string &dirName, \
+                              std::map<std::string, struct dirent*> &entries) {
 
-  if (stat(filename.c_str(), &fileInfo) != 0) {
-      return false; // Erro ao obter informações do arquivo
+  DIR* currentDir = opendir(dirName.c_str());
+
+  if (currentDir != NULL) {
+    struct dirent *entry;
+    
+    while (true) {
+      entry = readdir(currentDir);
+
+      if (entry == NULL)  {
+        closedir(currentDir);
+        break;
+      }
+
+      entries.insert(std::make_pair(entry->d_name, entry));
+    }
+  } else {
+    return (-1);
   }
 
-  return (true);
+  return (0);
+}
+
+bool FileReader::isDirectory(const std::string &filename) {
+  struct stat fileInfo;
+  return (stat(filename.c_str(), &fileInfo) == 0) && S_ISDIR(fileInfo.st_mode);
 }
 
 bool isRegularFile(const std::string &filename) {

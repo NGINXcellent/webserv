@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 14:08:40 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/26 16:01:41 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ HttpResponse::HttpResponse(void) {
 
 HttpResponse::~HttpResponse(void) {
   if (msgBody != NULL) {
-    delete[] msgBody;
+    //delete[] msgBody;
   }
 }
 
