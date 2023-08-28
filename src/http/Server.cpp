@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/27 20:43:31 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 16:10:14 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,15 +173,19 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
     if ((access(fullpath.c_str(), R_OK | X_OK) == -1) || !request->isDirListActive()) {
       return (403);
     }
-   
-    std::map<std::string, struct dirent*> entries;
     
-    if (FileReader::getDirContent(fullpath.c_str(), entries) == -1) {
-      return (500);
-    }
+    if (!fileExists(request->getLocation())) {
+      std::map<std::string, struct dirent*> entries;
+      
+      if (FileReader::getDirContent(fullpath.c_str(), entries) == -1) {
+        return (500);
+      }
 
-    HttpResponseComposer::buildDirListResponse(request, response, entries);
-    return (0); // or opStatus Code
+      HttpResponseComposer::buildDirListResponse(request, response, entries);
+      return (0); // or opStatus Code
+    } else {
+      fullpath = request->getLocation();
+    }
   } 
 
   if (access(fullpath.c_str(), F_OK) == -1) return (404);
