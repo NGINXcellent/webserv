@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 18:05:18 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 21:50:16 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <fstream>
 #include <exception>
 #include <cstdlib>
+#include <limits>
 
 bool  InputHandler::check_args(int argc, const char **argv) {
   if ((argc - 1) == 1 && argv[1] != NULL) {
@@ -48,6 +49,25 @@ void InputHandler::addPort(std::ifstream &fileStream, std::string &string) {
       word.resize(word.size() - 1);
       string = word;
     }
+}
+
+void InputHandler::addToSizeT(std::ifstream &fileStream, size_t &size) {
+  std::string word;
+  fileStream >> word;
+
+  if (!(word.find_first_of(";") == word.size() - 1))
+    throw std::runtime_error("no ; at the end of line");
+
+  word.resize(word.size() -1);
+
+  std::istringstream iss(word);
+  char remainingChar;
+  size_t value;
+
+  if (!(iss >> value) || (iss >> remainingChar)) {
+    throw std::runtime_error("Invalid size_t format");
+  }
+  size = value;
 }
 
 void InputHandler::addToString(std::ifstream &fileStream, \
@@ -148,7 +168,7 @@ void redirectCheck(s_locationConfig newLocation) {
         if (!newLocation.root.empty() ||
             !newLocation.autoindex.empty() ||
             !newLocation.index.empty() ||
-            !newLocation.max_body_size.empty() ||
+            newLocation.loc_max_body_size != SIZE_T_MAX ||
             !newLocation.allowed_method.empty()) {
             throw std::runtime_error("return is not the only entrance");
         }
@@ -160,6 +180,7 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
   std::string word;
   fileStream >> word;
   newLocation.location = locationCheck(word);
+  newLocation.loc_max_body_size = SIZE_T_MAX;
   fileStream >> word;
 
   if (word != "{")
@@ -184,9 +205,9 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
       addToString(fileStream, newLocation.index);
 
     } else if (word == "max_body_size") {
-      if (!newLocation.max_body_size.empty())
-        throw std::runtime_error("duplicate max_body_size inside location");
-      addToString(fileStream, newLocation.max_body_size);
+      if (!newLocation.loc_max_body_size != 0)
+        throw std::runtime_error("duplicate loc_max_body_size inside location");
+      addToSizeT(fileStream, newLocation.loc_max_body_size);
 
     } else if (word == "return") {  // redirect
       addToPair(fileStream, newLocation.redirect);
@@ -257,9 +278,9 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, \
       addToMap(fileStream, server.error_page);
 
     } else if (word == "max_body_size") {
-      if (!server.max_body_size.empty())
-        throw std::runtime_error("duplicate max_body_size");
-      addToString(fileStream, server.max_body_size);
+      if (!server.srv_max_body_size != 0)
+        throw std::runtime_error("duplicate loc_max_body_size");
+      addToSizeT(fileStream, server.srv_max_body_size);
 
     } else if (word == "location") {
       s_locationConfig newLocation;
@@ -291,6 +312,7 @@ void InputHandler::checkConfFile(char *fileArg) {
   while (fileStream >> word) {
     if (word == "server") {
       s_serverConfig newServer;
+      newServer.srv_max_body_size = SIZE_T_MAX;
       newServerCheck(fileStream, newServer);
       if (newServer.location.empty())
         throw std::runtime_error("Server need at least one location");
@@ -317,7 +339,7 @@ void InputHandler::printLocations(const std::vector<s_locationConfig> &location)
     std::cout << "    autoindex: " << toprint.autoindex << std::endl;
     std::cout << "    index " << toprint.index << std::endl;
     std::cout << "    root: " << toprint.root << std::endl;
-    std::cout << "    max_body_size: " << toprint.max_body_size << std::endl;
+    std::cout << "    loc_max_body_size: " << toprint.loc_max_body_size << std::endl;
 
     for (size_t i = 0; i < toprint.allowed_method.size(); ++i) {
       std::cout << "    allowed_method: ";
@@ -337,7 +359,7 @@ void InputHandler::printServers() {
     std::cout << "port: " << toprint.port << std::endl;
     std::cout << "host: " << toprint.host << std::endl;
     std::cout << "server_name: " << toprint.server_name << std::endl;
-    std::cout << "max_body_size: " << toprint.max_body_size << std::endl;
+    std::cout << "loc_max_body_size: " << toprint.srv_max_body_size << std::endl;
     printMap(toprint.error_page);
 
     if (!toprint.location.empty())

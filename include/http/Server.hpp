@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 17:55:38 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 21:49:15 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ class Server {
   size_t                        port;
   std::string                   host;
   std::string                   server_name;
-  size_t                        max_body_size;
+  size_t                        srv_max_body_size;
   int                           connection_fd;
   TCPServerSocket               *socket;
   std::map<int, std::string>    error_pages;

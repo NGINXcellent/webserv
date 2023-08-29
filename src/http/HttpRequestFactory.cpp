@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 09:12:38 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/28 22:14:40 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,11 +53,30 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
     request->setProtocolName("");
   }
 
-  if(request->getPostType() != "NONE"){
+  if(request->getPostType() != "NONE" && checkMaxBodySize(request, locations)){
     setupRequestBody(requestMsg, request);
   }
 
   return (request);
+}
+
+// NEED TESTS DOWNHERE
+// locations problem here.
+
+bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_locationConfig> locations) {
+  s_locationConfig tmp;
+  bool hasLocationBodySize = false;
+  for(size_t i = 0; i < locations.size(); ++i) {
+    if(request->getBaseLocation() == locations[i].location)
+    tmp = locations[i];
+    hasLocationBodySize = true;
+    break;
+  }
+  if(hasLocationBodySize && request->getContentLength() > tmp.loc_max_body_size){
+    request->setResponseStatusCode(413);
+    return false;
+  }
+  return true;
 }
 
 std::string setupBodyContentType(HttpRequest *request,
@@ -208,6 +227,7 @@ void HttpRequestFactory::createLocation(const std::string &buffer,
   for (size_t i = 0; i < locations.size(); ++i) {
     if (locations[i].location == tokens[0]) {
       std::string ret;
+      request->setBaseLocation(tokens[0]);
       if (locations[i].root.empty())
         ret = '.' + line;
       else {
@@ -333,6 +353,7 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
   request->setUnmodifiedSinceTimestamp( \
                                 getHeaderValue("if-unmodified-since", headers));
   request->setPostType(setupBodyContentType(request, headers));
+  request->setContentLength(getHeaderValue("content-length", headers));
 
   return true;
 }
