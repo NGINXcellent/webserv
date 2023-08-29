@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/29 07:49:47 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/29 07:58:53 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,6 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   return (request);
 }
 
-// NEED TESTS DOWNHERE
 bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_locationConfig> locations) {
   s_locationConfig tmp;
   bool hasLocationBodySize = false;
