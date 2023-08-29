@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:52:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/21 02:28:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 19:45:22 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ class HttpResponse {
   void          setStatusCode(int responseCode);
   void          setContentType(const std::string &mimeType);
   void          setContentLength(long long fileSize);
+  void          setLocation(const std::string& location);
   long long     getContentLength(void);
   void          setMsgBody(char *data);
   char          *getMsgBody(void);
@@ -41,6 +42,7 @@ class HttpResponse {
   std::string       serverVersion;
   std::string       modifiedTime;
   std::string       contentType;
+  std::string       location;
   long long         contentLength;
   char*             msgBody;
 

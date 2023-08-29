@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 14:20:53 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 21:59:38 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,8 +145,9 @@ void chunkBodyType (const std::string &msg, HttpRequest *request) {
         pos += count;
     }
     // MAX BODY SIZE CHECK POSSIVELMENTE VEM AQUI
-    if (!ret.empty())
+    if (!ret.empty()) {
         request->setRequestBody(ret);
+    }
 }
 
 void setupRequestBody(const std::string &msg, HttpRequest *request) {
@@ -178,7 +179,7 @@ void setupRequestBody(const std::string &msg, HttpRequest *request) {
 
 // this function verify if the tokens are in the right order and deals with redirection
 // if fails we are dealing whith location "/"
-bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *request,
+/*bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *request,
                      std::vector<std::string> &tokens) {
   for (size_t i = 0; i < locations.size(); ++i) {
     if (locations[i].location == tokens[0]){
@@ -186,11 +187,13 @@ bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *reque
         tokens[0] = locations[i].redirect.second;
         request->setResponseStatusCode(locations[i].redirect.first);
       }
+
       return true;
     }
   }
+
   return false;
-}
+}*/
 
 bool isDirectory(const char* path) {
     struct stat fileInfo;
@@ -230,13 +233,9 @@ void HttpRequestFactory::findLocation(const std::string &reqLine,
 
   std::cout << "reqLine " << reqLine << std::endl;
   std::vector<std::string> reqTokens = splitPath(reqLine);
-
-  //if (!tokensValidator(locations, request, reqTokens))
-    //reqTokens.insert(reqTokens.begin(), "/");
-
   int locationMatch = 0; // the more specific match is the one that wins
   std::string path;
-  std::string indexedPath;
+  std::string indexPath;
   std::string token;
 
   for (size_t i = 0; i < locations.size(); ++i) {
@@ -244,8 +243,8 @@ void HttpRequestFactory::findLocation(const std::string &reqLine,
     int tokenMatches = 0;
    
     for (size_t j = 0; j < locTokens.size(); j++) {
-      // std::cout << "reqTokens >>>> " << reqTokens[j] << std::endl;
-      // std::cout << "locTokens >>>> " << locTokens[j] << std::endl;
+      std::cout << "reqTokens >>>> " << reqTokens[j] << std::endl;
+      std::cout << "locTokens >>>> " << locTokens[j] << std::endl;
       if (reqTokens[j] == locTokens[j]) {
         tokenMatches++; 
       } else {
@@ -253,29 +252,37 @@ void HttpRequestFactory::findLocation(const std::string &reqLine,
       }
     }
 
-    if (tokenMatches > locationMatch) {
-      locationMatch = tokenMatches;
-      request->setRoot(locations[i].root);
-      path = locations[i].root + reqLine;
+    if (tokenMatches < locationMatch) {
+      continue;
+    } 
+    
+    locationMatch = tokenMatches;
 
-      if (isDirectory(path.c_str()) && !locations[i].index.empty()) {
-        indexedPath = path + '/' + locations[i].index;
-      } else {
-        indexedPath = "";
-      }
-
-      request->setDirListActive(locations[i].autoindex);
-      request->setAllowedMethods(locations[i].allowed_method);
+    if(!locations[i].redirect.second.empty()) {
+      request->setRedirectionCode(locations[i].redirect.first);
+      request->setRedirectionPath(locations[i].redirect.second);
+      continue; // go to next location config
+    } else {
+      request->setRedirectionCode(0);
+      request->setRedirectionPath("");
     }
+  
+    std::string fullpath = locations[i].root + reqLine; 
+
+    std::cout << "index: " << locations[i].index << std::endl;
+    if (isDirectory(fullpath.c_str()) && !locations[i].index.empty()) {
+      indexPath = fullpath + '/' + locations[i].index;
+    } else {
+      indexPath = "";
+    }
+
+    request->setRoot(locations[i].root);
+    request->setDirListActive(locations[i].autoindex);
+    request->setAllowedMethods(locations[i].allowed_method);
+    request->setIndexPath(indexPath);
   }
  
-  // path is the junction of root + reqLine
-  // example: root = /www/html/ , reqLine = /lfarias
-  // result: /www/html/lfarias
-  std::cout << "REQ PATH: " << path << std::endl;
-  std::cout << "INDEXED PATH: " << indexedPath << std::endl;
   request->setResource(reqLine);
-  request->setLocation(indexedPath);
   return;
 }
 

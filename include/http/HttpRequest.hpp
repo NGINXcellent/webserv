@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/27 16:43:55 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 19:55:50 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,26 +28,24 @@ class HttpRequest {
 
   bool                  isDirListActive(void);
   void                  setDirListActive(const std::string &active);
-  const std::string     &getMethod(void);
+  const std::string&    getMethod(void);
   void                  setMethod(const std::string &method);
-  const std::string     &getResource(void);
+  const std::string&    getResource(void);
   void                  setResource(const std::string &resource);
   void                  setProtocolName(const std::string &protocol);
-  const std::string     &getProtocolName(void);
+  const std::string&    getProtocolName(void);
   void                  setProtocolVersion(int main, int sub);
   int                   getProtocolMainVersion(void);
   int                   getProtocolSubVersion(void);
-  const std::string     &getHost(void);
+  const std::string&    getHost(void);
   void                  setHost(const std::string &nHost);
-  const std::string     &getModifiedTimestampCheck(void);
+  const std::string&    getModifiedTimestampCheck(void);
   void                  setModifiedTimestampCheck(const std::string &timestamp);
-  const std::string     &getUnmodifiedSinceTimestamp(void);
+  const std::string&    getUnmodifiedSinceTimestamp(void);
   void                  setUnmodifiedSinceTimestamp(const std::string &timestamp);
   const std::vector<std::string>   &getAllowedMethods(void);
   void                  setAllowedMethods(const std::vector<std::string> &allowedList);
-  void                  setResponseStatusCode(int toset);
-  int                   getResponseStatusCode(void);
- void                  setupContentType(const std::string &msg, HttpRequest *request);
+  void                  setupContentType(const std::string &msg, HttpRequest *request);
   const std::string&    getPostType(void);
   void                  setPostType(const std::string &type);
   const std::string&    getRequestBody(void);
@@ -56,8 +54,12 @@ class HttpRequest {
   void                  setRoot(const std::string &body);
   size_t                getContentLength(void);
   void                  setContentLength(const std::string &sizeStr);
-  const std::string&    getLocation(void);
-  void                  setLocation(const std::string &loc);
+  const std::string&    getIndexPath(void);
+  void                  setIndexPath(const std::string &iPath);
+  const std::string&    getRedirectionPath(void);
+  void                  setRedirectionPath(const std::string &loc);
+  int                   getRedirectionCode(void);
+  void                  setRedirectionCode(int toset);
   const std::string&    getLocationWithoutIndex(void);
   void                  setLocationWithoutIndex(const std::string &loc);
   void                  setBoundary(const std::string &boundary);
@@ -79,7 +81,8 @@ class HttpRequest {
   size_t                    bodySize;
   std::string               requestBody;
   bool                      autoindex;
-  std::string               location;
+  std::string               indexPath;
+  std::string               redirectionPath;
   std::string               locationWithoutIndex;
   std::string               boundary;
   std::vector<s_multipartStruct>  multipartStructVector;

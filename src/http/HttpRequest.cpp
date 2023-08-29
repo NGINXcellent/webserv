@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/27 16:50:32 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 19:58:57 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,13 +30,6 @@ void  HttpRequest::setDirListActive(const std::string& active) {
   }
 }
 
-void HttpRequest::setResponseStatusCode(int toset) {
-  responseStatusCode = toset;
-}
-
-int HttpRequest::getResponseStatusCode() {
-  return responseStatusCode;
-}
 
 HttpRequest::~HttpRequest(void) {}
 
@@ -125,13 +118,28 @@ void HttpRequest::setRequestBody(const std::string &body) {
   requestBody = body;
 }
 
-
-const std::string& HttpRequest::getLocation(void) {
-  return (location);
+const std::string& HttpRequest::getIndexPath(void) {
+  return (indexPath);
 }
 
-void HttpRequest::setLocation(const std::string &loc) {
-  location = loc;
+void HttpRequest::setIndexPath(const std::string &iPath) {
+  indexPath = iPath;
+}
+
+const std::string& HttpRequest::getRedirectionPath(void) {
+  return (redirectionPath);
+}
+
+void HttpRequest::setRedirectionPath(const std::string &path) {
+  redirectionPath = path; 
+}
+
+void HttpRequest::setRedirectionCode(int toset) {
+  responseStatusCode = toset;
+}
+
+int HttpRequest::getRedirectionCode() {
+  return responseStatusCode;
 }
 
 const std::string& HttpRequest::getLocationWithoutIndex(void) {
@@ -185,10 +193,10 @@ void HttpRequest::setMultipartStruct(const std::vector<s_multipartStruct>& parts
  multipartStructVector.insert(multipartStructVector.end(), parts.begin(), parts.end());
 }
 
-void HttpRequest::setRoot(const std::string &rootPath) {
-  root = rootPath;
-}
-
 const std::string &HttpRequest::getRoot(void) {
   return (root);
+}
+
+void HttpRequest::setRoot(const std::string &rootPath) {
+  root = rootPath;
 }

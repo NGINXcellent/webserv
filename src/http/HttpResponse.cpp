@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/26 16:01:41 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 20:23:32 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ HttpResponse::HttpResponse(void) {
 
 HttpResponse::~HttpResponse(void) {
   if (msgBody != NULL) {
-    //delete[] msgBody;
+    delete[] msgBody;
   }
 }
 
@@ -37,6 +37,11 @@ std::string   HttpResponse::getHeaders(void) {
   responseHeader += "Server: " + serverVersion + "\n";
   responseHeader += "Date: ";
   responseHeader += HttpTime::getCurrentTime();
+
+  if (!location.empty()) {
+    responseHeader += "Location: ";
+    responseHeader += location + "\n";
+  }
 
   if (!modifiedTime.empty()) {
     responseHeader += "Last-Modified: ";
@@ -83,6 +88,10 @@ void HttpResponse::setContentType(const std::string &mime) {
 
 void HttpResponse::setContentLength(long long fileSize) {
   contentLength = fileSize;
+}
+
+void HttpResponse::setLocation(const std::string &loc) {
+  location = loc;
 }
 
 long long HttpResponse::getContentLength(void) {

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 16:10:14 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 21:46:51 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,6 +167,12 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
 }
 
 int Server::get(HttpRequest *request, HttpResponse *response) {
+  if (request->getRedirectionCode() != 0) {
+    response->setStatusCode(request->getRedirectionCode());
+    response->setLocation(request->getRedirectionPath());
+    return (0);
+  }
+
   std::string fullpath = request->getRoot() + request->getResource();
   
   if (FileReader::isDirectory(fullpath)) {
@@ -174,7 +180,9 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
       return (403);
     }
     
-    if (!fileExists(request->getLocation())) {
+    std::cout << "FULLPATH: " << request->getIndexPath() << std::endl;
+
+    if (!fileExists(request->getIndexPath()) && request->isDirListActive()) {
       std::map<std::string, struct dirent*> entries;
       
       if (FileReader::getDirContent(fullpath.c_str(), entries) == -1) {
@@ -184,7 +192,7 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
       HttpResponseComposer::buildDirListResponse(request, response, entries);
       return (0); // or opStatus Code
     } else {
-      fullpath = request->getLocation();
+      fullpath = request->getIndexPath();
     }
   } 
 
@@ -207,11 +215,7 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
   if (opStatus != 0) {
     return (opStatus);
   }
-// TEM QUE CHECAR AQUI PRA VER SE VAI FICAR ASSIM.
-  /*if (request->getResponseStatusCode() != 0)
-    response->setStatusCode(request->getResponseStatusCode());
-  else
-    response->setStatusCode(200);*/
+
   response->setLastModifiedTime(HttpTime::getLastModifiedTime(fullpath));
   response->setContentType(MimeType::identify(fullpath));
   response->setMsgBody(resourceData);
