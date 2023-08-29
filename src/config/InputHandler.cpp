@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 21:50:16 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/29 07:30:46 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,7 +339,9 @@ void InputHandler::printLocations(const std::vector<s_locationConfig> &location)
     std::cout << "    autoindex: " << toprint.autoindex << std::endl;
     std::cout << "    index " << toprint.index << std::endl;
     std::cout << "    root: " << toprint.root << std::endl;
-    std::cout << "    loc_max_body_size: " << toprint.loc_max_body_size << std::endl;
+    if(toprint.loc_max_body_size != SIZE_T_MAX){
+      std::cout << "    loc_max_body_size: " << toprint.loc_max_body_size << std::endl;
+    }
 
     for (size_t i = 0; i < toprint.allowed_method.size(); ++i) {
       std::cout << "    allowed_method: ";
@@ -359,7 +361,9 @@ void InputHandler::printServers() {
     std::cout << "port: " << toprint.port << std::endl;
     std::cout << "host: " << toprint.host << std::endl;
     std::cout << "server_name: " << toprint.server_name << std::endl;
-    std::cout << "loc_max_body_size: " << toprint.srv_max_body_size << std::endl;
+    if(toprint.srv_max_body_size != SIZE_T_MAX){
+      std::cout << "    loc_max_body_size: " << toprint.srv_max_body_size << std::endl;
+    }
     printMap(toprint.error_page);
 
     if (!toprint.location.empty())
