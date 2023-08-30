@@ -41,7 +41,7 @@ class Server {
   size_t                        port;
   std::string                   host;
   std::string                   server_name;
-  size_t                        max_body_size;
+  size_t                        srv_max_body_size;
   int                           connection_fd;
   TCPServerSocket               *socket;
   std::map<int, std::string>    error_pages;

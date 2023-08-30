@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 21:59:38 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/29 07:58:53 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,148 +52,131 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
     request->setProtocolName("");
   }
 
-  setupContentType(requestMsg, request);
-  setupRequestBody(requestMsg, request);
+  //  setup body if POST
+  if(request->getPostType() != "NONE" && checkMaxBodySize(request, locations)){
+    setupRequestBody(requestMsg, request);
+  }
 
   return (request);
 }
 
-void setupContentType(const std::string &msg, HttpRequest *request) {
-  size_t pos = msg.find("Transfer-Encoding:");
-
-  if (pos != std::string::npos) {
-    if (msg.find("chunked", pos) != std::string::npos) {
-      request->setPostType("CHUNK");
-      return;
+bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_locationConfig> locations) {
+  s_locationConfig tmp;
+  bool hasLocationBodySize = false;
+  
+  for(size_t i = 0; i < locations.size(); ++i) {
+    if(locations[i].location == request->getBaseLocation()) {
+      tmp = locations[i];
+      hasLocationBodySize = true;
+      break;
     }
   }
+  
+  if(hasLocationBodySize && request->getContentLength() > tmp.loc_max_body_size){
+    request->setResponseStatusCode(413);
+    return false;
+  }
+  
+  return true;
+}
 
-  pos = msg.find("Content-Type:");
-
-  if (pos != std::string::npos) {
-    if (msg.find("multipart/form-data", pos) != std::string::npos) {
-      request->setPostType("MULTIPART");
-      // Pegar o boundary do multipart
-      size_t boundaryPos = msg.find("boundary=", pos);
-      if (boundaryPos != std::string::npos) {
-        boundaryPos += 9; // Tamanho da string "boundary="
-        size_t boundaryEndPos = msg.find("\r\n", boundaryPos);
-        std::string boundary = msg.substr(boundaryPos, boundaryEndPos - boundaryPos);
-        request->setBoundary(boundary);
-      }
-      return;
-    }
+std::string setupBodyContentType(HttpRequest *request,
+                                 std::map<std::string, std::string> &headers) {
+  std::string postType = getHeaderValue("transfer-encoding", headers);
+  if (postType == "chunked") {
+    return "CHUNK";
   }
 
-  request->setPostType("NONE");
+  postType = getHeaderValue("content-type", headers);
+  if (postType.find("multipart/form-data") != std::string::npos) {
+    size_t boundaryPos = postType.find("boundary=");
+
+    if (boundaryPos != std::string::npos) {
+      boundaryPos += 9;  // Tamanho da string "boundary="
+      size_t boundaryEndPos = postType.find("\r\n", boundaryPos);
+      std::string boundary =
+          postType.substr(boundaryPos, boundaryEndPos - boundaryPos);
+      request->setBoundary(boundary);
+      return "MULTIPART";
+    }
+  }
+  return "NONE";
 }
 
 void MultipartBodyType(const std::string &msg, HttpRequest *request) {
-  //P("DENTRO DO EXTRATOR");
-    std::vector<s_multipartStruct> bodyParts;
-    std::string boundary = request->getBoundary();
-    size_t startPos = msg.find(boundary);
+  std::vector<s_multipartStruct> bodyParts;
+  std::string boundary = request->getBoundary();
+  size_t startPos = msg.find(boundary);
 
-    if (startPos == std::string::npos) {
-        return;
+  if (startPos == std::string::npos) {
+    return;
+  }
+
+  startPos += boundary.length();
+
+  while (startPos != std::string::npos) {
+    size_t endPos = msg.find(boundary, startPos);
+
+    if (endPos == std::string::npos) {
+      break;
     }
 
-    startPos += boundary.length();
+    std::string bodyPart = msg.substr(startPos, endPos - startPos);
 
-    while (startPos != std::string::npos) {
-        size_t endPos = msg.find(boundary, startPos);
+    // Extract name and content from bodyPart
+    s_multipartStruct multipartStruct;
+    size_t namePos = bodyPart.find("name=\"") + 6;
+    size_t nameEndPos = bodyPart.find("\"", namePos);
+    multipartStruct.name = bodyPart.substr(namePos, nameEndPos - namePos);
 
-        if (endPos == std::string::npos) {
-            break;
-        }
+    size_t contentPos = bodyPart.find("\r\n\r\n") + 4;
+    multipartStruct.content =
+        bodyPart.substr(contentPos, bodyPart.size() - contentPos - 4);
 
-        std::string bodyPart = msg.substr(startPos, endPos - startPos);
+    bodyParts.push_back(multipartStruct);
+    startPos = endPos + boundary.length();
+  }
 
-        // Extract name, and content from bodyPart
-        s_multipartStruct multipartStruct;
-        size_t namePos = bodyPart.find("name=\"") + 6;
-        size_t nameEndPos = bodyPart.find("\"", namePos);
-        multipartStruct.name = bodyPart.substr(namePos, nameEndPos - namePos);
-
-        size_t contentPos = bodyPart.find("\r\n\r\n") + 4;
-        multipartStruct.content = bodyPart.substr(contentPos, bodyPart.size() - contentPos - 4);
-
-        bodyParts.push_back(multipartStruct);
-        startPos = endPos + boundary.length();
-    }
-
-    if (!bodyParts.empty()) {
-        request->setMultipartStruct(bodyParts);
-    }
+  if (!bodyParts.empty()) {
+    request->setMultipartStruct(bodyParts);
+  }
 }
 
 void chunkBodyType (const std::string &msg, HttpRequest *request) {
-    size_t pos, count = 1;
-    std::string ret;
-
-    if ((pos = msg.find("\r\n\r\n")) == std::string::npos) {
-        return;
-    }
-
+  size_t pos, count = 1;
+  std::string ret;
+  
+  if ((pos = msg.find("\r\n\r\n")) == std::string::npos) {
+    return;
+  }
+  
+  pos += 2;
+  
+  while (count) {
     pos += 2;
+    count = strtol(&msg[pos], NULL, 16);
+    pos = msg.find_first_of("\n", pos) + 1;
+    ret.append(msg, pos, count);
+    pos += count;
+  }
 
-    while (count) {
-        pos += 2;
-        count = strtol(&msg[pos], NULL, 16);
-        pos = msg.find_first_of("\n", pos) + 1;
-        ret.append(msg, pos, count);
-        pos += count;
-    }
-    // MAX BODY SIZE CHECK POSSIVELMENTE VEM AQUI
-    if (!ret.empty()) {
-        request->setRequestBody(ret);
-    }
+  if (!ret.empty()) {
+    request->setRequestBody(ret);
+  }
 }
 
 void setupRequestBody(const std::string &msg, HttpRequest *request) {
-    // P("Início");
-    std::cout << msg << std::endl;
-    if(request->getPostType() == "NONE") {
-        return;
-    }
-
-    if(request->getPostType() == "MULTIPART") {
-        // P("if MULTIPART");
-        MultipartBodyType(msg, request);
-        return;
-    }
-
+  if (request->getPostType() == "CHUNK") {
     chunkBodyType(msg, request);
-}
-//   if(request->getPostType() == "NONE") {
-//     return;
-//   }
-//   if(request->getPostType() == "MULTIPART") {
-//     std::cout << "entrou aqui" << std::endl;
-//     // std::cout << msg << std::endl;
-//     MultipartBodyType(msg, request);
-//     return;
-//   }
-//   chunkBodyType(msg, request);
-// }
-
-// this function verify if the tokens are in the right order and deals with redirection
-// if fails we are dealing whith location "/"
-/*bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *request,
-                     std::vector<std::string> &tokens) {
-  for (size_t i = 0; i < locations.size(); ++i) {
-    if (locations[i].location == tokens[0]){
-      if(!locations[i].redirect.second.empty()) {
-        tokens[0] = locations[i].redirect.second;
-        request->setResponseStatusCode(locations[i].redirect.first);
-      }
-
-      return true;
-    }
   }
-
-  return false;
-}*/
+  
+  if (request->getPostType() == "MULTIPART") {
+    MultipartBodyType(msg, request);
+    return;
+  }
+  
+  return;
+}
 
 bool isDirectory(const char* path) {
     struct stat fileInfo;
@@ -275,6 +258,7 @@ void HttpRequestFactory::findLocation(const std::string &reqLine,
     } else {
       indexPath = "";
     }
+  }
 
     request->setRoot(locations[i].root);
     request->setDirListActive(locations[i].autoindex);
@@ -366,7 +350,6 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
 
     if (ws_pos != std::string::npos && \
         (ws_pos < char_pos || ws_pos != delim_pos + 1)) {
-      // std::cout << "debug: line starts with white space" << std::endl;
       return false;
     }
 
@@ -389,6 +372,8 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
                                 getHeaderValue("if-modified-since", headers));
   request->setUnmodifiedSinceTimestamp( \
                                 getHeaderValue("if-unmodified-since", headers));
+  request->setPostType(setupBodyContentType(request, headers));
+  request->setContentLength(getHeaderValue("content-length", headers));
 
   return true;
 }

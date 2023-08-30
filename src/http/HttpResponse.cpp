@@ -17,7 +17,7 @@
 #include <sstream>
 
 HttpResponse::HttpResponse(void) {
-  statusCode = 200;
+  statusCode = 666;
   statusMessage = "OK";
   contentLength = 0;
   serverVersion = "webserv/0.1";
@@ -56,7 +56,7 @@ std::string   HttpResponse::getHeaders(void) {
 
     responseHeader += "Content-length: " + ss.str() + "\n";
   }
-  
+
   responseHeader += "Connection: close\n\n";
   return responseHeader;
 }

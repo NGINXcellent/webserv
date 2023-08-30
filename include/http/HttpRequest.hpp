@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 19:55:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 20:32:29 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,8 @@ class HttpRequest {
   const std::string&    getBoundary(void);
   void                  setMultipartStruct(const std::vector<s_multipartStruct>& parts);
   const std::vector<s_multipartStruct>& getMultipartStruct();
+  void                  setBaseLocation(std::string baseLocation);
+  std::string           getBaseLocation(void);
 
  private:
   std::string               protocolName;
@@ -83,6 +85,8 @@ class HttpRequest {
   bool                      autoindex;
   std::string               indexPath;
   std::string               redirectionPath;
+  std::string               baseLocation;
+  std::string               location;
   std::string               locationWithoutIndex;
   std::string               boundary;
   std::vector<s_multipartStruct>  multipartStructVector;

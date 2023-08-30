@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 13:40:29 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 20:34:44 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,6 @@
 
 #include <vector>
 
-/*void P(const std::string& msg, const std::string& str) {
-    std::cout << __func__ << "() l. " << __LINE__ << ": " << str << std::endl;
-    std::cout << msg << std::endl;
-}*/
-
 class HttpRequestFactory {
  public:
   static void         findLocation(const std::string &buffer, \
@@ -34,6 +29,7 @@ class HttpRequestFactory {
                                  std::vector<s_locationConfig> locations);
 
   static int          check(HttpRequest *request);
+  static bool checkMaxBodySize(HttpRequest *request,std::vector<s_locationConfig> locations);
 
  private:
   HttpRequestFactory(void);

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/29 20:20:53 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 21:42:54 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
   host = config.host;
   server_name = config.server_name;
-  max_body_size = strtol(config.port.c_str(), NULL, 0);
+  srv_max_body_size = config.srv_max_body_size;
   error_pages = config.error_page;
   locations = config.location;
 }
@@ -107,6 +107,21 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
   response->setProtocol("HTTP", protoMain, protoSub);
   response->setLastModifiedTime(
       HttpTime::getLastModifiedTime(request->getResource()));
+
+  // BODY SIZE CHECK
+  //  MESMA LOGICA DE CHECAGEM COM STATUS CODE EM REQUEST, VAI FICAR ASSIM ?
+  if (request->getResponseStatusCode() != 0) {
+    opStatus = request->getResponseStatusCode();
+    return opStatus;
+  }
+  // Checar max_body_size do server agora
+  if (srv_max_body_size != SIZE_T_MAX) {
+    if (request->getContentLength() > srv_max_body_size) {
+      opStatus = 413;
+      return opStatus;
+    }
+  }
+  // END BODY SIZE CHECK ---
 
   if (request->getPostType() == "NONE") {
     throw std::runtime_error("Wrong POST REQUEST, NONE");

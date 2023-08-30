@@ -6,11 +6,11 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 20:36:13 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/29 08:29:44 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-/*#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 
 #include <iostream>
 #include <string>
@@ -20,7 +20,6 @@
 #include "../../../include/http/HttpRequestFactory.hpp"
 #include "../../../include/http/Server.hpp"
 
-std::string createLocation(std::string &buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
 
 void testRequestLine(std::string requestMsg, int expectedStatusCode,
                      std::vector<s_locationConfig> locations) {
@@ -46,7 +45,7 @@ TEST(RequestTests, BasicBehaviourTest) {
   std::vector<s_locationConfig> locations;
   s_locationConfig locationOne;
   std::string page = "/index.html";
-  locationOne.location = page; 
+  locationOne.location = page;
   locations.push_back(locationOne);
 
   for (size_t i = 0; i < reqLines.size(); i++) {
@@ -82,16 +81,20 @@ TEST(LocationTests, basicLocationTests) {
     std::string buffer4 = "GET /dir HTTP/1.1";
     HttpRequest request;
 
-    std::string result1 = createLocation(buffer1, configs, &request);
+    HttpRequestFactory::createLocation(buffer1, configs, &request);
+    std::string result1 = request.getLocation();
     EXPECT_EQ(result1, "./index.html");
 
-    std::string result2 = createLocation(buffer2, configs, &request);
+    HttpRequestFactory::createLocation(buffer2, configs, &request);
+    std::string result2 = request.getLocation();
     EXPECT_EQ(result2, "./var/www/images");
 
-    std::string result3 = createLocation(buffer3, configs, &request);
+    HttpRequestFactory::createLocation(buffer3, configs, &request);
+    std::string result3 = request.getLocation();
     EXPECT_EQ(result3, "./teste4/vamos/testar/aqui");
 
-    std::string result4 = createLocation(buffer4, configs, &request);
+    HttpRequestFactory::createLocation(buffer4, configs, &request);
+    std::string result4 = request.getLocation();
     EXPECT_EQ(result4, "../../InputTests/test_files/fail/nestedServer.conf");
 }
 
@@ -412,6 +415,7 @@ TEST(RequestTests, CRLFParsingTest) {
   }
 }
 
+/* WORK ON THIS CHECK HTTP REQUEST FACTORY FUNCTION
 TEST(RequestTests, BlankLinesTest) {
   std::vector<s_locationConfig> locations;
   s_locationConfig locationOne;
@@ -496,4 +500,102 @@ TEST(RequestTests, BlankLinesTest) {
 
     testRequestLine(request.c_str(), 0, locations);
   }
-} */
+}*/
+
+std::string setupBodyContentType(HttpRequest *request,
+                                 std::map<std::string, std::string> &headers);
+TEST(RequestTests, TestChunkType) {
+  {
+    HttpRequest request;
+    std::map<std::string, std::string> headers;
+    headers["transfer-encoding"] = "chunked";
+
+    std::string result = setupBodyContentType(&request, headers);
+
+    EXPECT_EQ(result, "CHUNK");
+  }
+
+  {
+    HttpRequest request;
+    std::map<std::string, std::string> headers;
+    headers["content-type"] = "multipart/form-data; boundary=myboundary123";
+
+    std::string result = setupBodyContentType(&request, headers);
+
+    EXPECT_EQ(result, "MULTIPART");
+    EXPECT_EQ(request.getBoundary(), "myboundary123");
+  }
+
+  {
+    HttpRequest request;
+    std::map<std::string, std::string> headers;
+
+    std::string result = setupBodyContentType(&request, headers);
+
+    EXPECT_EQ(result, "NONE");
+  }
+
+  {
+    HttpRequest request;
+    std::map<std::string, std::string> headers;
+    headers["content-type"] = "multipart/wrongform-data; boundary=myboundary123";
+
+    std::string result = setupBodyContentType(&request, headers);
+
+    EXPECT_EQ(result, "NONE");
+  }
+  {
+    HttpRequest request;
+    std::map<std::string, std::string> headers;
+    headers["transfer-encoding"] = "chuunked";
+
+    std::string result = setupBodyContentType(&request, headers);
+
+    EXPECT_EQ(result, "NONE");
+  }
+}
+
+TEST(BodySizeTests, LocationMaxBodySize) {
+    HttpRequest request;
+    std::vector<s_locationConfig> configs;
+    size_t i = 100;
+    size_t j = 100000;
+    size_t k = 999999;
+    s_locationConfig config1;
+    config1.location = "/";
+    config1.loc_max_body_size = i;
+    config1.allowed_method = {"POST"};
+    configs.push_back(config1);
+
+    s_locationConfig config2;
+    config2.location = "/images";
+    config2.loc_max_body_size = j;
+    config2.allowed_method = {"POST"};
+    configs.push_back(config2);
+
+    s_locationConfig config3;
+    config3.location = "/dir";
+    config3.loc_max_body_size = k;
+    config3.allowed_method = {"POST"};
+    configs.push_back(config3);
+
+    size_t l = 200;
+    request.setContentLength("200");
+    request.setBaseLocation("/");
+    bool result = HttpRequestFactory::checkMaxBodySize(&request, configs);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(request.getResponseStatusCode(), 413);
+
+    request.setResponseStatusCode(0);
+    request.setBaseLocation("/images");
+    bool result2 = HttpRequestFactory::checkMaxBodySize(&request, configs);
+    EXPECT_TRUE(result2);
+    EXPECT_EQ(request.getResponseStatusCode(), 0);
+
+    request.setResponseStatusCode(0);
+    request.setBaseLocation("/dir");
+    bool result3 = HttpRequestFactory::checkMaxBodySize(&request, configs);
+    EXPECT_TRUE(result3);
+    EXPECT_EQ(request.getResponseStatusCode(), 0);
+
+}

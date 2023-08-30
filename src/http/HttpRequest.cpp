@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 19:58:57 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 20:33:16 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,3 +200,10 @@ const std::string &HttpRequest::getRoot(void) {
 void HttpRequest::setRoot(const std::string &rootPath) {
   root = rootPath;
 }
+  void HttpRequest::setBaseLocation(std::string baseLocation){
+    this->baseLocation = baseLocation;
+  }
+
+  std::string HttpRequest::getBaseLocation(void) {
+    return baseLocation;
+  }

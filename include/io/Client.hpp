@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/19 17:56:00 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 15:14:50 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/27 10:31:03 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,13 @@ class Client {
   Server*					getServer(void);
   int							getPort(void);
   void						reset(void);
+  std::string					buffer;
+  bool            isReady;
 
  private:
   int									connectionFd;
   int									port;
-  std::string					buffer;
+  // std::string					buffer;
   Server*							server;
   long long						connectionTimeout;
 };

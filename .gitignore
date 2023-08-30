@@ -43,3 +43,5 @@ tests/unit_tests/build
 .vscode/settings.json
 webserver
 files/static_pages/cantbedeleted000.jpg
+
+*.fromClient
