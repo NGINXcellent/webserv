@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:05:17 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/27 20:22:42 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/29 20:28:06 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ class HttpResponseComposer {
                             long long resourceSize);
 
   static void buildDirListResponse(HttpRequest *request, HttpResponse *response, \
-                                   std::map<std::string, struct dirent*> &entries);
+                                   std::map<std::string, struct file_info *> &entries);
 
   static void buildErrorResponse(HttpResponse *response, int error_code, \
                                   std::map<int, std::string> error_pages, \
@@ -46,6 +46,6 @@ class HttpResponseComposer {
   static void formatDirListStyle(const std::string &pathName, std::string &site);
 
   static void formatEntryName(const std::string &name, std::string &responseStr, \
-                              std::map<std::string, struct dirent *>::iterator it);
+                              struct file_info *info); 
 };
 #endif

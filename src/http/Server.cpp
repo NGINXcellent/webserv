@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 21:46:51 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/29 20:20:53 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,7 +183,7 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
     std::cout << "FULLPATH: " << request->getIndexPath() << std::endl;
 
     if (!fileExists(request->getIndexPath()) && request->isDirListActive()) {
-      std::map<std::string, struct dirent*> entries;
+      std::map<std::string, struct file_info*> entries;
       
       if (FileReader::getDirContent(fullpath.c_str(), entries) == -1) {
         return (500);
