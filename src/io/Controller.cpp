@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 09:55:43 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/28 21:31:19 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,7 +199,6 @@ void Controller::handleConnections(void) {
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         readFromClient(currentFd);
         connectedClients[currentFd]->isReady = isHTTPRequestComplete(connectedClients[currentFd]->buffer);
-        std::cout << connectedClients[currentFd]->isReady << std::endl;
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         if (connectedClients[currentFd]->isReady == true) {
           sendToClient(currentFd);

@@ -6,16 +6,20 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/18 21:56:33 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/28 21:53:50 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef INPUTHANDLER_HPP
 # define INPUTHANDLER_HPP
 
+
 #include <vector>
 #include <map>
 #include <string>
+#include <limits>
+
+#define SIZE_T_MAX std::numeric_limits<size_t>::max()
 
 // based con https://www.nginx.com/resources/wiki/start/topics/examples/full/
 
@@ -23,7 +27,7 @@ struct s_locationConfig {
   std::string                 location;
   std::string                 autoindex;
   std::string                 index;
-  std::string                 max_body_size;
+  size_t                      loc_max_body_size;
   std::string                 root;
   std::pair<int, std::string> redirect;
   std::vector<std::string>    allowed_method;
@@ -34,7 +38,7 @@ struct s_serverConfig {
   std::string                   port;
   std::string                   host;
   std::string                   server_name;  // server_name is unique
-  std::string                   max_body_size;
+  size_t                        srv_max_body_size;
   std::map<int, std::string>    error_page;
   std::vector<s_locationConfig> location;
 };
@@ -53,6 +57,7 @@ class InputHandler {
   void newServerCheck(std::ifstream &fileStream, s_serverConfig &server);
   void printLocations(const std::vector<s_locationConfig> &location);
   void addToPair(std::ifstream &fileStream, std::pair<int, std::string> &mapi);
+  void addToSizeT(std::ifstream &fileStream, size_t &size);
 
  public:
   std::vector<s_serverConfig> *serverVector;

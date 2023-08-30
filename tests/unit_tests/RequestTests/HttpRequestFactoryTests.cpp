@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 09:48:04 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/29 08:29:44 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -553,4 +553,49 @@ TEST(RequestTests, TestChunkType) {
 
     EXPECT_EQ(result, "NONE");
   }
+}
+
+TEST(BodySizeTests, LocationMaxBodySize) {
+    HttpRequest request;
+    std::vector<s_locationConfig> configs;
+    size_t i = 100;
+    size_t j = 100000;
+    size_t k = 999999;
+    s_locationConfig config1;
+    config1.location = "/";
+    config1.loc_max_body_size = i;
+    config1.allowed_method = {"POST"};
+    configs.push_back(config1);
+
+    s_locationConfig config2;
+    config2.location = "/images";
+    config2.loc_max_body_size = j;
+    config2.allowed_method = {"POST"};
+    configs.push_back(config2);
+
+    s_locationConfig config3;
+    config3.location = "/dir";
+    config3.loc_max_body_size = k;
+    config3.allowed_method = {"POST"};
+    configs.push_back(config3);
+
+    size_t l = 200;
+    request.setContentLength("200");
+    request.setBaseLocation("/");
+    bool result = HttpRequestFactory::checkMaxBodySize(&request, configs);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(request.getResponseStatusCode(), 413);
+
+    request.setResponseStatusCode(0);
+    request.setBaseLocation("/images");
+    bool result2 = HttpRequestFactory::checkMaxBodySize(&request, configs);
+    EXPECT_TRUE(result2);
+    EXPECT_EQ(request.getResponseStatusCode(), 0);
+
+    request.setResponseStatusCode(0);
+    request.setBaseLocation("/dir");
+    bool result3 = HttpRequestFactory::checkMaxBodySize(&request, configs);
+    EXPECT_TRUE(result3);
+    EXPECT_EQ(request.getResponseStatusCode(), 0);
+
 }

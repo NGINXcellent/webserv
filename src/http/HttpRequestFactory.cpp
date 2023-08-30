@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 09:12:38 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/29 07:58:53 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,12 +52,29 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   if (!parseHeaders(&requestMsg, request)) {
     request->setProtocolName("");
   }
-
-  if(request->getPostType() != "NONE"){
+  //  setup body if POST
+  if(request->getPostType() != "NONE" && checkMaxBodySize(request, locations)){
     setupRequestBody(requestMsg, request);
   }
 
   return (request);
+}
+
+bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_locationConfig> locations) {
+  s_locationConfig tmp;
+  bool hasLocationBodySize = false;
+  for(size_t i = 0; i < locations.size(); ++i) {
+    if(locations[i].location == request->getBaseLocation()) {
+      tmp = locations[i];
+      hasLocationBodySize = true;
+      break;
+    }
+  }
+  if(hasLocationBodySize && request->getContentLength() > tmp.loc_max_body_size){
+    request->setResponseStatusCode(413);
+    return false;
+  }
+  return true;
 }
 
 std::string setupBodyContentType(HttpRequest *request,
@@ -103,7 +120,7 @@ void MultipartBodyType(const std::string &msg, HttpRequest *request) {
 
     std::string bodyPart = msg.substr(startPos, endPos - startPos);
 
-    // Extract name, and content from bodyPart
+    // Extract name and content from bodyPart
     s_multipartStruct multipartStruct;
     size_t namePos = bodyPart.find("name=\"") + 6;
     size_t nameEndPos = bodyPart.find("\"", namePos);
@@ -116,7 +133,7 @@ void MultipartBodyType(const std::string &msg, HttpRequest *request) {
     bodyParts.push_back(multipartStruct);
     startPos = endPos + boundary.length();
   }
-  // MAX BODY SIZE CHECK POSSIVELMENTE VEM AQUI
+
   if (!bodyParts.empty()) {
     request->setMultipartStruct(bodyParts);
   }
@@ -136,7 +153,7 @@ void chunkBodyType (const std::string &msg, HttpRequest *request) {
     ret.append(msg, pos, count);
     pos += count;
   }
-  // MAX BODY SIZE CHECK POSSIVELMENTE VEM AQUI
+
   if (!ret.empty()) {
     request->setRequestBody(ret);
   }
@@ -208,6 +225,7 @@ void HttpRequestFactory::createLocation(const std::string &buffer,
   for (size_t i = 0; i < locations.size(); ++i) {
     if (locations[i].location == tokens[0]) {
       std::string ret;
+      request->setBaseLocation(tokens[0]);
       if (locations[i].root.empty())
         ret = '.' + line;
       else {
@@ -224,7 +242,6 @@ void HttpRequestFactory::createLocation(const std::string &buffer,
           ret += locations[i].index;
       }
       request->setAllowedMethods(locations[i].allowed_method);
-      // std::cout << "ret de location " << ret << std::endl;
       request->setLocation(ret);
     }
   }
@@ -272,7 +289,6 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request,
     return;
 
   request->setProtocolVersion(mainVersion, minorVersion);
-  // std::cout << msg << std::endl;
 }
 
 bool parseHeaders(std::string *msg, HttpRequest *request) {
@@ -310,7 +326,6 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
 
     if (ws_pos != std::string::npos && \
         (ws_pos < char_pos || ws_pos != delim_pos + 1)) {
-      // std::cout << "debug: line starts with white space" << std::endl;
       return false;
     }
 
@@ -333,6 +348,7 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
   request->setUnmodifiedSinceTimestamp( \
                                 getHeaderValue("if-unmodified-since", headers));
   request->setPostType(setupBodyContentType(request, headers));
+  request->setContentLength(getHeaderValue("content-length", headers));
 
   return true;
 }
