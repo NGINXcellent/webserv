@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 21:31:19 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/30 15:13:09 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,7 +200,7 @@ void Controller::handleConnections(void) {
         readFromClient(currentFd);
         connectedClients[currentFd]->isReady = isHTTPRequestComplete(connectedClients[currentFd]->buffer);
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        if (connectedClients[currentFd]->isReady == true) {
+        if (connectedClients[currentFd] != NULL && connectedClients[currentFd]->isReady == true) {
           sendToClient(currentFd);
         }
       }
@@ -266,14 +266,14 @@ void Controller::addNewConnection(int socketFD) {
 
 bool  Controller::closeConnection(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
-  std::vector<struct epoll_event>::iterator it = events.begin();
+  // std::vector<struct epoll_event>::iterator it = events.begin();
 
-  for (; it < events.end(); it++) {
-    if (currentFd == it->data.fd) {
-      events.erase(it);
-      break;
-    }
-  }
+  // for (; it < events.end(); it++) {
+  //   if (currentFd == it->data.fd) {
+  //     events.erase(it);
+  //     break;
+  //   }
+  // }
 
   close(currentFd);
   delete connectedClients[currentFd];
@@ -294,8 +294,8 @@ bool Controller::isNewConnection(int currentFD) {
 }
 
 void Controller::readFromClient(int currentFd) {
-  char buffer[4096];
-  int bytesRead = recv(currentFd, buffer, 4096, 0);
+  char insidebuffer[4096];
+  int bytesRead = read(currentFd, insidebuffer, 4096);
 
   if (bytesRead < 0) {
     std::cout << " bytesread -1, will break" << errno << std::endl;
@@ -303,7 +303,9 @@ void Controller::readFromClient(int currentFd) {
     std::cout << " bytesread 0, will close" << std::endl;
   } else if (bytesRead > 0) {
     std::cout << " i read -> " << bytesRead << " bytes" << std::endl;
-    connectedClients[currentFd]->buffer.append(buffer, bytesRead);
+    if(connectedClients[currentFd] != NULL) {
+      connectedClients[currentFd]->buffer.append(insidebuffer, bytesRead);
+    }
   }
 }
 
