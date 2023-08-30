@@ -6,18 +6,21 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:32:28 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/24 17:51:39 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/29 20:37:12 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/io/FileReader.hpp"
 
+#include <algorithm> // sort
 #include <fstream>
 #include <iostream>
 #include <unistd.h>
+#include <dirent.h>
 #include <sys/stat.h>
 
 bool isRegularFile(const std::string &filename);
+int getFileInfo(const std::string &filename, struct file_info *info);
 
 int FileReader::getContent(const std::string &fileName, char **resourceData, long long *resourceSize) {
   if (access(fileName.c_str(), F_OK) == -1) {
@@ -52,7 +55,67 @@ int FileReader::getContent(const std::string &fileName, char **resourceData, lon
   return (0);
 }
 
+int FileReader::getDirContent(const std::string &dirName, \
+                              std::map<std::string, struct file_info *> &entries) {
+
+  DIR* currentDir = opendir(dirName.c_str());
+
+  if (currentDir != NULL) {
+    struct dirent *entry;
+    
+    while (true) {
+      entry = readdir(currentDir);
+      
+      if (entry == NULL)  {
+        closedir(currentDir);
+        break;
+      }
+      
+      std::string filename = entry->d_name;
+
+      if (filename == ".") {
+        continue;
+      }
+      
+      std::string filepath = dirName + "/" + filename; 
+      struct file_info *info = new struct file_info;
+      info->fileName = entry->d_name;
+
+      if (getFileInfo(filepath.c_str(), info) != 0) {
+        return (-1);
+      }
+
+      entries.insert(std::make_pair(info->fileName, info));
+    }
+  } else {
+    return (-1);
+  }
+
+  return (0);
+}
+
+bool FileReader::isDirectory(const std::string &filename) {
+  struct stat fileInfo;
+  return (stat(filename.c_str(), &fileInfo) == 0) && S_ISDIR(fileInfo.st_mode);
+}
+
 bool isRegularFile(const std::string &filename) {
     struct stat fileInfo;
     return (stat(filename.c_str(), &fileInfo) == 0) && S_ISREG(fileInfo.st_mode);
 }
+
+int getFileInfo(const std::string &filename, struct file_info *info) {
+  struct stat fileDetails;
+
+  if (stat(filename.c_str(), &fileDetails) != 0) {
+    return (-1);
+  }
+  
+  info->isDir = S_ISDIR(fileDetails.st_mode); 
+  info->isRegFile = S_ISREG(fileDetails.st_mode);
+  info->lastModified = fileDetails.st_mtime;
+  info->fileSize = fileDetails.st_size;
+  return (0);
+}
+
+

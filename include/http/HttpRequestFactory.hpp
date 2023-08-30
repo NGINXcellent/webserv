@@ -21,8 +21,13 @@
 
 class HttpRequestFactory {
  public:
-  static void createLocation(const std::string &buffer, std::vector<s_locationConfig> locations, HttpRequest *request);
-  static HttpRequest *createFrom(std::string &requestMsg, std::vector<s_locationConfig> locations);
+  static void         findLocation(const std::string &buffer, \
+                                     std::vector<s_locationConfig> locations, \
+                                     HttpRequest *request);
+
+  static HttpRequest* createFrom(std::string &requestMsg, \
+                                 std::vector<s_locationConfig> locations);
+
   static int          check(HttpRequest *request);
   static bool checkMaxBodySize(HttpRequest *request,std::vector<s_locationConfig> locations);
 

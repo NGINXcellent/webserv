@@ -60,8 +60,6 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
 
   if (requestMethod == "GET")
     opStatus = get(request, response);
-  else if (requestMethod == "HEAD")
-    opStatus = head(request, response);
   else if (requestMethod == "DELETE")
     opStatus = del(request, response);
   else if (requestMethod == "POST")
@@ -70,6 +68,8 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
     opStatus = 501;
 
  return (opStatus);
+  /*else if (requestMethod == "HEAD")
+    opStatus = head(request, response);*/
 }
 
 HttpResponse *Server::process(std::string &buffer) {
@@ -81,6 +81,8 @@ HttpResponse *Server::process(std::string &buffer) {
   int status = HttpRequestFactory::check(request);
 
   if (status == 0) {
+    response->setProtocol("HTTP", request->getProtocolMainVersion(),
+                                  request->getProtocolSubVersion());
     status = resolve(request, response);
   }
 
@@ -180,78 +182,64 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
 }
 
 int Server::get(HttpRequest *request, HttpResponse *response) {
-  int protoMain = request->getProtocolMainVersion();
-  int protoSub = request->getProtocolSubVersion();
-  response->setProtocol("HTTP", protoMain, protoSub);
-  response->setLastModifiedTime(HttpTime::getLastModifiedTime(request->getResource()));
-
-  std::string unmodifiedTimestmap = request->getModifiedTimestampCheck();
-
-  if (!HttpTime::isModifiedSince(unmodifiedTimestmap, request->getResource())) {
-    response->setStatusCode(304);
+  if (request->getRedirectionCode() != 0) {
+    response->setStatusCode(request->getRedirectionCode());
+    response->setLocation(request->getRedirectionPath());
     return (0);
   }
 
+  std::string fullpath = request->getRoot() + request->getResource();
+  
+  if (FileReader::isDirectory(fullpath)) {
+    if ((access(fullpath.c_str(), R_OK | X_OK) == -1) || !request->isDirListActive()) {
+      return (403);
+    }
+    
+    std::cout << "FULLPATH: " << request->getIndexPath() << std::endl;
+
+    if (!fileExists(request->getIndexPath()) && request->isDirListActive()) {
+      std::map<std::string, struct file_info*> entries;
+      
+      if (FileReader::getDirContent(fullpath.c_str(), entries) == -1) {
+        return (500);
+      }
+
+      HttpResponseComposer::buildDirListResponse(request, response, entries);
+      return (0); // or opStatus Code
+    } else {
+      fullpath = request->getIndexPath();
+    }
+  } 
+
+  if (access(fullpath.c_str(), F_OK) == -1) return (404);
+
+  if (access(fullpath.c_str(), R_OK) == -1) return (403); // forbidden
+
+  std::string unmodifiedTimestmap = request->getModifiedTimestampCheck();
+
+  if (!HttpTime::isModifiedSince(unmodifiedTimestmap, fullpath)) {
+    response->setStatusCode(304);
+    return (0);
+  }
+  
   char *resourceData;
   long long resourceSize;
-  int opStatus = FileReader::getContent(request->getResource(), &resourceData, &resourceSize);
+  int opStatus = 0;
+  opStatus = FileReader::getContent(fullpath.c_str(), &resourceData, &resourceSize);
 
   if (opStatus != 0) {
     return (opStatus);
   }
-// TEM QUE CHECAR AQUI PRA VER SE VAI FICAR ASSIM.
-  if (request->getResponseStatusCode() != 0)
-    response->setStatusCode(request->getResponseStatusCode());
-  else
-    response->setStatusCode(200);
 
-  response->setContentType(MimeType::identify(request->getResource()));
+  response->setLastModifiedTime(HttpTime::getLastModifiedTime(fullpath));
+  response->setContentType(MimeType::identify(fullpath));
   response->setMsgBody(resourceData);
   response->setContentLength(resourceSize);
   return (0);
 }
 
-int Server::head(HttpRequest *request, HttpResponse *response) {
-  int protoMain = request->getProtocolMainVersion();
-  int protoSub = request->getProtocolSubVersion();
-  response->setProtocol("HTTP", protoMain, protoSub);
-  int opStatus = 0;
-
-  if (access(request->getResource().c_str(), F_OK) == -1) {
-    opStatus = 404;
-  } else if (access(request->getResource().c_str(), R_OK) == -1) {
-    opStatus = 403;
-  }
-
-  if (opStatus != 0) {
-    return (opStatus);
-  }
-
-  std::string modifiedTimestmap = request->getModifiedTimestampCheck();
-
-  if (!HttpTime::isModifiedSince(modifiedTimestmap, request->getResource())) {
-    response->setStatusCode(304);
-    return (0);
-  }
-
-  response->setLastModifiedTime(HttpTime::getLastModifiedTime(request->getResource()));
-  struct stat fileInfo;
-  off_t fileSize;
-
-  if (stat(request->getResource().c_str(), &fileInfo) == 0) {
-    fileSize = fileInfo.st_size;
-  }
-
-  response->setStatusCode(200);
-  response->setContentType(MimeType::identify(request->getResource()));
-  response->setContentLength(fileSize);
-  return (0);
-}
-
 int Server::del(HttpRequest *request, HttpResponse *response) {
   std::ifstream inputFile;
-  int protoMain = request->getProtocolMainVersion();
-  int protoSub = request->getProtocolSubVersion();
   int opStatus = 0;
 
   if (access(request->getResource().c_str(), F_OK) == -1) {
@@ -275,7 +263,6 @@ int Server::del(HttpRequest *request, HttpResponse *response) {
 
   response->setStatusCode(204);
   response->setMsgBody(msgBody);
-  response->setProtocol("HTTP", protoMain, protoSub);
   response->setContentLength(msg.size());
   return (0);
 }

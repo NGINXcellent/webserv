@@ -20,13 +20,16 @@ HttpRequest::HttpRequest(void) {
   responseStatusCode = 0;
 }
 
-void HttpRequest::setResponseStatusCode(int toset) {
-  responseStatusCode = toset;
+bool HttpRequest::isDirListActive(void) {
+  return (this->autoindex);
 }
 
-int HttpRequest::getResponseStatusCode() {
-  return responseStatusCode;
+void  HttpRequest::setDirListActive(const std::string& active) {
+  if (active == "on") {
+    autoindex = true;
+  }
 }
+
 
 HttpRequest::~HttpRequest(void) {}
 
@@ -115,13 +118,28 @@ void HttpRequest::setRequestBody(const std::string &body) {
   requestBody = body;
 }
 
-
-const std::string& HttpRequest::getLocation(void) {
-  return (location);
+const std::string& HttpRequest::getIndexPath(void) {
+  return (indexPath);
 }
 
-void HttpRequest::setLocation(const std::string &loc) {
-  location = loc;
+void HttpRequest::setIndexPath(const std::string &iPath) {
+  indexPath = iPath;
+}
+
+const std::string& HttpRequest::getRedirectionPath(void) {
+  return (redirectionPath);
+}
+
+void HttpRequest::setRedirectionPath(const std::string &path) {
+  redirectionPath = path; 
+}
+
+void HttpRequest::setRedirectionCode(int toset) {
+  responseStatusCode = toset;
+}
+
+int HttpRequest::getRedirectionCode() {
+  return responseStatusCode;
 }
 
 const std::string& HttpRequest::getLocationWithoutIndex(void) {
@@ -175,6 +193,13 @@ void HttpRequest::setMultipartStruct(const std::vector<s_multipartStruct>& parts
  multipartStructVector.insert(multipartStructVector.end(), parts.begin(), parts.end());
 }
 
+const std::string &HttpRequest::getRoot(void) {
+  return (root);
+}
+
+void HttpRequest::setRoot(const std::string &rootPath) {
+  root = rootPath;
+}
   void HttpRequest::setBaseLocation(std::string baseLocation){
     this->baseLocation = baseLocation;
   }

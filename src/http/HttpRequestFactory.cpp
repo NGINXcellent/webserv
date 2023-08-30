@@ -21,22 +21,21 @@
 
 #include "../../include/http/Server.hpp"
 
-void parseRequestLine(std::string *msg, HttpRequest *request, std::string location);
+void parseRequestLine(std::string *requestLine, HttpRequest *request, \
+                      std::vector<struct s_locationConfig> locations);
 bool parseHeaders(std::string *msg, HttpRequest *request);
 bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
 void setupContentType(const std::string &msg, HttpRequest *request);
 void setupRequestBody(const std::string &msg, HttpRequest *request);
-
 std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
 std::string toLowerStr(std::string str);
+std::vector<std::string> splitPath(const std::string &path);
 
 HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
                                     std::vector<s_locationConfig> locations) {
   // shim
   HttpRequest *request = new HttpRequest();
-  createLocation(requestMsg, locations, request);
-  size_t pos = 0;
-  pos = requestMsg.find_first_of("\n", 0);
+  size_t pos = requestMsg.find_first_of("\n", 0);
 
   if (pos == std::string::npos) {
     std::cout << "debug: no newline on requestline" << std::endl;
@@ -46,12 +45,13 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   // extract request line
   std::string reqLine = requestMsg.substr(0, pos);
   requestMsg.erase(0, pos + 1);
-  parseRequestLine(&reqLine, request, request->getLocation());
+  parseRequestLine(&reqLine, request, locations);
 
   // extract the headers
   if (!parseHeaders(&requestMsg, request)) {
     request->setProtocolName("");
   }
+
   //  setup body if POST
   if(request->getPostType() != "NONE" && checkMaxBodySize(request, locations)){
     setupRequestBody(requestMsg, request);
@@ -63,6 +63,7 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
 bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_locationConfig> locations) {
   s_locationConfig tmp;
   bool hasLocationBodySize = false;
+  
   for(size_t i = 0; i < locations.size(); ++i) {
     if(locations[i].location == request->getBaseLocation()) {
       tmp = locations[i];
@@ -70,10 +71,12 @@ bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_lo
       break;
     }
   }
+  
   if(hasLocationBodySize && request->getContentLength() > tmp.loc_max_body_size){
     request->setResponseStatusCode(413);
     return false;
   }
+  
   return true;
 }
 
@@ -142,10 +145,13 @@ void MultipartBodyType(const std::string &msg, HttpRequest *request) {
 void chunkBodyType (const std::string &msg, HttpRequest *request) {
   size_t pos, count = 1;
   std::string ret;
+  
   if ((pos = msg.find("\r\n\r\n")) == std::string::npos) {
     return;
   }
+  
   pos += 2;
+  
   while (count) {
     pos += 2;
     count = strtol(&msg[pos], NULL, 16);
@@ -163,94 +169,109 @@ void setupRequestBody(const std::string &msg, HttpRequest *request) {
   if (request->getPostType() == "CHUNK") {
     chunkBodyType(msg, request);
   }
+  
   if (request->getPostType() == "MULTIPART") {
     MultipartBodyType(msg, request);
     return;
   }
+  
   return;
-}
-
-// this function verify if the tokens are in the right order and deals with redirection
-// if fails we are dealing whith location "/"
-bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *request,
-                     std::vector<std::string> &tokens) {
-  for (size_t i = 0; i < locations.size(); ++i) {
-    if (locations[i].location == tokens[0]){
-      if(!locations[i].redirect.second.empty()) {
-        tokens[0] = locations[i].redirect.second;
-        request->setResponseStatusCode(locations[i].redirect.first);
-      }
-      return true;
-    }
-  }
-  return false;
 }
 
 bool isDirectory(const char* path) {
-  struct stat fileInfo;
-  if (stat(path, &fileInfo) != 0) {
-    return false; // Erro ao obter informações do arquivo
-  }
-  return S_ISDIR(fileInfo.st_mode);
+    struct stat fileInfo;
+
+    if (stat(path, &fileInfo) != 0) {
+        return false;
+    }
+
+    return S_ISDIR(fileInfo.st_mode);
 }
 
-void HttpRequestFactory::createLocation(const std::string &buffer,
-                                        std::vector<s_locationConfig> locations,
-                                        HttpRequest *request) {
-  std::istringstream streaming(buffer);
-  std::string line;
-  streaming >> line >> line;
+std::vector<std::string> splitPath(const std::string &path) {
   std::vector<std::string> tokens;
-  if (line.empty()) {
+  std::istringstream iss(path);
+  std::string token;
+
+  if (path == "/") {
+      tokens.push_back("/");
+  } else {
+      while (std::getline(iss, token, '/')) {
+        if (!token.empty()) {
+          token = token;
+          tokens.push_back(token);
+        }
+      }
+  }
+
+  return (tokens);
+}
+
+void HttpRequestFactory::findLocation(const std::string &reqLine,
+                           std::vector<s_locationConfig> locations,
+                           HttpRequest *request) {
+  if(reqLine.empty()) {
     return;
   }
 
-  std::istringstream iss(line);
+  std::cout << "reqLine " << reqLine << std::endl;
+  std::vector<std::string> reqTokens = splitPath(reqLine);
+  int locationMatch = 0; // the more specific match is the one that wins
+  std::string path;
+  std::string indexPath;
   std::string token;
 
-  if (line == "/") {
-    tokens.push_back("/");
-  } else {
-    while (std::getline(iss, token, '/')) {
-      if (!token.empty()) {
-        token = '/' + token;
-        tokens.push_back(token);
-      }
-    }
-  }
-
-  if (!tokensValidator(locations, request, tokens))
-    tokens.insert(tokens.begin(), "/");
-
   for (size_t i = 0; i < locations.size(); ++i) {
-    if (locations[i].location == tokens[0]) {
-      std::string ret;
-      request->setBaseLocation(tokens[0]);
-      if (locations[i].root.empty())
-        ret = '.' + line;
-      else {
-        ret += "." + locations[i].root;
-        for (size_t j = 1; j < tokens.size(); ++j) {
-          ret += tokens[j];
-        }
+    std::vector<std::string> locTokens = splitPath(locations[i].location);
+    int tokenMatches = 0;
+   
+    for (size_t j = 0; j < locTokens.size(); j++) {
+      std::cout << "reqTokens >>>> " << reqTokens[j] << std::endl;
+      std::cout << "locTokens >>>> " << locTokens[j] << std::endl;
+      if (reqTokens[j] == locTokens[j]) {
+        tokenMatches++; 
+      } else {
+        break;
       }
-      request->setLocationWithoutIndex(ret);
-      if (isDirectory(ret.c_str()) && !locations[i].index.empty()) {
-        if (ret != "./")
-          ret += '/' + locations[i].index;
-        else
-          ret += locations[i].index;
-      }
-      request->setAllowedMethods(locations[i].allowed_method);
-      request->setLocation(ret);
+    }
+
+    if (tokenMatches < locationMatch) {
+      continue;
+    } 
+    
+    locationMatch = tokenMatches;
+
+    if(!locations[i].redirect.second.empty()) {
+      request->setRedirectionCode(locations[i].redirect.first);
+      request->setRedirectionPath(locations[i].redirect.second);
+      continue; // go to next location config
+    } else {
+      request->setRedirectionCode(0);
+      request->setRedirectionPath("");
+    }
+  
+    std::string fullpath = locations[i].root + reqLine; 
+
+    std::cout << "index: " << locations[i].index << std::endl;
+    if (isDirectory(fullpath.c_str()) && !locations[i].index.empty()) {
+      indexPath = fullpath + '/' + locations[i].index;
+    } else {
+      indexPath = "";
     }
   }
 
+    request->setRoot(locations[i].root);
+    request->setDirListActive(locations[i].autoindex);
+    request->setAllowedMethods(locations[i].allowed_method);
+    request->setIndexPath(indexPath);
+  }
+ 
+  request->setResource(reqLine);
   return;
 }
 
-void parseRequestLine(std::string *requestLine, HttpRequest *request,
-                      std::string location) {
+void parseRequestLine(std::string *requestLine, HttpRequest *request, \
+                      std::vector<struct s_locationConfig> locations) {
   std::vector<std::string> fields;
 
   while (requestLine->size() != 0) {
@@ -270,8 +291,12 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request,
   }
 
   request->setMethod(fields[0]);
-  request->setResource(location);
 
+  if (fields[1].size() > 1 && fields[1].at(fields[1].size() - 1) == '/') {
+    fields[1].erase(fields[1].size() - 1, 1);
+  }
+
+  HttpRequestFactory::findLocation(fields[1], locations, request);
   size_t pos = fields[2].find('/');
 
   if (pos == std::string::npos) {
@@ -281,7 +306,6 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request,
   std::string protocol = fields[2].substr(0, pos);
   request->setProtocolName(protocol);
   std::string protocolVersion = fields[2].substr(pos + 1);
-
   int mainVersion;
   int minorVersion;
 
@@ -334,10 +358,11 @@ bool parseHeaders(std::string *msg, HttpRequest *request) {
     size_t val_start = line.find_first_not_of(" \t", delim_pos + 1);
     size_t val_end = line.find_last_not_of(" \t", delim_pos + 1);
 
-    if (val_start != std::string::npos)
+    if (val_start != std::string::npos) {
       value = line.substr(val_start, val_end - val_start);
-    else
+    } else {
       value = "";
+    }
 
     headers.insert(std::make_pair(key, value));
   }
@@ -409,14 +434,20 @@ int HttpRequestFactory::check(HttpRequest *request) {
   int version = mainVersion * 10 + minorVersion;
 
   if (request->getProtocolName() != "HTTP" ||
-      (mainVersion < 1 || minorVersion < 0))
+      (mainVersion < 1 || minorVersion < 0)) {
     return (400);
+  }
+
   if (!(version == 10 || version == 11)) return (505);
+
   if (version == 11 && request->getHost().size() == 0) return (400);
 
   std::string method = request->getMethod();
+
   for (size_t i = 0; i < method.size(); i++) {
-    if (!std::isupper(method[i])) return (400);
+    if (!std::isupper(method[i])) {
+      return (400);
+    }
   }
 
   return (0);
