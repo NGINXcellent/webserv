@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/29 07:58:53 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/30 14:35:23 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,9 +71,10 @@ bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_lo
       break;
     }
   }
-  
+ 
+  // remake logic
   if(hasLocationBodySize && request->getContentLength() > tmp.loc_max_body_size){
-    request->setResponseStatusCode(413);
+    request->setRedirectionCode(413);
     return false;
   }
   
@@ -258,7 +259,6 @@ void HttpRequestFactory::findLocation(const std::string &reqLine,
     } else {
       indexPath = "";
     }
-  }
 
     request->setRoot(locations[i].root);
     request->setDirListActive(locations[i].autoindex);

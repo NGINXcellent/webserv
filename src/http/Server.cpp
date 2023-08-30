@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 21:42:54 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/08/30 14:40:08 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,9 +110,10 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
 
   // BODY SIZE CHECK
   //  MESMA LOGICA DE CHECAGEM COM STATUS CODE EM REQUEST, VAI FICAR ASSIM ?
-  if (request->getResponseStatusCode() != 0) {
-    opStatus = request->getResponseStatusCode();
-    return opStatus;
+  if (request->getRedirectionCode() != 0) {
+    response->setStatusCode(request->getRedirectionCode());
+    response->setLocation(request->getRedirectionPath());
+    return (0);
   }
   // Checar max_body_size do server agora
   if (srv_max_body_size != SIZE_T_MAX) {
