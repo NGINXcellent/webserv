@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:32:28 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/29 20:37:12 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/08/31 20:30:15 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,11 +94,6 @@ int FileReader::getDirContent(const std::string &dirName, \
   return (0);
 }
 
-bool FileReader::isDirectory(const std::string &filename) {
-  struct stat fileInfo;
-  return (stat(filename.c_str(), &fileInfo) == 0) && S_ISDIR(fileInfo.st_mode);
-}
-
 bool isRegularFile(const std::string &filename) {
     struct stat fileInfo;
     return (stat(filename.c_str(), &fileInfo) == 0) && S_ISREG(fileInfo.st_mode);
@@ -117,5 +112,4 @@ int getFileInfo(const std::string &filename, struct file_info *info) {
   info->fileSize = fileDetails.st_size;
   return (0);
 }
-
 
