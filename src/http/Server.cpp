@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 15:09:36 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 19:30:10 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Server::~Server(void) {
   delete socket;
 }
 
-int Server::resolve(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
 
   if (!uTimestamp.empty() && \
@@ -58,7 +58,7 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
     return (Method_Not_Allowed);
   }
 
-  int opStatus = 0;
+  HttpStatusCode opStatus = Ready; 
 
   if (requestMethod == "GET")
     opStatus = get(request, response);
@@ -93,8 +93,8 @@ HttpResponse *Server::process(std::string &buffer) {
   return response;
 }
 
-int Server::post(HttpRequest *request, HttpResponse *response) {
-  int opStatus = 0;
+HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
+  HttpStatusCode opStatus = Ready;
   response->setLastModifiedTime(
       HttpTime::getLastModifiedTime(request->getResource()));
 
@@ -103,7 +103,7 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
   if (request->getRedirectionCode() != 0) {
     response->setStatusCode(request->getRedirectionCode());
     response->setLocation(request->getRedirectionPath());
-    return (0);
+    return (Ready);
   }
 
   if (srv_max_body_size != SIZE_T_MAX) {
@@ -170,18 +170,18 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
 
   response->setContentType(MimeType::identify(request->getResource()));
   response->setContentLength(0);
-  return (0);
+  return (Ready);
 }
 
-int Server::get(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
   if (request->getRedirectionCode() != 0) {
     response->setStatusCode(request->getRedirectionCode());
     response->setLocation(request->getRedirectionPath());
-    return (0);
+    return (Ready);
   }
 
   std::string fullpath = request->getRoot() + request->getResource();
-  int opStatus = 0;
+  HttpStatusCode opStatus = Ready;
 
   if (FileSystem::isDirectory(fullpath)) {
     opStatus = FileSystem::check(fullpath, R_OK | X_OK);
@@ -193,13 +193,14 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
     if (FileSystem::check(request->getIndexPath(), F_OK) != 0 && \
         request->isDirListActive()) {
       std::map<std::string, struct file_info*> entries;
-      
-      if (FileReader::getDirContent(fullpath.c_str(), entries) == -1) {
-        return (Internal_Server_Error);
+      opStatus = FileReader::getDirContent(fullpath.c_str(), entries); 
+
+      if (opStatus != Ready) {
+        return (opStatus);
       }
 
       HttpResponseComposer::buildDirListResponse(request, response, entries);
-      return (0); // or opStatus Code
+      return (Ready); // or opStatus Code
     } else {
       fullpath = request->getIndexPath();
     }
@@ -215,12 +216,13 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
 
   if (!HttpTime::isModifiedSince(unmodifiedTimestmap, fullpath)) {
     response->setStatusCode(Not_Modified);
-    return (0);
+    return (Ready);
   }
   
   char *resourceData;
   long long resourceSize;
-  opStatus = FileReader::getContent(fullpath.c_str(), &resourceData, &resourceSize);
+  opStatus = FileReader::getContent(fullpath.c_str(), \
+                                    &resourceData, &resourceSize);
 
   if (opStatus != 0) {
     return (opStatus);
@@ -230,12 +232,12 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
   response->setContentType(MimeType::identify(fullpath));
   response->setMsgBody(resourceData);
   response->setContentLength(resourceSize);
-  return (0);
+  return (Ready);
 }
 
-int Server::del(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::del(HttpRequest *request, HttpResponse *response) {
   std::ifstream inputFile;
-  int opStatus = 0;
+  HttpStatusCode opStatus = Ready;
 
   // we need to rework this. a file can only be deleted if:
   // the folder it is contained has EXECUTE permission
@@ -248,7 +250,7 @@ int Server::del(HttpRequest *request, HttpResponse *response) {
     opStatus = Internal_Server_Error;
   }
 
-  if (opStatus != 0) {
+  if (opStatus != Ready) {
     return (opStatus);
   }
 
@@ -262,7 +264,7 @@ int Server::del(HttpRequest *request, HttpResponse *response) {
   response->setStatusCode(No_Content);
   response->setMsgBody(msgBody);
   response->setContentLength(msg.size());
-  return (0);
+  return (Ready);
 }
 
 int   Server::getPort(void) {

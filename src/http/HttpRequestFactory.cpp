@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 15:23:08 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 15:29:16 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,31 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   return (request);
 }
 
+int HttpRequestFactory::check(HttpRequest *request) {
+  int mainVersion = request->getProtocolMainVersion();
+  int minorVersion = request->getProtocolSubVersion();
+  int version = mainVersion * 10 + minorVersion;
+
+  if (request->getProtocolName() != "HTTP" ||
+      (mainVersion < 1 || minorVersion < 0)) {
+    return (Bad_Request);
+  }
+
+  if (!(version == 10 || version == 11)) return (Http_Ver_Unsupported);
+
+  if (version == 11 && request->getHost().size() == 0) return (Bad_Request);
+
+  std::string method = request->getMethod();
+
+  for (size_t i = 0; i < method.size(); i++) {
+    if (!std::isupper(method[i])) {
+      return (Bad_Request);
+    }
+  }
+
+  return (0);
+}
+
 bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_locationConfig> locations) {
   s_locationConfig tmp;
   bool hasLocationBodySize = false;
@@ -75,7 +100,7 @@ bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_lo
  
   // remake logic
   if(hasLocationBodySize && request->getContentLength() > tmp.loc_max_body_size){
-    request->setRedirectionCode(413);
+    request->setRedirectionCode(Payload_Too_Large);
     return false;
   }
   
@@ -429,27 +454,3 @@ std::string toLowerStr(std::string str) {
   return (result);
 }
 
-int HttpRequestFactory::check(HttpRequest *request) {
-  int mainVersion = request->getProtocolMainVersion();
-  int minorVersion = request->getProtocolSubVersion();
-  int version = mainVersion * 10 + minorVersion;
-
-  if (request->getProtocolName() != "HTTP" ||
-      (mainVersion < 1 || minorVersion < 0)) {
-    return (Bad_Request);
-  }
-
-  if (!(version == 10 || version == 11)) return (505);
-
-  if (version == 11 && request->getHost().size() == 0) return (400);
-
-  std::string method = request->getMethod();
-
-  for (size_t i = 0; i < method.size(); i++) {
-    if (!std::isupper(method[i])) {
-      return (Bad_Request);
-    }
-  }
-
-  return (0);
-}

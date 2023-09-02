@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/30 14:48:49 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/02 15:31:29 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <sstream>
 
 HttpResponse::HttpResponse(void) {
-  statusCode = 200;
+  statusCode = Ok;
   statusMessage = "OK";
   contentLength = 0;
   serverVersion = "webserv/0.1";

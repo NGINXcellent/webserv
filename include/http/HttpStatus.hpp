@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:13:54 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 15:07:44 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 19:21:19 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <map>
 
 enum status_code {
+  Ready = 0, // everything is ok, logic control
   Ok = 200,
   Created = 201,
   No_Content = 204,

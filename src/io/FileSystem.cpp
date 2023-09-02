@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/31 20:27:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 15:13:48 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 19:14:37 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,9 @@
 #include <sys/stat.h>
 #include <cerrno>
 
-int FileSystem::check(const std::string &filename, int conditions) {
+HttpStatusCode FileSystem::check(const std::string &filename, int conditions) {
   if (access(filename.c_str(), conditions) == 0) {
-    return (0);
+    return (Ready);
   }
 
   if (errno == EACCES || errno == EPERM) {
