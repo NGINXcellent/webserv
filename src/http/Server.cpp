@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 19:30:10 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 19:33:55 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,15 +75,15 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
 HttpResponse *Server::process(std::string &buffer) {
   HttpRequest *request = HttpRequestFactory::createFrom(buffer, locations);
   HttpResponse *response = new HttpResponse();
-  int status = HttpRequestFactory::check(request);
+  HttpStatusCode status = HttpRequestFactory::check(request);
 
-  if (status == 0) {
+  if (status == Ready) {
     response->setProtocol("HTTP", request->getProtocolMainVersion(),
                                   request->getProtocolSubVersion());
     status = resolve(request, response);
   }
 
-  if (status != 0) {
+  if (status != Ready) {
     HttpResponseComposer::buildErrorResponse(response, status, error_pages, \
                                           request->getProtocolMainVersion(), \
                                           request->getProtocolSubVersion());

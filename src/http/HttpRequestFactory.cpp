@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 15:29:16 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 19:42:44 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   return (request);
 }
 
-int HttpRequestFactory::check(HttpRequest *request) {
+HttpStatusCode HttpRequestFactory::check(HttpRequest *request) {
   int mainVersion = request->getProtocolMainVersion();
   int minorVersion = request->getProtocolSubVersion();
   int version = mainVersion * 10 + minorVersion;
@@ -83,7 +83,7 @@ int HttpRequestFactory::check(HttpRequest *request) {
     }
   }
 
-  return (0);
+  return (Ready);
 }
 
 bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_locationConfig> locations) {
