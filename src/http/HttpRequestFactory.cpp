@@ -6,35 +6,37 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 19:42:44 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 20:24:43 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequestFactory.hpp"
 #include "../../include/http/HttpStatus.hpp"
+#include "../../include/io/FileSystem.hpp"
+#include "../../include/http/Server.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
 #include <vector>
-#include <sys/stat.h>
 
-#include "../../include/http/Server.hpp"
-
-void parseRequestLine(std::string *requestLine, HttpRequest *request, \
-                      std::vector<struct s_locationConfig> locations);
-bool parseHeaders(std::string *msg, HttpRequest *request);
-bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
-void setupContentType(const std::string &msg, HttpRequest *request);
-void setupRequestBody(const std::string &msg, HttpRequest *request);
-std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
-std::string toLowerStr(std::string str);
-std::vector<std::string> splitPath(const std::string &path);
+namespace parsing {
+  void parseRequestLine(std::string *requestLine, HttpRequest *request, \
+                        std::vector<struct s_locationConfig> locations);
+  bool parseHeaders(std::string *msg, HttpRequest *request);
+  bool parseProtocolVersion(const std::string &input, int *mainVer, int *subVer);
+  void setupContentType(const std::string &msg, HttpRequest *request);
+  void setupRequestBody(const std::string &msg, HttpRequest *request);
+  std::string getHeaderValue(std::string headerName, std::map<std::string, std::string> headers);
+  std::string toLowerStr(std::string str);
+  std::vector<std::string> splitPath(const std::string &path);
+}
 
 HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
                                     std::vector<s_locationConfig> locations) {
   // shim
+  using namespace parsing;
   HttpRequest *request = new HttpRequest();
   size_t pos = requestMsg.find_first_of("\n", 0);
 
@@ -109,6 +111,7 @@ bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, std::vector<s_lo
 
 std::string setupBodyContentType(HttpRequest *request,
                                  std::map<std::string, std::string> &headers) {
+  using namespace parsing;
   std::string postType = getHeaderValue("transfer-encoding", headers);
   if (postType == "chunked") {
     return "CHUNK";
@@ -205,16 +208,6 @@ void setupRequestBody(const std::string &msg, HttpRequest *request) {
   return;
 }
 
-bool isDirectory(const char* path) {
-    struct stat fileInfo;
-
-    if (stat(path, &fileInfo) != 0) {
-        return false;
-    }
-
-    return S_ISDIR(fileInfo.st_mode);
-}
-
 std::vector<std::string> splitPath(const std::string &path) {
   std::vector<std::string> tokens;
   std::istringstream iss(path);
@@ -280,7 +273,7 @@ void HttpRequestFactory::findLocation(const std::string &reqLine,
     std::string fullpath = locations[i].root + reqLine; 
 
     std::cout << "index: " << locations[i].index << std::endl;
-    if (isDirectory(fullpath.c_str()) && !locations[i].index.empty()) {
+    if (FileSystem::isDirectory(fullpath.c_str()) && !locations[i].index.empty()) {
       indexPath = fullpath + '/' + locations[i].index;
     } else {
       indexPath = "";
@@ -298,6 +291,7 @@ void HttpRequestFactory::findLocation(const std::string &reqLine,
 
 void parseRequestLine(std::string *requestLine, HttpRequest *request, \
                       std::vector<struct s_locationConfig> locations) {
+  using namespace parsing;
   std::vector<std::string> fields;
 
   while (requestLine->size() != 0) {
@@ -342,6 +336,7 @@ void parseRequestLine(std::string *requestLine, HttpRequest *request, \
 }
 
 bool parseHeaders(std::string *msg, HttpRequest *request) {
+  using namespace parsing;
   std::map<std::string, std::string> headers;
   bool emptyLineFound = false;
   std::istringstream msgStream(*msg);
