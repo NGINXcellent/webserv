@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/29 21:28:22 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 15:14:16 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,7 +164,7 @@ void HttpResponseComposer::buildDirListResponse(HttpRequest *request, HttpRespon
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
   response->setProtocol("HTTP", protoMain, protoSub);
-  response->setStatusCode(200);
+  response->setStatusCode(Ok);
   response->setMsgBody(msg);
   response->setContentLength(responseStr.size());
 }

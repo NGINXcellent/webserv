@@ -6,11 +6,12 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/31 20:27:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/31 21:14:56 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 15:13:48 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/io/FileSystem.hpp"
+#include "../../include/http/HttpStatus.hpp"
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -21,12 +22,12 @@ int FileSystem::check(const std::string &filename, int conditions) {
     return (0);
   }
 
-  if (errno == EACCES|| errno == EPERM) {
-    return (403);
+  if (errno == EACCES || errno == EPERM) {
+    return (Forbidden);
   } else if (errno == ENOENT) {
-    return (404);
+    return (Not_Found);
   } else {
-    return (500);
+    return (Internal_Server_Error);
   }
 }
 

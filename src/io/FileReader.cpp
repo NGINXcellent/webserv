@@ -6,11 +6,12 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:32:28 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/31 20:30:15 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 15:11:41 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/io/FileReader.hpp"
+#include "../../include/http/HttpStatus.hpp" // status codes
 
 #include <algorithm> // sort
 #include <fstream>
@@ -24,15 +25,15 @@ int getFileInfo(const std::string &filename, struct file_info *info);
 
 int FileReader::getContent(const std::string &fileName, char **resourceData, long long *resourceSize) {
   if (access(fileName.c_str(), F_OK) == -1) {
-    return 404;
+    return Not_Found;
   }
 
   if (access(fileName.c_str(), R_OK) == -1) {
-    return 403;
+    return Forbidden;
   }
 
   if (!isRegularFile(fileName.c_str()))
-    return (404);
+    return (Not_Found);
 
   std::ifstream inputFile;
   inputFile.open(fileName.c_str(), std::ios::binary);

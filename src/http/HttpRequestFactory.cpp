@@ -6,11 +6,12 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/30 14:35:23 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/02 15:23:08 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequestFactory.hpp"
+#include "../../include/http/HttpStatus.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -435,7 +436,7 @@ int HttpRequestFactory::check(HttpRequest *request) {
 
   if (request->getProtocolName() != "HTTP" ||
       (mainVersion < 1 || minorVersion < 0)) {
-    return (400);
+    return (Bad_Request);
   }
 
   if (!(version == 10 || version == 11)) return (505);
@@ -446,7 +447,7 @@ int HttpRequestFactory::check(HttpRequest *request) {
 
   for (size_t i = 0; i < method.size(); i++) {
     if (!std::isupper(method[i])) {
-      return (400);
+      return (Bad_Request);
     }
   }
 
