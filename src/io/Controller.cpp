@@ -6,15 +6,19 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/30 15:13:09 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/03 15:44:33 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/io/Controller.hpp"
-#include "../../include/io/TcpServerSocket.hpp"
+
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <fcntl.h>
+
+#include <iostream>
+
+#include "../../include/io/TcpServerSocket.hpp"
 
 int   setToNonBlock(int sock);
 void  initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd);

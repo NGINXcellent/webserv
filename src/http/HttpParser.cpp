@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/02 20:36:09 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 15:24:24 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 15:46:16 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,3 +156,4 @@ std::string utils::toLowerStr(std::string str) {
 
   return (result);
 }
+

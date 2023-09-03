@@ -6,19 +6,21 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:32:28 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 19:28:10 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 15:42:13 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/io/FileReader.hpp"
-#include "../../include/http/HttpStatus.hpp" // status codes
 
-#include <algorithm> // sort
-#include <fstream>
-#include <iostream>
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
+
+#include <algorithm>  // sort
+#include <fstream>    // IO file reading
+#include <iostream>   // cout
+
+#include "../../include/http/HttpStatus.hpp" // status codes
 
 bool isRegularFile(const std::string &filename);
 int getFileInfo(const std::string &filename, struct file_info *info);

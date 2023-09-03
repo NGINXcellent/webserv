@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:13:54 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 19:21:19 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 15:32:31 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <string>
 #include <map>
 
-enum status_code {
+enum HttpStatusCode {
   Ready = 0, // everything is ok, logic control
   Ok = 200,
   Created = 201,
@@ -41,8 +41,6 @@ enum status_code {
   Not_Implemented = 501,
   Http_Ver_Unsupported = 505
 };
-
-typedef status_code HttpStatusCode;
 
 class HttpStatus {
  public:

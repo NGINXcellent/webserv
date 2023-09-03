@@ -6,12 +6,11 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:15:50 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 14:47:16 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 15:27:08 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpStatus.hpp"
-#include <utility>
 
 std::map<int, std::string> HttpStatus::messages;
 bool HttpStatus::is_init = false;

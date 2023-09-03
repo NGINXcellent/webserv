@@ -6,11 +6,14 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/08/24 17:51:52 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 15:45:36 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/io/TcpServerSocket.hpp"
+
+#include <iostream>
+
 #include "../../include/http/Server.hpp"
 
 // Constructor Server Socket
@@ -25,7 +28,6 @@ TCPServerSocket::~TCPServerSocket() {
 }
 
 int TCPServerSocket::bindAndListen() {
-
   // Configurar o endereço para o socket
   sockaddr_in serverAddr;
   bzero(&serverAddr, sizeof(serverAddr));

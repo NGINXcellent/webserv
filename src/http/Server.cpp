@@ -6,11 +6,17 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 19:33:55 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 15:34:31 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/Server.hpp"
+
+#include <iostream> // cout
+#include <fstream>
+#include <sstream>  // stringstream
+#include <algorithm>
+
 #include "../../include/http/HttpTime.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
 #include "../../include/http/HttpResponseComposer.hpp"
@@ -19,13 +25,6 @@
 #include "../../include/io/FileSystem.hpp"
 #include "../../include/io/FileReader.hpp"
 #include "../../include/http/HttpStatus.hpp"
-
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <sstream>  // stringstream
-#include <sys/stat.h>
-#include <algorithm>
 
 Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
