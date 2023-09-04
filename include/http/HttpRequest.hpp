@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 20:32:29 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/03 21:42:34 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,16 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
-struct s_multipartStruct {
-  std::string                 name;
-  std::string                 content;
+enum PostType {
+  None,
+  Multipart,
+  Chunked,
+  UrlEncoded 
 };
+
+typedef std::map<std::string, std::string> MultiPartMap;
 
 class HttpRequest {
  public:
@@ -32,7 +37,7 @@ class HttpRequest {
   void                  setMethod(const std::string &method);
   const std::string&    getResource(void);
   void                  setResource(const std::string &resource);
-  void                  setProtocolName(const std::string &protocol);
+  void                 setProtocolName(const std::string &protocol);
   const std::string&    getProtocolName(void);
   void                  setProtocolVersion(int main, int sub);
   int                   getProtocolMainVersion(void);
@@ -46,8 +51,8 @@ class HttpRequest {
   const std::vector<std::string>   &getAllowedMethods(void);
   void                  setAllowedMethods(const std::vector<std::string> &allowedList);
   void                  setupContentType(const std::string &msg, HttpRequest *request);
-  const std::string&    getPostType(void);
-  void                  setPostType(const std::string &type);
+  PostType              getPostType(void);
+  void                  setPostType(PostType type);
   const std::string&    getRequestBody(void);
   void                  setRequestBody(const std::string &body);
   const std::string&    getRoot(void);
@@ -64,8 +69,8 @@ class HttpRequest {
   void                  setLocationWithoutIndex(const std::string &loc);
   void                  setBoundary(const std::string &boundary);
   const std::string&    getBoundary(void);
-  void                  setMultipartStruct(const std::vector<s_multipartStruct>& parts);
-  const std::vector<s_multipartStruct>& getMultipartStruct();
+  void                  setMultipartMap(const MultiPartMap& parts);
+  const MultiPartMap&   getMultipartMap(void);
   void                  setBaseLocation(std::string baseLocation);
   std::string           getBaseLocation(void);
 
@@ -89,8 +94,8 @@ class HttpRequest {
   std::string               location;
   std::string               locationWithoutIndex;
   std::string               boundary;
-  std::vector<s_multipartStruct>  multipartStructVector;
-  std::string               postType;
+  MultiPartMap              multipartMap;
+  PostType                  postType;
   std::string               root;
 
   HttpRequest(const HttpRequest& f);

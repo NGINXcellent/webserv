@@ -6,18 +6,19 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/30 14:48:49 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/03 15:37:40 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpResponse.hpp"
-#include "../../include/http/HttpTime.hpp"
-#include "../../include/http/HttpStatus.hpp"
 
 #include <sstream>
 
+#include "../../include/http/HttpTime.hpp"
+#include "../../include/http/HttpStatus.hpp"
+
 HttpResponse::HttpResponse(void) {
-  statusCode = 200;
+  statusCode = Ok;
   statusMessage = "OK";
   contentLength = 0;
   serverVersion = "webserv/0.1";

@@ -6,24 +6,25 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/30 14:40:08 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 21:41:56 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/Server.hpp"
+
+#include <iostream> // cout
+#include <fstream>
+#include <sstream>  // stringstream
+#include <algorithm>
+
 #include "../../include/http/HttpTime.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
 #include "../../include/http/HttpResponseComposer.hpp"
 #include "../../include/http/MimeType.hpp"
 #include "../../include/io/TcpServerSocket.hpp"
+#include "../../include/io/FileSystem.hpp"
 #include "../../include/io/FileReader.hpp"
-
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <sstream>  // stringstream
-#include <sys/stat.h>
-#include <algorithm>
+#include "../../include/http/HttpStatus.hpp"
 
 Server::Server(const struct s_serverConfig& config) {
   port = strtol(config.port.c_str(), NULL, 0);
@@ -38,13 +39,13 @@ Server::~Server(void) {
   delete socket;
 }
 
-int Server::resolve(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
 
   if (!uTimestamp.empty() && \
       HttpTime::isModifiedSince(uTimestamp, request->getResource())) {
     // shim
-    return 412;
+    return (Precondition_Failed);
   }
 
   std::string requestMethod = request->getMethod();
@@ -53,10 +54,10 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
   it = std::find(allowedMethods.begin(), allowedMethods.end(), requestMethod);
 
   if (!allowedMethods.empty() && it == allowedMethods.end()) {
-    return 405;
+    return (Method_Not_Allowed);
   }
 
-  int opStatus = 0;
+  HttpStatusCode opStatus = Ready; 
 
   if (requestMethod == "GET")
     opStatus = get(request, response);
@@ -65,28 +66,23 @@ int Server::resolve(HttpRequest *request, HttpResponse *response) {
   else if (requestMethod == "POST")
     opStatus = post(request, response);
   else
-    opStatus = 501;
+    opStatus = Not_Implemented;
 
- return (opStatus);
-  /*else if (requestMethod == "HEAD")
-    opStatus = head(request, response);*/
+  return (opStatus);
 }
 
 HttpResponse *Server::process(std::string &buffer) {
-  // std::cout << "BUFFER" << std::endl;
-  // std::cout << buffer << std::endl;
-  //std::cout << "hey hey >>>>" << buffer.find_first_of('\n') << std::endl;
   HttpRequest *request = HttpRequestFactory::createFrom(buffer, locations);
   HttpResponse *response = new HttpResponse();
-  int status = HttpRequestFactory::check(request);
+  HttpStatusCode status = HttpRequestFactory::check(request);
 
-  if (status == 0) {
+  if (status == Ready) {
     response->setProtocol("HTTP", request->getProtocolMainVersion(),
                                   request->getProtocolSubVersion());
     status = resolve(request, response);
   }
 
-  if (status != 0) {
+  if (status != Ready) {
     HttpResponseComposer::buildErrorResponse(response, status, error_pages, \
                                           request->getProtocolMainVersion(), \
                                           request->getProtocolSubVersion());
@@ -96,15 +92,8 @@ HttpResponse *Server::process(std::string &buffer) {
   return response;
 }
 
-bool fileExists(const std::string& filename) {
-    return (access(filename.c_str(), F_OK) != -1);
-}
-
-int Server::post(HttpRequest *request, HttpResponse *response) {
-  int protoMain = request->getProtocolMainVersion();
-  int protoSub = request->getProtocolSubVersion();
-  int opStatus = 0;
-  response->setProtocol("HTTP", protoMain, protoSub);
+HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
+  HttpStatusCode opStatus = Ready;
   response->setLastModifiedTime(
       HttpTime::getLastModifiedTime(request->getResource()));
 
@@ -113,29 +102,32 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
   if (request->getRedirectionCode() != 0) {
     response->setStatusCode(request->getRedirectionCode());
     response->setLocation(request->getRedirectionPath());
-    return (0);
+    return (Ready);
   }
-  // Checar max_body_size do server agora
+
   if (srv_max_body_size != SIZE_T_MAX) {
     if (request->getContentLength() > srv_max_body_size) {
-      opStatus = 413;
-      return opStatus;
+      return (Payload_Too_Large);
     }
   }
   // END BODY SIZE CHECK ---
 
-  if (request->getPostType() == "NONE") {
-    throw std::runtime_error("Wrong POST REQUEST, NONE");
+  PostType pType = request->getPostType();
+  
+  // WE NEED TO CHANGE THIS TO A SWITCH AND ENCAPSULATE THE LOGIC
 
-  } else if (request->getPostType() == "CHUNK") {
+  if (pType == None) {
+    throw std::runtime_error("Wrong POST REQUEST, NONE");
+  } else if (pType == Chunked) {
     std::string location = request->getLocationWithoutIndex();
 
-    if (fileExists(location)) {
-      response->setStatusCode(204);
+    if (FileSystem::check(location, F_OK) != 0) {
+      response->setStatusCode(No_Content);
     } else {
-      response->setStatusCode(201);
+      response->setStatusCode(Created);
     }
-
+    
+    // wrap this inside a proper class 
     std::ofstream file(location.c_str(),
                        std::ofstream::out | std::ofstream::trunc);
 
@@ -143,34 +135,56 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
       file << request->getRequestBody();
       file.close();
     } else {
-      opStatus = 500;
+      opStatus = Internal_Server_Error;
     }
-  } else if (request->getPostType() == "MULTIPART") {
-    std::vector<s_multipartStruct> multiParts = request->getMultipartStruct();
-
+    
+  } else if (pType == Multipart) {
+    MultiPartMap multiParts = request->getMultipartMap();
+    MultiPartMap::iterator it = multiParts.begin();
+    MultiPartMap::iterator ite = multiParts.begin();
+    
     // CREATE FILES AND INSERT CONTENT INSIDE;
-    for (size_t i = 1; i < multiParts.size(); i++) {
+    for (; it != ite; it++) {
       std::string location = request->getLocationWithoutIndex();
-      std::string filename = location + '/' + multiParts[i].name + "_fromClient";
+      std::string filename = location + '/' +  it->first + "_fromClient";
       std::cout << filename << std::endl;
 
-      if(fileExists(filename)) {
-        response->setStatusCode(204);
+      if(FileSystem::check(filename, F_OK)) {
+        response->setStatusCode(No_Content);
       }
       else {
-        response->setStatusCode(201);
+        response->setStatusCode(Created);
       }
 
+      // wrap this inside a proper class 
       std::ofstream file(filename.c_str(),
                          std::ofstream::out | std::ofstream::trunc);
 
       if (file.is_open()) {
-        file << multiParts[i].content;
+        file << it->second;
         file.close();
       } else {
-        opStatus = 500;
+        opStatus = Internal_Server_Error;
       }
     }
+  } else if (pType == UrlEncoded) {
+      std::string location = request->getLocationWithoutIndex() + "_URL";
+
+      if (FileSystem::check(location, F_OK) == Ready) {
+        response->setStatusCode(204);
+      } else {
+        response->setStatusCode(201);
+      }
+
+      std::ofstream file(location.c_str(),
+                         std::ofstream::out | std::ofstream::trunc);
+
+      if (file.is_open()) {
+        file << request->getRequestBody();
+        file.close();
+      } else {
+        opStatus = Internal_Server_Error;
+      }
   }
 
   if (opStatus != 0) {
@@ -179,54 +193,59 @@ int Server::post(HttpRequest *request, HttpResponse *response) {
 
   response->setContentType(MimeType::identify(request->getResource()));
   response->setContentLength(0);
-  return (0);
+  return (Ready);
 }
 
-int Server::get(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
   if (request->getRedirectionCode() != 0) {
     response->setStatusCode(request->getRedirectionCode());
     response->setLocation(request->getRedirectionPath());
-    return (0);
+    return (Ready);
   }
 
   std::string fullpath = request->getRoot() + request->getResource();
-  
-  if (FileReader::isDirectory(fullpath)) {
-    if ((access(fullpath.c_str(), R_OK | X_OK) == -1) || !request->isDirListActive()) {
-      return (403);
+  HttpStatusCode opStatus = Ready;
+
+  if (FileSystem::isDirectory(fullpath)) {
+    opStatus = FileSystem::check(fullpath, R_OK | X_OK);
+
+    if (opStatus != 0 || !request->isDirListActive()) {
+      return (Forbidden);
     }
     
-    std::cout << "FULLPATH: " << request->getIndexPath() << std::endl;
-
-    if (!fileExists(request->getIndexPath()) && request->isDirListActive()) {
+    if (FileSystem::check(request->getIndexPath(), F_OK) != 0 && \
+        request->isDirListActive()) {
       std::map<std::string, struct file_info*> entries;
-      
-      if (FileReader::getDirContent(fullpath.c_str(), entries) == -1) {
-        return (500);
+      opStatus = FileReader::getDirContent(fullpath.c_str(), entries); 
+
+      if (opStatus != Ready) {
+        return (opStatus);
       }
 
       HttpResponseComposer::buildDirListResponse(request, response, entries);
-      return (0); // or opStatus Code
+      return (Ready); // or opStatus Code
     } else {
       fullpath = request->getIndexPath();
     }
   } 
 
-  if (access(fullpath.c_str(), F_OK) == -1) return (404);
+  opStatus = FileSystem::check(fullpath, F_OK | R_OK);
 
-  if (access(fullpath.c_str(), R_OK) == -1) return (403); // forbidden
+  if (opStatus != 0) {
+    return (opStatus);
+  }
 
   std::string unmodifiedTimestmap = request->getModifiedTimestampCheck();
 
   if (!HttpTime::isModifiedSince(unmodifiedTimestmap, fullpath)) {
-    response->setStatusCode(304);
-    return (0);
+    response->setStatusCode(Not_Modified);
+    return (Ready);
   }
   
   char *resourceData;
   long long resourceSize;
-  int opStatus = 0;
-  opStatus = FileReader::getContent(fullpath.c_str(), &resourceData, &resourceSize);
+  opStatus = FileReader::getContent(fullpath.c_str(), \
+                                    &resourceData, &resourceSize);
 
   if (opStatus != 0) {
     return (opStatus);
@@ -236,22 +255,25 @@ int Server::get(HttpRequest *request, HttpResponse *response) {
   response->setContentType(MimeType::identify(fullpath));
   response->setMsgBody(resourceData);
   response->setContentLength(resourceSize);
-  return (0);
+  return (Ready);
 }
 
-int Server::del(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::del(HttpRequest *request, HttpResponse *response) {
   std::ifstream inputFile;
-  int opStatus = 0;
+  HttpStatusCode opStatus = Ready;
 
+  // we need to rework this. a file can only be deleted if:
+  // the folder it is contained has EXECUTE permission
+  // the file itself has write permission
   if (access(request->getResource().c_str(), F_OK) == -1) {
-    opStatus = 404;
+    opStatus = Not_Found;
   } else if (access(request->getResource().c_str(), R_OK | W_OK) == -1) {
-    opStatus = 405;
+    opStatus = Method_Not_Allowed;
   } else if (remove(request->getResource().c_str()) != 0) {
-    opStatus = 500;
+    opStatus = Internal_Server_Error;
   }
 
-  if (opStatus != 0) {
+  if (opStatus != Ready) {
     return (opStatus);
   }
 
@@ -262,10 +284,10 @@ int Server::del(HttpRequest *request, HttpResponse *response) {
     msgBody[i] = msg[i];
   }
 
-  response->setStatusCode(204);
+  response->setStatusCode(No_Content);
   response->setMsgBody(msgBody);
   response->setContentLength(msg.size());
-  return (0);
+  return (Ready);
 }
 
 int   Server::getPort(void) {

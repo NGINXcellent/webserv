@@ -6,19 +6,26 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/30 15:13:09 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/03 21:54:30 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/io/Controller.hpp"
-#include "../../include/io/TcpServerSocket.hpp"
+
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <fcntl.h>
 
-int   setToNonBlock(int sock);
-void  initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd);
-int   getPortFromFd(int connectionFd);
+#include <iostream>
+
+#include "../../include/io/TcpServerSocket.hpp"
+
+void    initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd);
+bool    isChunkedBodyComplete(const std::string &body);
+bool    isMultipartBodyComplete(const std::string &body);
+bool    isUrlEncodedBodyComplete(const std::string &body, size_t cLength);
+size_t  findContentLength(const std::string& request);
+int     getPortFromFd(int connectionFd);
 
 Controller::Controller(const InputHandler &input) {
   std::vector<struct s_serverConfig>::iterator it = input.serverVector->begin();
@@ -96,10 +103,6 @@ void Controller::init(void) {
     // Bind sockfd on epoll event
     initEpollEvent(&ev, EPOLLIN | EPOLLOUT, socket->getFD());
 
-    if (setToNonBlock(socket->getFD())) {
-      throw std::runtime_error("Non Block Error");
-    }
-
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket->getFD(), &ev) == -1) {
       std::cerr << "Failed to add sockfd to epoll. errno: ";
       std::cout << errno << std::endl;
@@ -114,18 +117,16 @@ void Controller::init(void) {
 
 bool isChunkedBodyComplete(const std::string &body) {
   size_t pos = body.find("\r\n0\r\n\r\n", body.size() - 7);
-  if (pos != std::string::npos) {
-    return true;
-  }
-  return false;
+  return (pos != std::string::npos);
 }
 
 bool isMultipartBodyComplete(const std::string &body) {
   size_t pos = body.find("--\r\n", body.size() - 6);
-  if (pos != std::string::npos) {
-    return true;
-  }
-  return false;
+  return (pos != std::string::npos);
+}
+
+bool isUrlEncodedBodyComplete(const std::string &body, size_t cLength) {
+  return (body.size() == cLength);
 }
 
 // we already have an toLowerStr, need to remove this . . .
@@ -139,7 +140,24 @@ std::string toLowerStr2(std::string str) {
   return (result);
 }
 
+size_t findContentLength(const std::string& request) {
+  size_t contentLengthPos = request.find("Content-Length: ");
+
+  if (contentLengthPos != std::string::npos) {
+    contentLengthPos += strlen("Content-Length: "); 
+    size_t contentLengthEnd = request.find("\r\n", contentLengthPos);
+
+    if (contentLengthEnd != std::string::npos) {
+        std::string contentLengthStr = request.substr(contentLengthPos, contentLengthEnd - contentLengthPos);
+        return static_cast<size_t>(std::atoi(contentLengthStr.c_str()));
+    }
+  }
+
+  return -1; // Valor padrão se não encontrar ou ocorrer erro na conversão
+}
+
 bool isHTTPRequestComplete(const std::string &request) {
+  size_t cLenght = findContentLength(request);
   size_t pos = request.find("\r\n\r\n");
 
   if (pos != std::string::npos) {
@@ -156,20 +174,21 @@ bool isHTTPRequestComplete(const std::string &request) {
     }
 
     size_t contentTypePos = request.find("Content-Type: ");
-    if (contentTypePos != std::string::npos) {
-      std::string contentType = request.substr(contentTypePos + 14, 19);
-      contentType = toLowerStr2(contentType);
-      if (contentType == "multipart/form-data") {
-        if (isMultipartBodyComplete(body)) {
-          return true;  // complete multipart req
-        } else {
-          return false;  // need more data
-        }
-      }
-    } else {
-      return true;  // complete req
+
+    if (contentTypePos == std::string::npos) {
+      return (true);
+    }
+
+    std::string contentType = request.substr(contentTypePos + 14, 19);
+    contentType = toLowerStr2(contentType);
+
+    if (contentType == "multipart/form-data") {
+      return (isMultipartBodyComplete(body));
+    } else if (contentType == "application/x-www-f") {
+      return (isUrlEncodedBodyComplete(body, cLenght));
     }
   }
+
   return false;  // need more data
 }
 
@@ -248,10 +267,6 @@ void Controller::addNewConnection(int socketFD) {
   Server *server = serverPool[serverPort];
   time_t currentTime = time(NULL);
 
-  if (setToNonBlock(newConnection)) {
-    throw std::runtime_error ("Nonblock setup error");
-  }
-
   if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, &ev) == -1) {
     std::cerr << "Failed to add new connection to epoll. errno: ";
     std::cerr << errno << std::endl;
@@ -266,15 +281,6 @@ void Controller::addNewConnection(int socketFD) {
 
 bool  Controller::closeConnection(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
-  // std::vector<struct epoll_event>::iterator it = events.begin();
-
-  // for (; it < events.end(); it++) {
-  //   if (currentFd == it->data.fd) {
-  //     events.erase(it);
-  //     break;
-  //   }
-  // }
-
   close(currentFd);
   delete connectedClients[currentFd];
   connectedClients.erase(currentFd);
@@ -313,10 +319,12 @@ void Controller::sendToClient(int currentFd) {
   Client *client = connectedClients[currentFd];
   Server *server = client->getServer();
   client->getBuffer() += '\0';
-  HttpResponse *response = server->process(client->getBuffer()); // alterar server pra receber string
+  HttpResponse *response = server->process(client->getBuffer()); 
   TCPServerSocket *socket = socketPool[client->getPort()];
-  socket->sendData(currentFd, response->getHeaders().c_str(), response->getHeaders().size());
-  socket->sendData(currentFd, response->getMsgBody(), response->getContentLength());
+  socket->sendData(currentFd, response->getHeaders().c_str(), \
+                   response->getHeaders().size());
+  socket->sendData(currentFd, response->getMsgBody(), \
+                   response->getContentLength());
 
   // cleaning
   delete response;
@@ -324,20 +332,6 @@ void Controller::sendToClient(int currentFd) {
 
   //isso aqui deveria acontecer com keepalive ?
   closeConnection(currentFd);
-}
-
-int   setToNonBlock(int sock) {
-  int flag = fcntl(sock, F_GETFL, 0);
-
-  if (flag < 0)   {
-    return (-1);
-  }
-
-  if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0)  {
-    return (-1);
-  }
-
-  return (0);
 }
 
 void initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd) {

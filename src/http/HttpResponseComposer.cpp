@@ -6,22 +6,24 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/29 21:28:22 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 15:37:16 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpResponseComposer.hpp"
+
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <sstream>
+#include <fstream>
+#include <iostream>
+
 #include "../../include/http/HttpStatus.hpp"
 #include "../../include/http/HttpTime.hpp"
 #include "../../include/http/MimeType.hpp"
 #include "../../include/io/FileReader.hpp"
-
-#include <dirent.h>
-#include <sstream>
-#include <fstream>
-#include <iostream>
-#include <sys/stat.h>
-#include <unistd.h>
 
 void HttpResponseComposer::buildErrorResponse(HttpResponse *response, \
                                        int error_code, \
@@ -164,7 +166,7 @@ void HttpResponseComposer::buildDirListResponse(HttpRequest *request, HttpRespon
   int protoMain = request->getProtocolMainVersion();
   int protoSub = request->getProtocolSubVersion();
   response->setProtocol("HTTP", protoMain, protoSub);
-  response->setStatusCode(200);
+  response->setStatusCode(Ok);
   response->setMsgBody(msg);
   response->setContentLength(responseStr.size());
 }

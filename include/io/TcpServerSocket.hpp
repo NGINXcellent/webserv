@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 15:29:55 by dvargas           #+#    #+#             */
-/*   Updated: 2023/08/15 15:00:49 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/03 15:43:32 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,6 @@
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
-#include <vector>
 
 #define MAX_EVENTS 1000
 

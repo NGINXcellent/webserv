@@ -6,12 +6,11 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:15:50 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 00:30:46 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 15:27:08 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpStatus.hpp"
-#include <utility>
 
 std::map<int, std::string> HttpStatus::messages;
 bool HttpStatus::is_init = false;
@@ -34,11 +33,11 @@ void HttpStatus::init(void) {
 
   // 300 class - redirection
   messages.insert(std::make_pair(301, "Moved Permanently"));
-  messages.insert(std::make_pair(304, "Not Modified"));
-  messages.insert(std::make_pair(308, "Permanent Redirect"));
   messages.insert(std::make_pair(302, "Found"));
   messages.insert(std::make_pair(303, "See Other"));
+  messages.insert(std::make_pair(304, "Not Modified"));
   messages.insert(std::make_pair(307, "Temporary Redirect"));
+  messages.insert(std::make_pair(308, "Permanent Redirect"));
 
   // 400 class - client errors
   messages.insert(std::make_pair(400, "Bad Request"));

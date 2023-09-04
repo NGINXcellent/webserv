@@ -6,7 +6,7 @@
 #    By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/08/24 19:51:10 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/09/03 14:37:51 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,6 +26,7 @@ IO = $(addprefix io/,    \
 	TcpServerSocket.cpp 	 \
 	Controller.cpp 	         \
 	Client.cpp		 \
+	FileSystem.cpp \
 	FileReader.cpp  \
 )
 
@@ -33,6 +34,7 @@ HTTP  = $(addprefix http/,  \
 	HttpRequest.cpp 	    \
 	HttpResponse.cpp 		\
 	HttpRequestFactory.cpp  \
+	HttpParser.cpp \
 	HttpResponseComposer.cpp \
 	HttpTime.cpp  			\
 	HttpStatus.cpp			\

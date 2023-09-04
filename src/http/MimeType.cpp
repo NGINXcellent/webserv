@@ -6,11 +6,12 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/29 12:12:09 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/25 12:21:03 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 15:42:40 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/MimeType.hpp"
+
 #include <iostream>
 
 bool MimeType::is_set = false;

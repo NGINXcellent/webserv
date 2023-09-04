@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/30 14:38:12 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 19:20:03 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,11 +102,11 @@ void HttpRequest::setAllowedMethods(const std::vector<std::string> &allowedList)
   allowedMethodList = allowedList;
 }
 
-const std::string& HttpRequest::getPostType(void) {
+PostType HttpRequest::getPostType(void) {
   return (this->postType);
 }
 
-void HttpRequest::setPostType(const std::string &type) {
+void HttpRequest::setPostType(PostType type) {
   postType = type;
 }
 
@@ -184,13 +184,18 @@ const std::string& HttpRequest::getBoundary() {
 void HttpRequest::setBoundary(const std::string& boundary) {
  this->boundary = boundary;
 }
-const std::vector<s_multipartStruct>& HttpRequest::getMultipartStruct() {
- return multipartStructVector;
+
+const MultiPartMap& HttpRequest::getMultipartMap(void) {
+  return (multipartMap);
 }
 
-void HttpRequest::setMultipartStruct(const std::vector<s_multipartStruct>& parts ) {
- multipartStructVector.clear();
- multipartStructVector.insert(multipartStructVector.end(), parts.begin(), parts.end());
+void HttpRequest::setMultipartMap(const MultiPartMap& parts) {
+  multipartMap.clear();
+  std::map<std::string, std::string>::const_iterator it = parts.begin();
+
+  for (; it != parts.end(); ++it) {
+      multipartMap[it->first] = it->second;
+  }
 }
 
 const std::string &HttpRequest::getRoot(void) {
