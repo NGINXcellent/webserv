@@ -6,14 +6,14 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 15:19:28 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 21:42:29 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequestFactory.hpp"
 
-#include <fstream>
-#include <iostream>
+#include <fstream> // io ops
+#include <iostream> // cout
 #include <map>
 #include <sstream>
 #include <vector>
@@ -25,6 +25,7 @@
 namespace post {
   void setupContentType(const std::string &msg, HttpRequest *request);
   void setupRequestBody(const std::string &msg, HttpRequest *request);
+  void urlEncodedBodyType(const std::string &msg, HttpRequest *request);
 }
 
 namespace location {
@@ -65,7 +66,7 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   request->setContentLength(getHeaderValue("content-length", &headers));
 
   //  setup body if POST
-  if(request->getPostType() != "NONE" && checkMaxBodySize(request, locations)){
+  if(request->getPostType() != None && checkMaxBodySize(request, locations)){
     post::setupRequestBody(requestMsg, request);
   }
 
@@ -119,16 +120,21 @@ bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, \
   return true;
 }
 
-std::string HttpRequestFactory::setupBodyContentType(HttpRequest *request, \
+PostType HttpRequestFactory::setupBodyContentType(HttpRequest *request, \
                                                      HttpHeaders &headers) {
   std::string postType = getHeaderValue("transfer-encoding", &headers);
   std::string boundary = "boundary=";
 
   if (postType == "chunked") {
-    return "CHUNK";
+    return Chunked;
   }
 
   postType = getHeaderValue("content-type", &headers);
+
+  if (postType.find("application/x-www-form-urlencoded") != std::string::npos) {
+    return UrlEncoded;
+  }
+
   if (postType.find("multipart/form-data") != std::string::npos) {
     size_t boundaryPos = postType.find(boundary);
 
@@ -138,14 +144,15 @@ std::string HttpRequestFactory::setupBodyContentType(HttpRequest *request, \
       std::string boundary =
           postType.substr(boundaryPos, boundaryEndPos - boundaryPos);
       request->setBoundary(boundary);
-      return "MULTIPART";
+      return Multipart;
     }
   }
-  return "NONE";
+
+  return None;
 }
 
 void MultipartBodyType(const std::string &msg, HttpRequest *request) {
-  std::vector<s_multipartStruct> bodyParts;
+  MultiPartMap bodyParts;
   std::string boundary = request->getBoundary();
   size_t startPos = msg.find(boundary);
 
@@ -165,26 +172,26 @@ void MultipartBodyType(const std::string &msg, HttpRequest *request) {
     std::string bodyPart = msg.substr(startPos, endPos - startPos);
 
     // Extract name and content from bodyPart
-    s_multipartStruct multipartStruct;
     size_t namePos = bodyPart.find("name=\"") + 6;
     size_t nameEndPos = bodyPart.find("\"", namePos);
-    multipartStruct.name = bodyPart.substr(namePos, nameEndPos - namePos);
+    std::string name = bodyPart.substr(namePos, nameEndPos - namePos);
 
     size_t contentPos = bodyPart.find("\r\n\r\n") + 4;
-    multipartStruct.content =
+    std::string content =
         bodyPart.substr(contentPos, bodyPart.size() - contentPos - 4);
 
-    bodyParts.push_back(multipartStruct);
+    bodyParts[name] = content;
     startPos = endPos + boundary.length();
   }
 
   if (!bodyParts.empty()) {
-    request->setMultipartStruct(bodyParts);
+    request->setMultipartMap(bodyParts);
   }
 }
 
 void chunkBodyType(const std::string &msg, HttpRequest *request) {
-  size_t pos, count = 1;
+  size_t pos;
+  size_t count = 1;
   std::string ret;
   
   if ((pos = msg.find("\r\n\r\n")) == std::string::npos) {
@@ -207,15 +214,25 @@ void chunkBodyType(const std::string &msg, HttpRequest *request) {
 }
 
 void post::setupRequestBody(const std::string &msg, HttpRequest *request) {
-  if (request->getPostType() == "CHUNK") {
-    chunkBodyType(msg, request);
-  }
-  
-  if (request->getPostType() == "MULTIPART") {
-    MultipartBodyType(msg, request);
-    return;
-  }
-  
+  PostType p_type = request->getPostType();
+ 
+  switch (p_type) {
+    case Chunked:
+      chunkBodyType(msg, request);
+      break;
+
+    case Multipart:
+      MultipartBodyType(msg, request);
+      break;
+
+    case UrlEncoded:
+      urlEncodedBodyType(msg, request);
+      break;
+    
+    case None:
+      break;
+   }
+
   return;
 }
 
@@ -310,4 +327,18 @@ std::string HttpRequestFactory::getHeaderValue(std::string headerName, \
   }
 
   return ("");
+}
+
+void post::urlEncodedBodyType(const std::string &msg, HttpRequest *request) {
+  std::string ret;
+  size_t pos;
+
+  if ((pos = msg.find("\r\n\r\n")) == std::string::npos) {
+    return;
+  }
+  pos += 4;
+
+  ret = msg.substr(pos, request->getContentLength());
+
+  request->setRequestBody(ret);
 }

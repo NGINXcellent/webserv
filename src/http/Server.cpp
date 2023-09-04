@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 15:34:31 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 21:41:56 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,10 +112,13 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
   }
   // END BODY SIZE CHECK ---
 
-  if (request->getPostType() == "NONE") {
-    throw std::runtime_error("Wrong POST REQUEST, NONE");
+  PostType pType = request->getPostType();
+  
+  // WE NEED TO CHANGE THIS TO A SWITCH AND ENCAPSULATE THE LOGIC
 
-  } else if (request->getPostType() == "CHUNK") {
+  if (pType == None) {
+    throw std::runtime_error("Wrong POST REQUEST, NONE");
+  } else if (pType == Chunked) {
     std::string location = request->getLocationWithoutIndex();
 
     if (FileSystem::check(location, F_OK) != 0) {
@@ -134,13 +137,16 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
     } else {
       opStatus = Internal_Server_Error;
     }
-  } else if (request->getPostType() == "MULTIPART") {
-    std::vector<s_multipartStruct> multiParts = request->getMultipartStruct();
-
+    
+  } else if (pType == Multipart) {
+    MultiPartMap multiParts = request->getMultipartMap();
+    MultiPartMap::iterator it = multiParts.begin();
+    MultiPartMap::iterator ite = multiParts.begin();
+    
     // CREATE FILES AND INSERT CONTENT INSIDE;
-    for (size_t i = 1; i < multiParts.size(); i++) {
+    for (; it != ite; it++) {
       std::string location = request->getLocationWithoutIndex();
-      std::string filename = location + '/' + multiParts[i].name + "_fromClient";
+      std::string filename = location + '/' +  it->first + "_fromClient";
       std::cout << filename << std::endl;
 
       if(FileSystem::check(filename, F_OK)) {
@@ -155,12 +161,30 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
                          std::ofstream::out | std::ofstream::trunc);
 
       if (file.is_open()) {
-        file << multiParts[i].content;
+        file << it->second;
         file.close();
       } else {
         opStatus = Internal_Server_Error;
       }
     }
+  } else if (pType == UrlEncoded) {
+      std::string location = request->getLocationWithoutIndex() + "_URL";
+
+      if (FileSystem::check(location, F_OK) == Ready) {
+        response->setStatusCode(204);
+      } else {
+        response->setStatusCode(201);
+      }
+
+      std::ofstream file(location.c_str(),
+                         std::ofstream::out | std::ofstream::trunc);
+
+      if (file.is_open()) {
+        file << request->getRequestBody();
+        file.close();
+      } else {
+        opStatus = Internal_Server_Error;
+      }
   }
 
   if (opStatus != 0) {

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 15:06:27 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/03 19:22:27 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ class HttpRequestFactory {
 
   static bool         checkMaxBodySize(HttpRequest *request, LocationList locs);
   static void         findLocation(HttpRequest *request, LocationList locs);
-  static std::string  setupBodyContentType(HttpRequest *request, HttpHeaders &headers);
+  static PostType     setupBodyContentType(HttpRequest *request, HttpHeaders &headers);
   static std::string  getHeaderValue(std::string headerName, \
                                      HttpHeaders* headers);
 };
