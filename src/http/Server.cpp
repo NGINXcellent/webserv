@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 08:17:26 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 13:47:44 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,7 +127,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
       response->setStatusCode(Created);
     }
 
-    // wrap this inside a proper class 
+    // wrap this inside a proper class
     std::ofstream file(location.c_str(),
                        std::ofstream::out | std::ofstream::trunc);
 
@@ -141,7 +141,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
   } else if (pType == Multipart) {
     MultiPartMap multiParts = request->getMultipartMap();
     MultiPartMap::iterator it = multiParts.begin();
-    MultiPartMap::iterator ite = multiParts.begin();
+    MultiPartMap::iterator ite = multiParts.end();
 
     // CREATE FILES AND INSERT CONTENT INSIDE;
     for (; it != ite; it++) {
@@ -149,7 +149,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
       std::string filename = location + '/' +  it->first + "_fromClient";
       std::cout << filename << std::endl;
 
-      if(FileSystem::check(filename, F_OK)) {
+      if(FileSystem::check(filename, F_OK) != Ready) {
         response->setStatusCode(No_Content);
       }
       else {
@@ -263,11 +263,12 @@ HttpStatusCode Server::del(HttpRequest *request, HttpResponse *response) {
   // we need to rework this. a file can only be deleted if:
   // the folder it is contained has EXECUTE permission
   // the file itself has write permission
-  if (access(request->getResource().c_str(), F_OK) == -1) {
+  std::string path = request->getIndexPath();
+  if (access(path.c_str(), F_OK) == -1) {
     opStatus = Not_Found;
-  } else if (access(request->getResource().c_str(), R_OK | W_OK) == -1) {
+  } else if (access(path.c_str(), R_OK | W_OK) == -1) {
     opStatus = Method_Not_Allowed;
-  } else if (remove(request->getResource().c_str()) != 0) {
+  } else if (remove(path.c_str()) != 0) {
     opStatus = Internal_Server_Error;
   }
 

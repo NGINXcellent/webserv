@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 11:22:36 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 13:30:56 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,7 +152,7 @@ PostType HttpRequestFactory::setupBodyContentType(HttpRequest *request, \
 }
 
 void MultipartBodyType(const std::string &msg, HttpRequest *request) {
-  MultiPartMap bodyParts;
+    MultiPartMap bodyParts;
   std::string boundary = request->getBoundary();
   size_t startPos = msg.find(boundary);
 
@@ -171,17 +171,33 @@ void MultipartBodyType(const std::string &msg, HttpRequest *request) {
 
     std::string bodyPart = msg.substr(startPos, endPos - startPos);
 
-    // Extract name and content from bodyPart
-    size_t namePos = bodyPart.find("name=\"") + 6;
-    size_t nameEndPos = bodyPart.find("\"", namePos);
-    std::string name = bodyPart.substr(namePos, nameEndPos - namePos);
+    // Verifique se a parte do corpo contém dados válidos
+    if (!bodyPart.empty()) {
+      // Extraia name e content da bodyPart
+      size_t namePos = bodyPart.find("name=\"");
+      if (namePos != std::string::npos) {
+        namePos += 6;  // Avance para o início do nome
+        size_t nameEndPos = bodyPart.find("\"", namePos);
+        if (nameEndPos != std::string::npos) {
+          std::string name = bodyPart.substr(namePos, nameEndPos - namePos);
+          std::cout << "name: " << name << std::endl;
 
-    size_t contentPos = bodyPart.find("\r\n\r\n") + 4;
-    std::string content =
-        bodyPart.substr(contentPos, bodyPart.size() - contentPos - 4);
+          // Encontre o início do conteúdo após \r\n\r\n
+          size_t contentPos = bodyPart.find("\r\n\r\n");
+          if (contentPos != std::string::npos) {
+            contentPos += 4;  // Avance para o início do conteúdo
+            std::string content = bodyPart.substr(contentPos, bodyPart.size() - contentPos - 4);
+            std::cout << "content: " << content << std::endl;
 
-    bodyParts[name] = content;
-    startPos = endPos + boundary.length();
+            // Armazene os dados na map
+            bodyParts[name] = content;
+          }
+        }
+      }
+    }
+
+    // Avance para a próxima parte do corpo
+    startPos = endPos + boundary.length() + 6;
   }
 
   if (!bodyParts.empty()) {
@@ -193,13 +209,13 @@ void chunkBodyType(const std::string &msg, HttpRequest *request) {
   size_t pos;
   size_t count = 1;
   std::string ret;
-  
+
   if ((pos = msg.find("\r\n\r\n")) == std::string::npos) {
     return;
   }
-  
+
   pos += 2;
-  
+
   while (count) {
     pos += 2;
     count = strtol(&msg[pos], NULL, 16);
@@ -215,7 +231,7 @@ void chunkBodyType(const std::string &msg, HttpRequest *request) {
 
 void post::setupRequestBody(const std::string &msg, HttpRequest *request) {
   PostType p_type = request->getPostType();
- 
+
   switch (p_type) {
     case Chunked:
       chunkBodyType(msg, request);
@@ -228,7 +244,7 @@ void post::setupRequestBody(const std::string &msg, HttpRequest *request) {
     case UrlEncoded:
       urlEncodedBodyType(msg, request);
       break;
-    
+
     case None:
       break;
    }
