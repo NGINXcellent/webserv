@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 13:50:55 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 13:51:24 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -379,4 +379,3 @@ void post::urlEncodedBodyType(const std::string &msg, HttpRequest *request) {
 
   request->setRequestBody(ret);
 }
-  std::string               root;
