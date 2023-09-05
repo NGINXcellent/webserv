@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/04 20:47:04 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 08:17:26 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
     return (Method_Not_Allowed);
   }
 
-  HttpStatusCode opStatus = Ready; 
+  HttpStatusCode opStatus = Ready;
 
   if (requestMethod == "GET")
     opStatus = get(request, response);
@@ -113,7 +113,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
   // END BODY SIZE CHECK ---
 
   PostType pType = request->getPostType();
-  
+
   // WE NEED TO CHANGE THIS TO A SWITCH AND ENCAPSULATE THE LOGIC
 
   if (pType == None) {
@@ -126,7 +126,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
     } else {
       response->setStatusCode(Created);
     }
-    
+
     // wrap this inside a proper class 
     std::ofstream file(location.c_str(),
                        std::ofstream::out | std::ofstream::trunc);
@@ -137,12 +137,12 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
     } else {
       opStatus = Internal_Server_Error;
     }
-    
+
   } else if (pType == Multipart) {
     MultiPartMap multiParts = request->getMultipartMap();
     MultiPartMap::iterator it = multiParts.begin();
     MultiPartMap::iterator ite = multiParts.begin();
-    
+
     // CREATE FILES AND INSERT CONTENT INSIDE;
     for (; it != ite; it++) {
       std::string location = request->getLocationWithoutIndex();
@@ -156,7 +156,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
         response->setStatusCode(Created);
       }
 
-      // wrap this inside a proper class 
+      // wrap this inside a proper class
       std::ofstream file(filename.c_str(),
                          std::ofstream::out | std::ofstream::trunc);
 
@@ -199,8 +199,6 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
 HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
   if (request->getRedirectionCode() != 0) {
     response->setStatusCode(request->getRedirectionCode());
-    response->setLocation(request->getRedirectionPath());
-    return (Ready);
   }
 
   std::string fullpath = request->getIndexPath();
@@ -212,11 +210,11 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     if (opStatus != 0 || !request->isDirListActive()) {
       return (Forbidden);
     }
-    
+
     if (FileSystem::check(request->getIndexPath(), F_OK) == 0 && \
         request->isDirListActive()) {
       std::map<std::string, struct file_info*> entries;
-      opStatus = FileReader::getDirContent(fullpath.c_str(), entries); 
+      opStatus = FileReader::getDirContent(fullpath.c_str(), entries);
 
       if (opStatus != Ready) {
         return (opStatus);
@@ -227,7 +225,7 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     } else {
       fullpath = request->getIndexPath();
     }
-  } 
+  }
 
   opStatus = FileSystem::check(fullpath, F_OK | R_OK);
 
@@ -241,7 +239,7 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     response->setStatusCode(Not_Modified);
     return (Ready);
   }
-  
+
   char *resourceData;
   long long resourceSize;
   opStatus = FileReader::getContent(fullpath.c_str(), \

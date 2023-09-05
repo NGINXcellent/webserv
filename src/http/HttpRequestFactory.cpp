@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/04 21:44:37 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 08:59:04 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -269,7 +269,7 @@ bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *reque
   return false;
 }
 
-int findLocationNb(const std::vector<std::string> &reqTokens, const std::vector<s_locationConfig> &locations) {
+int findLocationNb(std::vector<std::string> &reqTokens, const std::vector<s_locationConfig> &locations, HttpRequest *request) {
   int maxTokenMatches = -1;
   int maxLocationIndex = -1;
 
@@ -299,7 +299,17 @@ int findLocationNb(const std::vector<std::string> &reqTokens, const std::vector<
       maxLocationIndex = i;
     }
   }
-  return maxLocationIndex;
+
+  if(locations[maxLocationIndex].redirect.second.empty()){
+    reqTokens.erase(reqTokens.begin(), reqTokens.begin() + maxTokenMatches);
+    return maxLocationIndex;
+  }
+  else{
+    // nesse momento quando entramos aqui, o reqTokens da findLocation vai ficar com o caminho antigo, precisa de uma forma de acertar isso.
+    std::vector<std::string> returnTokens = location::splitPath(locations[maxLocationIndex].redirect.second);
+    request->setRedirectionCode(locations[maxLocationIndex].redirect.first);
+    return findLocationNb(returnTokens, locations, request);
+  }
 }
 
 
@@ -316,14 +326,12 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
   std::cout << "reqLine " << reqLine << std::endl;
   std::vector<std::string> reqTokens = location::splitPath(reqLine);
 
-  // if (!tokensValidator(locations, request, reqTokens)) {
-  //   reqTokens.insert(reqTokens.begin(), "/");
-  // }
-
-  int locationNb = findLocationNb(reqTokens, locations);
+//  This will find the best match of location and solve the redirection.
+  int locationNb = findLocationNb(reqTokens, locations, request);
   if(locationNb == -1) {
     return;
   }
+
   tmplocation = locations[locationNb];
   request->setBaseLocation(tmplocation.location);
   if(tmplocation.location == "/"){
@@ -334,7 +342,7 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
     ret = "." + reqLine;
     } else {
       ret = tmplocation.root;
-      for(size_t i = 1; i < reqTokens.size(); ++i) {
+      for(size_t i = 0; i < reqTokens.size(); ++i) {
         ret += "/" + reqTokens[i];
         std::cout << "estamos montando ret" << i << ret << std::endl;
       }
@@ -342,7 +350,7 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
     request->setLocationWithoutIndex(ret);
 
     if (FileSystem::isDirectory(ret.c_str()) && !tmplocation.index.empty()) {
-      indexRet = ret + tmplocation.index;
+      indexRet = ret + "/" + tmplocation.index;
       if(FileSystem::check(indexRet, F_OK) != Ready){
         indexRet = ret;
       }
