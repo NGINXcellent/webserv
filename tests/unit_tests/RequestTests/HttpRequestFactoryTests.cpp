@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 14:21:41 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 15:15:50 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,8 @@
 #include "../../../include/io/FileReader.hpp"
 #include "../../../include/io/FileSystem.hpp"
 #include "../../../src/http/HttpRequestFactory.cpp"
+#include "../../../src/http/HttpParser.cpp"
+#include "../../../src/io/FileSystem.cpp"
 
 
 void testRequestLine(std::string requestMsg, int expectedStatusCode,
@@ -78,27 +80,44 @@ TEST(LocationTests, basicLocationTests) {
     config3.allowed_method = {"GET"};
     configs.push_back(config3);
 
-    std::string buffer1 = "GET / HTTP/1.1";
-    std::string buffer2 = "GET /images HTTP/1.1";
-    std::string buffer3 = "GET /teste4/vamos/testar/aqui HTTP/1.1";
-    std::string buffer4 = "GET /dir HTTP/1.1";
+    s_locationConfig config4;
+    config4.location = "/images/zeroum";
+    config4.root = "/var";
+    config4.allowed_method = {"GET"};
+    configs.push_back(config4);
+
+    std::string buffer1 = "/";
+    std::string buffer2 = "/images";
+    std::string buffer3 = "/teste4/vamos/testar/aqui";
+    std::string buffer4 = "/dir";
+    std::string buffer5 = "/images/zeroum";
     HttpRequest request;
 
+    // will not return index becaus there is no valid index file
+    request.setResource(buffer1);
     HttpRequestFactory::findLocation(&request, configs);
     std::string result1 = request.getIndexPath();
-    EXPECT_EQ(result1, "./index.html");
+    EXPECT_EQ(result1, "./");
 
+    request.setResource(buffer2);
     HttpRequestFactory::findLocation(&request, configs);
     std::string result2 = request.getIndexPath();
-    EXPECT_EQ(result2, "./var/www/images");
+    EXPECT_EQ(result2, "/var/www/images");
 
+    request.setResource(buffer3);
     HttpRequestFactory::findLocation(&request, configs);
     std::string result3 = request.getIndexPath();
     EXPECT_EQ(result3, "./teste4/vamos/testar/aqui");
 
+    request.setResource(buffer4);
     HttpRequestFactory::findLocation(&request, configs);
     std::string result4 = request.getIndexPath();
-    EXPECT_EQ(result4, "../../InputTests/test_files/fail/nestedServer.conf");
+    EXPECT_EQ(result4, "./../InputTests/test_files/fail");
+
+    request.setResource(buffer5);
+    HttpRequestFactory::findLocation(&request, configs);
+    std::string result5 = request.getIndexPath();
+    EXPECT_EQ(result5, "/var");
 }
 
 TEST(RequestTests, RequestLineMethodTest) {

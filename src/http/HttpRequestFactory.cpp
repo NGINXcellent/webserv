@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 13:51:24 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 14:58:15 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -313,7 +313,7 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
     return;
   }
 
-  std::cout << "reqLine " << reqLine << std::endl;
+  // std::cout << "reqLine " << reqLine << std::endl;
   std::vector<std::string> reqTokens = location::splitPath(reqLine);
 
 //  This will find the best match of location and solve the redirection.
