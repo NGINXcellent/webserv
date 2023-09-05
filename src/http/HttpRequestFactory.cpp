@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 13:30:56 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 13:50:55 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,7 @@ bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, \
                                           LocationList locations) {
   s_locationConfig tmp;
   bool hasLocationBodySize = false;
-  
+
   for(size_t i = 0; i < locations.size(); ++i) {
     if(locations[i].location == request->getBaseLocation()) {
       tmp = locations[i];
@@ -110,13 +110,13 @@ bool HttpRequestFactory::checkMaxBodySize(HttpRequest *request, \
       break;
     }
   }
- 
+
   // remake logic
   if(hasLocationBodySize && request->getContentLength() > tmp.loc_max_body_size){
     request->setRedirectionCode(Payload_Too_Large);
     return false;
   }
-  
+
   return true;
 }
 
@@ -171,32 +171,22 @@ void MultipartBodyType(const std::string &msg, HttpRequest *request) {
 
     std::string bodyPart = msg.substr(startPos, endPos - startPos);
 
-    // Verifique se a parte do corpo contém dados válidos
     if (!bodyPart.empty()) {
-      // Extraia name e content da bodyPart
       size_t namePos = bodyPart.find("name=\"");
       if (namePos != std::string::npos) {
-        namePos += 6;  // Avance para o início do nome
+        namePos += 6;
         size_t nameEndPos = bodyPart.find("\"", namePos);
         if (nameEndPos != std::string::npos) {
           std::string name = bodyPart.substr(namePos, nameEndPos - namePos);
-          std::cout << "name: " << name << std::endl;
-
-          // Encontre o início do conteúdo após \r\n\r\n
           size_t contentPos = bodyPart.find("\r\n\r\n");
           if (contentPos != std::string::npos) {
-            contentPos += 4;  // Avance para o início do conteúdo
+            contentPos += 4;
             std::string content = bodyPart.substr(contentPos, bodyPart.size() - contentPos - 4);
-            std::cout << "content: " << content << std::endl;
-
-            // Armazene os dados na map
             bodyParts[name] = content;
           }
         }
       }
     }
-
-    // Avance para a próxima parte do corpo
     startPos = endPos + boundary.length() + 6;
   }
 
@@ -269,20 +259,6 @@ std::vector<std::string> location::splitPath(const std::string &path) {
   }
 
   return (tokens);
-}
-
-bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *request,
-                     std::vector<std::string> &tokens) {
-  for (size_t i = 0; i < locations.size(); ++i) {
-    if (locations[i].location == tokens[0]){
-      if(!locations[i].redirect.second.empty()) {
-        tokens[0] = locations[i].redirect.second;
-        request->setRedirectionCode(locations[i].redirect.first);
-      }
-      return true;
-    }
-  }
-  return false;
 }
 
 int findLocationNb(std::vector<std::string> &reqTokens, const std::vector<s_locationConfig> &locations, HttpRequest *request) {
@@ -358,7 +334,6 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
       ret = tmplocation.root;
       for(size_t i = 0; i < reqTokens.size(); ++i) {
         ret += "/" + reqTokens[i];
-        std::cout << "estamos montando ret" << i << ret << std::endl;
       }
     }
     request->setLocationWithoutIndex(ret);
