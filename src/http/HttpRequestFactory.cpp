@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 08:59:04 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 11:22:36 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -299,13 +299,11 @@ int findLocationNb(std::vector<std::string> &reqTokens, const std::vector<s_loca
       maxLocationIndex = i;
     }
   }
-
+  reqTokens.erase(reqTokens.begin(), reqTokens.begin() + maxTokenMatches);
   if(locations[maxLocationIndex].redirect.second.empty()){
-    reqTokens.erase(reqTokens.begin(), reqTokens.begin() + maxTokenMatches);
     return maxLocationIndex;
   }
   else{
-    // nesse momento quando entramos aqui, o reqTokens da findLocation vai ficar com o caminho antigo, precisa de uma forma de acertar isso.
     std::vector<std::string> returnTokens = location::splitPath(locations[maxLocationIndex].redirect.second);
     request->setRedirectionCode(locations[maxLocationIndex].redirect.first);
     return findLocationNb(returnTokens, locations, request);
