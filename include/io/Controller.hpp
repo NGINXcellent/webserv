@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 21:53:46 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 13:31:45 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class Controller {
 
  private:
   int                               epollfd;
-  char                              buffer[1024];
+  char                              buffer[4096];
   std::map<int, Client*>            connectedClients;
   std::map<int, Server*>            serverPool;
   std::map<int, TCPServerSocket*>   socketPool;

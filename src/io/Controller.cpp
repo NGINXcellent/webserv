@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 21:54:30 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/05 13:31:59 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,9 +42,6 @@ Controller::Controller(const InputHandler &input) {
 }
 
 Controller::~Controller(void) {
-  // todo: Implement resource liberation logic
-  // implement logic to close the epollfd
-
   std::map<int, Client*>::iterator clientIt = connectedClients.begin();
   std::map<int, Client*>::iterator clientIte = connectedClients.end();
 
@@ -300,8 +297,7 @@ bool Controller::isNewConnection(int currentFD) {
 }
 
 void Controller::readFromClient(int currentFd) {
-  char insidebuffer[4096];
-  int bytesRead = read(currentFd, insidebuffer, 4096);
+  int bytesRead = read(currentFd, buffer, 4096);
 
   if (bytesRead < 0) {
     std::cout << " bytesread -1, will break" << errno << std::endl;
@@ -310,7 +306,7 @@ void Controller::readFromClient(int currentFd) {
   } else if (bytesRead > 0) {
     std::cout << " i read -> " << bytesRead << " bytes" << std::endl;
     if(connectedClients[currentFd] != NULL) {
-      connectedClients[currentFd]->buffer.append(insidebuffer, bytesRead);
+      connectedClients[currentFd]->buffer.append(buffer, bytesRead);
     }
   }
 }
