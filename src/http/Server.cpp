@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 21:41:56 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/04 20:47:04 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,7 +203,7 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     return (Ready);
   }
 
-  std::string fullpath = request->getRoot() + request->getResource();
+  std::string fullpath = request->getIndexPath();
   HttpStatusCode opStatus = Ready;
 
   if (FileSystem::isDirectory(fullpath)) {
@@ -213,7 +213,7 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
       return (Forbidden);
     }
     
-    if (FileSystem::check(request->getIndexPath(), F_OK) != 0 && \
+    if (FileSystem::check(request->getIndexPath(), F_OK) == 0 && \
         request->isDirListActive()) {
       std::map<std::string, struct file_info*> entries;
       opStatus = FileReader::getDirContent(fullpath.c_str(), entries); 

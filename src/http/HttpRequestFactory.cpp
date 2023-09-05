@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 21:42:29 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/04 21:44:37 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,67 +255,107 @@ std::vector<std::string> location::splitPath(const std::string &path) {
   return (tokens);
 }
 
+bool tokensValidator(std::vector<s_locationConfig> locations, HttpRequest *request,
+                     std::vector<std::string> &tokens) {
+  for (size_t i = 0; i < locations.size(); ++i) {
+    if (locations[i].location == tokens[0]){
+      if(!locations[i].redirect.second.empty()) {
+        tokens[0] = locations[i].redirect.second;
+        request->setRedirectionCode(locations[i].redirect.first);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+int findLocationNb(const std::vector<std::string> &reqTokens, const std::vector<s_locationConfig> &locations) {
+  int maxTokenMatches = -1;
+  int maxLocationIndex = -1;
+
+  if (reqTokens.size() == 1 && reqTokens[0] == "/") {
+    for (size_t i = 0; i < locations.size(); ++i) {
+      if (locations[i].location == "/") {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  // Itera por todas as locations
+  for (size_t i = 0; i < locations.size(); ++i) {
+    std::vector<std::string> locTokens = location::splitPath(locations[i].location);
+    int tokenMatches = 0;
+
+    for (size_t j = 0; j < locTokens.size(); j++) {
+      if (reqTokens.size() <= j || reqTokens[j] != locTokens[j]) {
+        break;
+      }
+      tokenMatches++;
+    }
+
+    if (tokenMatches > maxTokenMatches) {
+      maxTokenMatches = tokenMatches;
+      maxLocationIndex = i;
+    }
+  }
+  return maxLocationIndex;
+}
+
+
 void HttpRequestFactory::findLocation(HttpRequest *request, \
                                       LocationList locations) {
+  std::string ret;
+  std::string indexRet;
   std::string reqLine = request->getResource();
-
+  s_locationConfig tmplocation;
   if(reqLine.empty()) {
     return;
   }
 
   std::cout << "reqLine " << reqLine << std::endl;
   std::vector<std::string> reqTokens = location::splitPath(reqLine);
-  int locationMatch = 0; // the more specific match is the one that wins
-  std::string path;
-  std::string indexPath;
-  std::string token;
 
-  for (size_t i = 0; i < locations.size(); ++i) {
-    std::vector<std::string> locTokens = location::splitPath(locations[i].location);
-    int tokenMatches = 0;
-   
-    for (size_t j = 0; j < locTokens.size(); j++) {
-      std::cout << "reqTokens >>>> " << reqTokens[j] << std::endl;
-      std::cout << "locTokens >>>> " << locTokens[j] << std::endl;
-      if (reqTokens[j] == locTokens[j]) {
-        tokenMatches++; 
-      } else {
-        break;
+  // if (!tokensValidator(locations, request, reqTokens)) {
+  //   reqTokens.insert(reqTokens.begin(), "/");
+  // }
+
+  int locationNb = findLocationNb(reqTokens, locations);
+  if(locationNb == -1) {
+    return;
+  }
+  tmplocation = locations[locationNb];
+  request->setBaseLocation(tmplocation.location);
+  if(tmplocation.location == "/"){
+    reqTokens.insert(reqTokens.begin(), "/");
+  }
+
+  if(tmplocation.root.empty()){
+    ret = "." + reqLine;
+    } else {
+      ret = tmplocation.root;
+      for(size_t i = 1; i < reqTokens.size(); ++i) {
+        ret += "/" + reqTokens[i];
+        std::cout << "estamos montando ret" << i << ret << std::endl;
       }
     }
+    request->setLocationWithoutIndex(ret);
 
-    if (tokenMatches < locationMatch) {
-      continue;
-    } 
-    
-    locationMatch = tokenMatches;
-
-    if(!locations[i].redirect.second.empty()) {
-      request->setRedirectionCode(locations[i].redirect.first);
-      request->setRedirectionPath(locations[i].redirect.second);
-      continue; // go to next location config
+    if (FileSystem::isDirectory(ret.c_str()) && !tmplocation.index.empty()) {
+      indexRet = ret + tmplocation.index;
+      if(FileSystem::check(indexRet, F_OK) != Ready){
+        indexRet = ret;
+      }
     } else {
-      request->setRedirectionCode(0);
-      request->setRedirectionPath("");
-    }
-  
-    std::string fullpath = locations[i].root + reqLine; 
-
-    std::cout << "index: " << locations[i].index << std::endl;
-    if (FileSystem::isDirectory(fullpath.c_str()) && !locations[i].index.empty()) {
-      indexPath = fullpath + '/' + locations[i].index;
-    } else {
-      indexPath = "";
+      indexRet = ret;
     }
 
-    request->setRoot(locations[i].root);
-    request->setDirListActive(locations[i].autoindex);
-    request->setAllowedMethods(locations[i].allowed_method);
-    request->setIndexPath(indexPath);
+    request->setRoot(tmplocation.root);
+    request->setDirListActive(tmplocation.autoindex);
+    request->setAllowedMethods(tmplocation.allowed_method);
+    request->setIndexPath(indexRet);
+    std::cout<<request->getIndexPath()<<std::endl;
   }
- 
-  return;
-}
 
 std::string HttpRequestFactory::getHeaderValue(std::string headerName, \
                                                HttpHeaders* headers) {
@@ -342,3 +382,4 @@ void post::urlEncodedBodyType(const std::string &msg, HttpRequest *request) {
 
   request->setRequestBody(ret);
 }
+  std::string               root;
