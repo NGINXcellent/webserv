@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/06 09:06:07 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/06 10:22:02 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -261,6 +261,8 @@ std::vector<std::string> location::splitPath(const std::string &path) {
   return (tokens);
 }
 
+// Finds the location number based on the given request tokens, locations, and HTTP request.
+// Returns an integer representing the location number
 int findLocationNb(std::vector<std::string> &reqTokens, const std::vector<s_locationConfig> &locations, HttpRequest *request) {
   int maxTokenMatches = -1;
   int maxLocationIndex = -1;
@@ -293,17 +295,17 @@ int findLocationNb(std::vector<std::string> &reqTokens, const std::vector<s_loca
   }
   // this delete token matches, leaving only the right path
   reqTokens.erase(reqTokens.begin(), reqTokens.begin() + maxTokenMatches);
-  if(locations[maxLocationIndex].redirect.second.empty()){
-    return maxLocationIndex;
-  }
-  else{
+
+  // if the found location is an redirection, it runs again with redirections params, and set redir code
+  if(!locations[maxLocationIndex].redirect.second.empty()){
     std::vector<std::string> returnTokens = location::splitPath(locations[maxLocationIndex].redirect.second);
     request->setRedirectionCode(locations[maxLocationIndex].redirect.first);
     return findLocationNb(returnTokens, locations, request);
   }
+  return maxLocationIndex;
 }
 
-
+// first find the right location then set request location properties.
 void HttpRequestFactory::findLocation(HttpRequest *request, \
                                       LocationList locations) {
   std::string ret;
@@ -330,12 +332,16 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
     ret = "." + reqLine;
     } else {
       ret = tmplocation.root;
+// Building the path with the root and the rest of the URL.
       for(size_t i = 0; i < reqTokens.size(); ++i) {
         ret += "/" + reqTokens[i];
       }
     }
     request->setLocationWithoutIndex(ret);
 
+// If the directory exists and tmplocation.index is not empty,
+// try adding the index to the path and check if it exists.
+// Otherwise, use the original path.
     if (FileSystem::isDirectory(ret.c_str()) && !tmplocation.index.empty()) {
       indexRet = ret + "/" + tmplocation.index;
       if(FileSystem::check(indexRet, F_OK) != Ready){
