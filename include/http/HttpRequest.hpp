@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 21:42:34 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/05 18:38:23 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,11 @@ class HttpRequest {
   const MultiPartMap&   getMultipartMap(void);
   void                  setBaseLocation(std::string baseLocation);
   std::string           getBaseLocation(void);
+  bool                  isHeaderReady(void);
+  void                  setHeaderReady(bool opt);
+  /*bool                  isBodyReady(void);
+  void                  setBodyReady(bool opt);*/
+
 
  private:
   std::string               protocolName;
@@ -97,6 +102,8 @@ class HttpRequest {
   MultiPartMap              multipartMap;
   PostType                  postType;
   std::string               root;
+  bool                      hasHeader;
+  bool                      hasBodyt;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);

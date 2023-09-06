@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 19:20:03 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/05 18:39:46 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -212,3 +212,11 @@ void HttpRequest::setRoot(const std::string &rootPath) {
   std::string HttpRequest::getBaseLocation(void) {
     return baseLocation;
   }
+
+void HttpRequest::setHeaderReady(bool opt) {
+  hasHeader = opt; 
+}
+
+bool HttpRequest::isHeaderReady(void) {
+  return (hasHeader);
+}

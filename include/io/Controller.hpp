@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 13:53:05 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/05 21:21:11 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ class Controller {
   std::map<int, Client*>            connectedClients;
   std::map<int, Server*>            serverPool;
   std::map<int, TCPServerSocket*>   socketPool;
-  std::vector<epoll_event> events;
+  std::vector<epoll_event>	    events;
 
   Controller(const Controller& f);
   Controller& operator=(const Controller& t);
@@ -55,7 +55,7 @@ class Controller {
   static void signalHandler(int signal);
 
   // POST handling
-  bool  isHTTPRequestComplete(const std::string &request);
+  bool  isHTTPRequestComplete(HttpRequest *request, std::string &requestMsg); 
   bool	isChunkedBodyComplete(const std::string &body);
   bool	isMultipartBodyComplete(const std::string &body);
   bool	isUrlEncodedBodyComplete(const std::string &body, size_t cLength);

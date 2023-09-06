@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 21:41:56 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/05 21:08:47 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,9 +35,7 @@ Server::Server(const struct s_serverConfig& config) {
   locations = config.location;
 }
 
-Server::~Server(void) {
-  delete socket;
-}
+Server::~Server(void) {}
 
 HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
@@ -71,25 +69,21 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   return (opStatus);
 }
 
-HttpResponse *Server::process(std::string &buffer) {
-  HttpRequest *request = HttpRequestFactory::createFrom(buffer, locations);
-  HttpResponse *response = new HttpResponse();
-  HttpStatusCode status = HttpRequestFactory::check(request);
+void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
+  HttpRequestFactory::setupRequest(req, buffer, locations);
+  HttpStatusCode status = HttpRequestFactory::check(req);
 
   if (status == Ready) {
-    response->setProtocol("HTTP", request->getProtocolMainVersion(),
-                                  request->getProtocolSubVersion());
-    status = resolve(request, response);
+    res->setProtocol("HTTP", req->getProtocolMainVersion(),
+                                  req->getProtocolSubVersion());
+    status = resolve(req, res);
   }
 
   if (status != Ready) {
-    HttpResponseComposer::buildErrorResponse(response, status, error_pages, \
-                                          request->getProtocolMainVersion(), \
-                                          request->getProtocolSubVersion());
+    HttpResponseComposer::buildErrorResponse(res, status, error_pages, \
+                                          req->getProtocolMainVersion(), \
+                                          req->getProtocolSubVersion());
   }
-
-  delete request;
-  return response;
 }
 
 HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {

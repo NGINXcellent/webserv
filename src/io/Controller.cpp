@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 13:52:35 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/05 21:19:51 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include "../../include/io/TcpServerSocket.hpp"
+#include "../../include/http/HttpRequestFactory.hpp"
 
 Controller::Controller(const InputHandler &input) {
   std::vector<struct s_serverConfig>::iterator it = input.serverVector->begin();
@@ -52,9 +53,13 @@ Controller::~Controller(void) {
   std::map<int, TCPServerSocket*>::iterator socketIt = socketPool.begin();
   std::map<int, TCPServerSocket*>::iterator socketIte = socketPool.end();
 
-  for (; socketIt != socketIte; serverIt++) {
-    delete socketIte->second;
+  for (; socketIt != socketIte; socketIt++) {
+    close(socketIt->second->getFD());
+    delete socketIt->second;
   }
+
+  close(epollfd);
+  
 }
 
 void Controller::endServer() {
@@ -130,9 +135,13 @@ void Controller::handleConnections(void) {
         closeConnection(currentFd);
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         readFromClient(currentFd);
-        connectedClients[currentFd]->isReady = isHTTPRequestComplete(connectedClients[currentFd]->buffer);
+        HttpRequest *request = connectedClients[currentFd]->getRequest();
+        std::string &clientBuffer = connectedClients[currentFd]->getBuffer();
+        request->setHeaderReady(isHTTPRequestComplete(request, clientBuffer));
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        if (connectedClients[currentFd] != NULL && connectedClients[currentFd]->isReady == true) {
+        Client *client = connectedClients[currentFd];
+
+        if (client != NULL && client->getRequest()->isHeaderReady()) {
           sendToClient(currentFd);
         }
       }
@@ -182,40 +191,44 @@ size_t Controller::findContentLength(const std::string& request) {
   return -1; // Valor padrão se não encontrar ou ocorrer erro na conversão
 }
 
-bool Controller::isHTTPRequestComplete(const std::string &request) {
-  size_t cLenght = findContentLength(request);
-  size_t pos = request.find("\r\n\r\n");
-
-  if (pos != std::string::npos) {
-    size_t contentPos = request.find("\r\n\r\n") + 4;
-    std::string body = request.substr(contentPos);
-
-    size_t transferEncodingPos = request.find("Transfer-Encoding: chunked");
-    if (transferEncodingPos != std::string::npos) {
-      if (isChunkedBodyComplete(body)) {
-        return true;  // complete chunk req
-      } else {
-        return false;  // need more data
-      }
-    }
-
-    size_t contentTypePos = request.find("Content-Type: ");
-
-    if (contentTypePos == std::string::npos) {
+bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &requestMsg) {
+  if (request->isHeaderReady() && request->getMethod() != "POST") {
       return (true);
-    }
+  } 
 
-    std::string contentType = request.substr(contentTypePos + 14, 19);
-    contentType = toLowerStr2(contentType);
+  size_t pos = requestMsg.find("\r\n\r\n");
 
-    if (contentType == "multipart/form-data") {
-      return (isMultipartBodyComplete(body));
-    } else if (contentType == "application/x-www-f") {
-      return (isUrlEncodedBodyComplete(body, cLenght));
+  if (pos == std::string::npos) {
+    return (false);
+  }
+
+  if (!request->isHeaderReady()) {
+    HttpRequestFactory::setupHeader(request, requestMsg);
+  } 
+ 
+  if (request->getMethod() == "POST") {
+    size_t contentPos = pos + requestMsg.find("\r\n\r\n") + 4;
+    std::string body = requestMsg.substr(contentPos);
+
+    PostType pType = request->getPostType();
+
+    switch(pType) {
+      case None:
+        return false;
+
+      case Chunked: 
+        return isChunkedBodyComplete(body);
+
+      case Multipart:
+        return isMultipartBodyComplete(body);
+
+      case UrlEncoded:
+        size_t cLenght = request->getContentLength();
+        return isUrlEncodedBodyComplete(body, cLenght);
     }
   }
 
-  return false;  // need more data
+  return true; 
 }
 
 
@@ -273,7 +286,11 @@ void Controller::addNewConnection(int socketFD) {
 bool  Controller::closeConnection(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
   close(currentFd);
-  delete connectedClients[currentFd];
+
+  if (connectedClients[currentFd] != NULL) {
+    delete connectedClients[currentFd];
+  }
+
   connectedClients.erase(currentFd);
   return false;
 }
@@ -308,16 +325,18 @@ void Controller::readFromClient(int currentFd) {
 void Controller::sendToClient(int currentFd) {
   Client *client = connectedClients[currentFd];
   Server *server = client->getServer();
-  client->getBuffer() += '\0';
-  HttpResponse *response = server->process(client->getBuffer()); 
+  HttpRequest *request = client->getRequest();
+  HttpResponse *response = client->getResponse(); 
   TCPServerSocket *socket = socketPool[client->getPort()];
+
+  client->getBuffer() += '\0';
+  server->process(client->getBuffer(), request, response);
+
   socket->sendData(currentFd, response->getHeaders().c_str(), \
                    response->getHeaders().size());
   socket->sendData(currentFd, response->getMsgBody(), \
                    response->getContentLength());
 
-  // cleaning
-  delete response;
   client->reset();
 
   //isso aqui deveria acontecer com keepalive ?
