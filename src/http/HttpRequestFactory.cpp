@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 14:58:15 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/06 09:06:07 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -291,6 +291,7 @@ int findLocationNb(std::vector<std::string> &reqTokens, const std::vector<s_loca
       maxLocationIndex = i;
     }
   }
+  // this delete token matches, leaving only the right path
   reqTokens.erase(reqTokens.begin(), reqTokens.begin() + maxTokenMatches);
   if(locations[maxLocationIndex].redirect.second.empty()){
     return maxLocationIndex;
@@ -324,9 +325,6 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
 
   tmplocation = locations[locationNb];
   request->setBaseLocation(tmplocation.location);
-  if(tmplocation.location == "/"){
-    reqTokens.insert(reqTokens.begin(), "/");
-  }
 
   if(tmplocation.root.empty()){
     ret = "." + reqLine;
