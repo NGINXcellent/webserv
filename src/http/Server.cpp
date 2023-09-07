@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/07 17:28:18 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/07 18:39:18 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
     return (Method_Not_Allowed);
   }
 
-  HttpStatusCode opStatus = Ready; 
+  HttpStatusCode opStatus = Ready;
 
   if (requestMethod == "GET")
     opStatus = get(request, response);
@@ -108,7 +108,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
   // END BODY SIZE CHECK ---
 
   PostType pType = request->getPostType();
-  
+
   // WE NEED TO CHANGE THIS TO A SWITCH AND ENCAPSULATE THE LOGIC
 
   if (pType == None) {
@@ -121,13 +121,13 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
     } else {
       response->setStatusCode(Created);
     }
-    
+
     opStatus = FileWriter::writeToFile(location, request->getRequestBody()); 
   } else if (pType == Multipart) {
     MultiPartMap multiParts = request->getMultipartMap();
     MultiPartMap::iterator it = multiParts.begin();
     MultiPartMap::iterator ite = multiParts.end();
-    
+
     for (; it != ite; it++) {
       std::string location = request->getLocationWithoutIndex();
       std::string filename = location + '/' +  it->first + "_fromClient";
@@ -156,11 +156,9 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
 HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
   if (request->getRedirectionCode() != 0) {
     response->setStatusCode(request->getRedirectionCode());
-    response->setLocation(request->getRedirectionPath());
-    return (Ready);
   }
 
-  std::string fullpath = request->getRoot() + request->getResource();
+  std::string fullpath = request->getIndexPath();
   HttpStatusCode opStatus = Ready;
 
   if (FileSystem::isDirectory(fullpath)) {
@@ -169,11 +167,11 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     if (opStatus != 0 || !request->isDirListActive()) {
       return (Forbidden);
     }
-    
-    if (FileSystem::check(request->getIndexPath(), F_OK) != 0 && \
+
+    if (FileSystem::check(request->getIndexPath(), F_OK) == 0 && \
         request->isDirListActive()) {
       std::map<std::string, struct file_info*> entries;
-      opStatus = FileReader::getDirContent(fullpath.c_str(), entries); 
+      opStatus = FileReader::getDirContent(fullpath.c_str(), entries);
 
       if (opStatus != Ready) {
         return (opStatus);
@@ -184,7 +182,7 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     } else {
       fullpath = request->getIndexPath();
     }
-  } 
+  }
 
   opStatus = FileSystem::check(fullpath, F_OK | R_OK);
 
@@ -198,7 +196,7 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     response->setStatusCode(Not_Modified);
     return (Ready);
   }
-  
+
   char *resourceData;
   long long resourceSize;
   opStatus = FileReader::getContent(fullpath.c_str(), \
@@ -222,11 +220,12 @@ HttpStatusCode Server::del(HttpRequest *request, HttpResponse *response) {
   // we need to rework this. a file can only be deleted if:
   // the folder it is contained has EXECUTE permission
   // the file itself has write permission
-  if (access(request->getResource().c_str(), F_OK) == -1) {
+  std::string path = request->getIndexPath();
+  if (access(path.c_str(), F_OK) == -1) {
     opStatus = Not_Found;
-  } else if (access(request->getResource().c_str(), R_OK | W_OK) == -1) {
+  } else if (access(path.c_str(), R_OK | W_OK) == -1) {
     opStatus = Method_Not_Allowed;
-  } else if (remove(request->getResource().c_str()) != 0) {
+  } else if (remove(path.c_str()) != 0) {
     opStatus = Internal_Server_Error;
   }
 

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 18:20:16 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/07 18:37:02 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,10 @@ class HttpRequestFactory {
   static void           setupRequest(HttpRequest *request, std::string &reqMsg, \
                                      LocationList locations);
   static HttpRequest*   createFrom(std::string &requestMsg, LocationList locs);
-
+  static void         findLocation(HttpRequest *request, LocationList locs);
   static HttpStatusCode check(HttpRequest *request);
+  static bool         checkMaxBodySize(HttpRequest *request, LocationList locs);
+  static PostType     setupBodyContentType(HttpRequest *request, HttpHeaders &headers);
 
  private:
   HttpRequestFactory(void);
@@ -36,9 +38,7 @@ class HttpRequestFactory {
   HttpRequestFactory& operator=(const HttpRequestFactory& t);
   ~HttpRequestFactory(void);
 
-  static bool         checkMaxBodySize(HttpRequest *request, LocationList locs);
-  static void         findLocation(HttpRequest *request, LocationList locs);
-  static PostType     setupBodyContentType(HttpRequest *request, HttpHeaders &headers);
+
   static std::string  getHeaderValue(std::string headerName, \
                                      HttpHeaders* headers);
 };
