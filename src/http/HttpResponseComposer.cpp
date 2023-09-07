@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponseComposer.cpp                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 15:37:16 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/06 09:46:34 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,7 +118,7 @@ void HttpResponseComposer::formatEntryName(const std::string &path, \
     responseStr += "<a href=\"" + path + "/" + entryName + "\">";
     responseStr += icon + entryName + "</a>";
   }
-  
+
   int whiteSpaces = 50 - entryName.size();
 
   for (int i = 0; i < whiteSpaces; ++i) {
@@ -146,6 +146,11 @@ void HttpResponseComposer::formatEntryName(const std::string &path, \
 void HttpResponseComposer::buildDirListResponse(HttpRequest *request, HttpResponse *response, \
                                                 std::map<std::string, struct file_info *> &entries) {
   std::string path = request->getResource();
+  // this guard for double "//" and a broken root
+  if (path == "/")
+    path = "";
+  // end guard
+
   std::string responseStr;
   formatDirListStyle(path, responseStr);
 
@@ -158,6 +163,9 @@ void HttpResponseComposer::buildDirListResponse(HttpRequest *request, HttpRespon
 
   responseStr += "</pre></ul></main></body></html>";
   char *msg = new char[responseStr.size()];
+
+  // this can be an strcpy ?
+  // strcpy(msg, responseStr.c_str());
 
   for (size_t i = 0; i < responseStr.size(); ++i) {
     msg[i] = responseStr[i];
