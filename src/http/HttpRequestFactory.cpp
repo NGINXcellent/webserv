@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 18:27:57 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/07 18:04:45 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,17 +108,25 @@ HttpStatusCode HttpRequestFactory::check(HttpRequest *request) {
 
   if (request->getProtocolName() != "HTTP" ||
       (mainVersion < 1 || minorVersion < 0)) {
+    std::cout << "HERE" << std::endl;
     return (Bad_Request);
   }
 
-  if (!(version == 10 || version == 11)) return (Http_Ver_Unsupported);
+  if (!(version == 10 || version == 11)) {
+    std::cout << "" << std::endl;
+    return (Http_Ver_Unsupported);
+  }
 
-  if (version == 11 && request->getHost().size() == 0) return (Bad_Request);
+  if (version == 11 && request->getHost().size() == 0) {
+    std::cout << "VERSION FUCKUP" << std::endl;
+    return (Bad_Request);
+  }
 
   std::string method = request->getMethod();
 
   for (size_t i = 0; i < method.size(); i++) {
     if (!std::isupper(method[i])) {
+      std::cout << "HEY" << std::endl;
       return (Bad_Request);
     }
   }

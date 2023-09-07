@@ -6,7 +6,7 @@
 #    By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/09/03 14:37:51 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/09/07 17:28:48 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,6 +28,7 @@ IO = $(addprefix io/,    \
 	Client.cpp		 \
 	FileSystem.cpp \
 	FileReader.cpp  \
+	FileWriter.cpp  \
 )
 
 HTTP  = $(addprefix http/,  \

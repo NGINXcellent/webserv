@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 21:19:51 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/07 17:52:46 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,7 +207,7 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
   } 
  
   if (request->getMethod() == "POST") {
-    size_t contentPos = pos + requestMsg.find("\r\n\r\n") + 4;
+    size_t contentPos = pos + 4;
     std::string body = requestMsg.substr(contentPos);
 
     PostType pType = request->getPostType();
@@ -324,6 +324,7 @@ void Controller::readFromClient(int currentFd) {
 
 void Controller::sendToClient(int currentFd) {
   Client *client = connectedClients[currentFd];
+  std::cout << client->getBuffer() << std::endl;
   Server *server = client->getServer();
   HttpRequest *request = client->getRequest();
   HttpResponse *response = client->getResponse(); 

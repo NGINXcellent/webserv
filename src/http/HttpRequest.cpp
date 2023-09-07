@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 18:39:46 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/07 18:07:36 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ HttpRequest::HttpRequest(void) {
   protocolMainVersion = -1;
   protocolSubVersion = -1;
   responseStatusCode = 0;
+  hasHeader = false;
 }
 
 bool HttpRequest::isDirListActive(void) {
@@ -29,7 +30,6 @@ void  HttpRequest::setDirListActive(const std::string& active) {
     autoindex = true;
   }
 }
-
 
 HttpRequest::~HttpRequest(void) {}
 
