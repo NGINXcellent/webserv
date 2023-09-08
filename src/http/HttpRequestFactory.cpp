@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 07:38:13 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/08 08:57:34 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,10 +59,6 @@ void HttpRequestFactory::setupHeader(HttpRequest *request, std::string &requestM
                                 getHeaderValue("if-unmodified-since", &headers));
   request->setPostType(setupBodyContentType(request, headers));
   request->setContentLength(getHeaderValue("content-length", &headers));
-
-  // we need to make sure that header is ready before enter POST check.
-  // this is working but possible we need to change this.
-  request->setHeaderReady(true);
 }
 
 void HttpRequestFactory::setupRequest(HttpRequest *req, std::string &requestMsg, \

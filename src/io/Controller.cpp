@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 08:51:35 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/08 08:59:23 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -204,6 +204,10 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
 
   if (!request->isHeaderReady()) {
     HttpRequestFactory::setupHeader(request, requestMsg);
+  // we need to make sure that header is ready before enter POST check.
+  // i`m assuming that the header is always ready after first interaction.
+  // whe should change this.
+    request->setHeaderReady(true);
   }
 
   if (request->getMethod() == "POST") {
