@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 22:34:12 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 07:13:41 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/08 09:04:40 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,7 @@ std::string HttpTime::fmtDate(time_t milliseconds) {
   std::tm* timeInfo = std::gmtime(&milliseconds);
 
   if (!timeInfo) {
-    // Tratamento de erro, se necessário
-    return std::string(); // Retorna uma string vazia em caso de erro
+    return std::string();
   }
 
   char buffer[128];
