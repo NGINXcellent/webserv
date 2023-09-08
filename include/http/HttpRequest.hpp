@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 18:38:23 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/08 06:56:14 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,8 @@ class HttpRequest {
   std::string           getBaseLocation(void);
   bool                  isHeaderReady(void);
   void                  setHeaderReady(bool opt);
+  bool                  isRequestReady(void);
+  void                  setRequestReady(bool set);
   /*bool                  isBodyReady(void);
   void                  setBodyReady(bool opt);*/
 
@@ -104,6 +106,7 @@ class HttpRequest {
   std::string               root;
   bool                      hasHeader;
   bool                      hasBodyt;
+  bool                      requestReady;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);
