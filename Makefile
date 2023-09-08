@@ -6,7 +6,7 @@
 #    By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/09/07 17:28:48 by lfarias-         ###   ########.fr        #
+#    Updated: 2023/09/08 09:24:03 by dvargas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,6 +17,9 @@ CXX 		= c++
 CXXFLAGS	= -Wall -Werror -Wextra -std=c++98 -g
 
 TEST_BUILD 	= tests/unit_tests/build
+
+SRC_DIR = src
+OBJ_DIR = obj
 
 CONFIG = $(addprefix config/, \
 	InputHandler.cpp		\
@@ -49,10 +52,15 @@ SRC	= $(addprefix src/, \
 	$(IO)					 \
 	main.cpp)
 
-OBJ			= $(SRC:.cpp=.o)
+# OBJ			= $(SRC:.cpp=.o)
+OBJ = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(NAME): $(OBJ)
-	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
 all: $(NAME)
 
@@ -68,7 +76,7 @@ $(TEST_BUILD):
 	@cd tests/unit_tests && cmake -S . -B build
 
 test: $(TEST_BUILD)
-	@cd tests/unit_tests && cmake --build build && cd build && ctest --output-on-failure 
+	@cd tests/unit_tests && cmake --build build && cd build && ctest --output-on-failure
 
 cleantest:
 	rm -rf $(TEST_BUILD)
