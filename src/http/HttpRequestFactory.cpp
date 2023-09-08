@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/06 10:22:02 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/07 18:36:29 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,25 +32,20 @@ namespace location {
   std::vector<std::string> splitPath(const std::string &path);
 }
 
-HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
-                                            LocationList locations) {
-  // shim
+void HttpRequestFactory::setupHeader(HttpRequest *request, std::string &requestMsg) {
   HttpParser parser;
-  HttpRequest *request = new HttpRequest();
   size_t pos = requestMsg.find_first_of("\n", 0);
 
   if (pos == std::string::npos) {
     std::cout << "debug: no newline on requestline" << std::endl;
-    return request;
+    return;
   }
 
   // extract and translate request line
   std::string reqLine = requestMsg.substr(0, pos);
   requestMsg.erase(0, pos + 1);
   parser.parseRequestLine(&reqLine, request);
-  findLocation(request, locations);
 
-  // extract the headers
   HttpHeaders headers;
 
   if (!parser.parseHeaders(&requestMsg, &headers)) {
@@ -64,11 +59,44 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
                                 getHeaderValue("if-unmodified-since", &headers));
   request->setPostType(setupBodyContentType(request, headers));
   request->setContentLength(getHeaderValue("content-length", &headers));
+}
+
+void HttpRequestFactory::setupRequest(HttpRequest *req, std::string &requestMsg, \
+                                      LocationList locations) { 
+  findLocation(req, locations);
+
+  // setup Body if POST
+  if(req->getPostType() != None && checkMaxBodySize(req, locations)){
+    post::setupRequestBody(requestMsg, req);
+  }
+}
+
+HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
+                                            LocationList locations) {
+  // shim
+  (void)locations;
+  HttpParser parser;
+  HttpRequest *request = new HttpRequest();
+  size_t pos = requestMsg.find_first_of("\n", 0);
+
+  if (pos == std::string::npos) {
+    std::cout << "debug: no newline on requestline" << std::endl;
+    return request;
+  }
+
+  // extract and translate request line
+  std::string reqLine = requestMsg.substr(0, pos);
+  requestMsg.erase(0, pos + 1);
+  parser.parseRequestLine(&reqLine, request);
+
+  // extract the headers
+  HttpHeaders headers;
+
+  if (!parser.parseHeaders(&requestMsg, &headers)) {
+    request->setProtocolName("");
+  }
 
   //  setup body if POST
-  if(request->getPostType() != None && checkMaxBodySize(request, locations)){
-    post::setupRequestBody(requestMsg, request);
-  }
 
   return (request);
 }
@@ -80,17 +108,25 @@ HttpStatusCode HttpRequestFactory::check(HttpRequest *request) {
 
   if (request->getProtocolName() != "HTTP" ||
       (mainVersion < 1 || minorVersion < 0)) {
+    std::cout << "HERE" << std::endl;
     return (Bad_Request);
   }
 
-  if (!(version == 10 || version == 11)) return (Http_Ver_Unsupported);
+  if (!(version == 10 || version == 11)) {
+    std::cout << "" << std::endl;
+    return (Http_Ver_Unsupported);
+  }
 
-  if (version == 11 && request->getHost().size() == 0) return (Bad_Request);
+  if (version == 11 && request->getHost().size() == 0) {
+    std::cout << "VERSION FUCKUP" << std::endl;
+    return (Bad_Request);
+  }
 
   std::string method = request->getMethod();
 
   for (size_t i = 0; i < method.size(); i++) {
     if (!std::isupper(method[i])) {
+      std::cout << "HEY" << std::endl;
       return (Bad_Request);
     }
   }

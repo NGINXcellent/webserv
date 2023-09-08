@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 21:54:30 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/07 17:52:46 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,7 @@
 #include <iostream>
 
 #include "../../include/io/TcpServerSocket.hpp"
-
-void    initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd);
-bool    isChunkedBodyComplete(const std::string &body);
-bool    isMultipartBodyComplete(const std::string &body);
-bool    isUrlEncodedBodyComplete(const std::string &body, size_t cLength);
-size_t  findContentLength(const std::string& request);
-int     getPortFromFd(int connectionFd);
+#include "../../include/http/HttpRequestFactory.hpp"
 
 Controller::Controller(const InputHandler &input) {
   std::vector<struct s_serverConfig>::iterator it = input.serverVector->begin();
@@ -42,9 +36,6 @@ Controller::Controller(const InputHandler &input) {
 }
 
 Controller::~Controller(void) {
-  // todo: Implement resource liberation logic
-  // implement logic to close the epollfd
-
   std::map<int, Client*>::iterator clientIt = connectedClients.begin();
   std::map<int, Client*>::iterator clientIte = connectedClients.end();
 
@@ -62,9 +53,13 @@ Controller::~Controller(void) {
   std::map<int, TCPServerSocket*>::iterator socketIt = socketPool.begin();
   std::map<int, TCPServerSocket*>::iterator socketIte = socketPool.end();
 
-  for (; socketIt != socketIte; serverIt++) {
-    delete socketIte->second;
+  for (; socketIt != socketIte; socketIt++) {
+    close(socketIt->second->getFD());
+    delete socketIt->second;
   }
+
+  close(epollfd);
+  
 }
 
 void Controller::endServer() {
@@ -115,83 +110,6 @@ void Controller::init(void) {
   handleConnections();
 }
 
-bool isChunkedBodyComplete(const std::string &body) {
-  size_t pos = body.find("\r\n0\r\n\r\n", body.size() - 7);
-  return (pos != std::string::npos);
-}
-
-bool isMultipartBodyComplete(const std::string &body) {
-  size_t pos = body.find("--\r\n", body.size() - 6);
-  return (pos != std::string::npos);
-}
-
-bool isUrlEncodedBodyComplete(const std::string &body, size_t cLength) {
-  return (body.size() == cLength);
-}
-
-// we already have an toLowerStr, need to remove this . . .
-std::string toLowerStr2(std::string str) {
-  std::string result;
-
-  for (size_t i = 0; i < str.size(); i++) {
-    result += static_cast<char>(std::tolower(str[i]));
-  }
-
-  return (result);
-}
-
-size_t findContentLength(const std::string& request) {
-  size_t contentLengthPos = request.find("Content-Length: ");
-
-  if (contentLengthPos != std::string::npos) {
-    contentLengthPos += strlen("Content-Length: "); 
-    size_t contentLengthEnd = request.find("\r\n", contentLengthPos);
-
-    if (contentLengthEnd != std::string::npos) {
-        std::string contentLengthStr = request.substr(contentLengthPos, contentLengthEnd - contentLengthPos);
-        return static_cast<size_t>(std::atoi(contentLengthStr.c_str()));
-    }
-  }
-
-  return -1; // Valor padrão se não encontrar ou ocorrer erro na conversão
-}
-
-bool isHTTPRequestComplete(const std::string &request) {
-  size_t cLenght = findContentLength(request);
-  size_t pos = request.find("\r\n\r\n");
-
-  if (pos != std::string::npos) {
-    size_t contentPos = request.find("\r\n\r\n") + 4;
-    std::string body = request.substr(contentPos);
-
-    size_t transferEncodingPos = request.find("Transfer-Encoding: chunked");
-    if (transferEncodingPos != std::string::npos) {
-      if (isChunkedBodyComplete(body)) {
-        return true;  // complete chunk req
-      } else {
-        return false;  // need more data
-      }
-    }
-
-    size_t contentTypePos = request.find("Content-Type: ");
-
-    if (contentTypePos == std::string::npos) {
-      return (true);
-    }
-
-    std::string contentType = request.substr(contentTypePos + 14, 19);
-    contentType = toLowerStr2(contentType);
-
-    if (contentType == "multipart/form-data") {
-      return (isMultipartBodyComplete(body));
-    } else if (contentType == "application/x-www-f") {
-      return (isUrlEncodedBodyComplete(body, cLenght));
-    }
-  }
-
-  return false;  // need more data
-}
-
 void Controller::handleConnections(void) {
   // create just one pool of events, its like a line, if is a new conection, add
   // to poll, if not, handle the client conection.
@@ -217,9 +135,13 @@ void Controller::handleConnections(void) {
         closeConnection(currentFd);
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         readFromClient(currentFd);
-        connectedClients[currentFd]->isReady = isHTTPRequestComplete(connectedClients[currentFd]->buffer);
+        HttpRequest *request = connectedClients[currentFd]->getRequest();
+        std::string &clientBuffer = connectedClients[currentFd]->getBuffer();
+        request->setHeaderReady(isHTTPRequestComplete(request, clientBuffer));
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        if (connectedClients[currentFd] != NULL && connectedClients[currentFd]->isReady == true) {
+        Client *client = connectedClients[currentFd];
+
+        if (client != NULL && client->getRequest()->isHeaderReady()) {
           sendToClient(currentFd);
         }
       }
@@ -227,6 +149,88 @@ void Controller::handleConnections(void) {
     checkTimeOut();
   }
 }
+
+bool Controller::isChunkedBodyComplete(const std::string &body) {
+  size_t pos = body.find("\r\n0\r\n\r\n", body.size() - 7);
+  return (pos != std::string::npos);
+}
+
+bool Controller::isMultipartBodyComplete(const std::string &body) {
+  size_t pos = body.find("--\r\n", body.size() - 6);
+  return (pos != std::string::npos);
+}
+
+bool Controller::isUrlEncodedBodyComplete(const std::string &body, size_t cLength) {
+  return (body.size() == cLength);
+}
+
+// we already have an toLowerStr, need to remove this . . .
+std::string toLowerStr2(std::string str) {
+  std::string result;
+
+  for (size_t i = 0; i < str.size(); i++) {
+    result += static_cast<char>(std::tolower(str[i]));
+  }
+
+  return (result);
+}
+
+size_t Controller::findContentLength(const std::string& request) {
+  size_t contentLengthPos = request.find("Content-Length: ");
+
+  if (contentLengthPos != std::string::npos) {
+    contentLengthPos += strlen("Content-Length: "); 
+    size_t contentLengthEnd = request.find("\r\n", contentLengthPos);
+
+    if (contentLengthEnd != std::string::npos) {
+        std::string contentLengthStr = request.substr(contentLengthPos, contentLengthEnd - contentLengthPos);
+        return static_cast<size_t>(std::atoi(contentLengthStr.c_str()));
+    }
+  }
+
+  return -1; // Valor padrão se não encontrar ou ocorrer erro na conversão
+}
+
+bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &requestMsg) {
+  if (request->isHeaderReady() && request->getMethod() != "POST") {
+      return (true);
+  } 
+
+  size_t pos = requestMsg.find("\r\n\r\n");
+
+  if (pos == std::string::npos) {
+    return (false);
+  }
+
+  if (!request->isHeaderReady()) {
+    HttpRequestFactory::setupHeader(request, requestMsg);
+  } 
+ 
+  if (request->getMethod() == "POST") {
+    size_t contentPos = pos + 4;
+    std::string body = requestMsg.substr(contentPos);
+
+    PostType pType = request->getPostType();
+
+    switch(pType) {
+      case None:
+        return false;
+
+      case Chunked: 
+        return isChunkedBodyComplete(body);
+
+      case Multipart:
+        return isMultipartBodyComplete(body);
+
+      case UrlEncoded:
+        size_t cLenght = request->getContentLength();
+        return isUrlEncodedBodyComplete(body, cLenght);
+    }
+  }
+
+  return true; 
+}
+
 
 void Controller::checkTimeOut() {
   time_t currentTime = time(NULL);
@@ -282,7 +286,11 @@ void Controller::addNewConnection(int socketFD) {
 bool  Controller::closeConnection(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
   close(currentFd);
-  delete connectedClients[currentFd];
+
+  if (connectedClients[currentFd] != NULL) {
+    delete connectedClients[currentFd];
+  }
+
   connectedClients.erase(currentFd);
   return false;
 }
@@ -300,8 +308,7 @@ bool Controller::isNewConnection(int currentFD) {
 }
 
 void Controller::readFromClient(int currentFd) {
-  char insidebuffer[4096];
-  int bytesRead = read(currentFd, insidebuffer, 4096);
+  int bytesRead = read(currentFd, buffer, 4096);
 
   if (bytesRead < 0) {
     std::cout << " bytesread -1, will break" << errno << std::endl;
@@ -310,31 +317,34 @@ void Controller::readFromClient(int currentFd) {
   } else if (bytesRead > 0) {
     std::cout << " i read -> " << bytesRead << " bytes" << std::endl;
     if(connectedClients[currentFd] != NULL) {
-      connectedClients[currentFd]->buffer.append(insidebuffer, bytesRead);
+      connectedClients[currentFd]->buffer.append(buffer, bytesRead);
     }
   }
 }
 
 void Controller::sendToClient(int currentFd) {
   Client *client = connectedClients[currentFd];
+  std::cout << client->getBuffer() << std::endl;
   Server *server = client->getServer();
-  client->getBuffer() += '\0';
-  HttpResponse *response = server->process(client->getBuffer()); 
+  HttpRequest *request = client->getRequest();
+  HttpResponse *response = client->getResponse(); 
   TCPServerSocket *socket = socketPool[client->getPort()];
+
+  client->getBuffer() += '\0';
+  server->process(client->getBuffer(), request, response);
+
   socket->sendData(currentFd, response->getHeaders().c_str(), \
                    response->getHeaders().size());
   socket->sendData(currentFd, response->getMsgBody(), \
                    response->getContentLength());
 
-  // cleaning
-  delete response;
   client->reset();
 
   //isso aqui deveria acontecer com keepalive ?
   closeConnection(currentFd);
 }
 
-void initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd) {
+void Controller::initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd) {
   bzero(ev, sizeof(*ev));
   ev->events = flag;
   ev->data.fd = fd;

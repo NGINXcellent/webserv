@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 14:22:54 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/07 18:37:02 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,9 @@ typedef std::vector<s_locationConfig> LocationList;
 
 class HttpRequestFactory {
  public:
+  static void           setupHeader(HttpRequest *request, std::string &reqMsg);
+  static void           setupRequest(HttpRequest *request, std::string &reqMsg, \
+                                     LocationList locations);
   static HttpRequest*   createFrom(std::string &requestMsg, LocationList locs);
   static void         findLocation(HttpRequest *request, LocationList locs);
   static HttpStatusCode check(HttpRequest *request);

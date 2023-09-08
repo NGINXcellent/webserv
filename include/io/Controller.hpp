@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 21:53:46 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/05 21:21:11 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,11 +34,11 @@ class Controller {
 
  private:
   int                               epollfd;
-  char                              buffer[1024];
+  char                              buffer[4096];
   std::map<int, Client*>            connectedClients;
   std::map<int, Server*>            serverPool;
   std::map<int, TCPServerSocket*>   socketPool;
-  std::vector<epoll_event> events;
+  std::vector<epoll_event>	    events;
 
   Controller(const Controller& f);
   Controller& operator=(const Controller& t);
@@ -50,11 +50,21 @@ class Controller {
   void  sendToClient(int connectionFd);
   bool  closeConnection(int connectionFd);
 
-  //signal handler
+  // signal handler
   static void endServer();
   static void signalHandler(int signal);
 
-  int getSocketPort(int socketFd);
-  void checkTimeOut();
+  // POST handling
+  bool  isHTTPRequestComplete(HttpRequest *request, std::string &requestMsg); 
+  bool	isChunkedBodyComplete(const std::string &body);
+  bool	isMultipartBodyComplete(const std::string &body);
+  bool	isUrlEncodedBodyComplete(const std::string &body, size_t cLength);
+  size_t  findContentLength(const std::string& request);
+
+  // utils
+  void  initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd);
+  int   getPortFromFd(int connectionFd);
+  int	getSocketPort(int socketFd);
+  void	checkTimeOut();
 };
 #endif
