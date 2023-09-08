@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/07 18:39:18 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/08 07:34:57 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,7 +122,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
       response->setStatusCode(Created);
     }
 
-    opStatus = FileWriter::writeToFile(location, request->getRequestBody()); 
+    opStatus = FileWriter::writeToFile(location, request->getRequestBody());
   } else if (pType == Multipart) {
     MultiPartMap multiParts = request->getMultipartMap();
     MultiPartMap::iterator it = multiParts.begin();
@@ -134,12 +134,12 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
       std::cout << filename << std::endl;
 
       if(FileSystem::check(filename, F_OK) != Ready) {
-        response->setStatusCode(No_Content);
-      }
-      else {
         response->setStatusCode(Created);
       }
-      
+      else {
+        response->setStatusCode(No_Content);
+      }
+
       opStatus = FileWriter::writeToFile(filename, it->second);
     }
   }

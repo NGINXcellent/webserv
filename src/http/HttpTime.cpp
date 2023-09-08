@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 22:34:12 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 21:42:34 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/08 09:04:40 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,15 @@ std::string HttpTime::getCurrentTime(void) {
 }
 
 
-std::string HttpTime::fmtDate(time_t miliseconds) {
-  std::tm* timeInfo = std::gmtime(&miliseconds);
+std::string HttpTime::fmtDate(time_t milliseconds) {
+  std::tm* timeInfo = std::gmtime(&milliseconds);
+
+  if (!timeInfo) {
+    return std::string();
+  }
+
   char buffer[128];
-  std::strftime(buffer, sizeof(buffer), \
-                "%a, %d %b %Y %H:%M:%S GMT\n", timeInfo);
+  std::strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT\n", timeInfo);
   return std::string(buffer);
 }
 

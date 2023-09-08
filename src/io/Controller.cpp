@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/07 17:52:46 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/08 08:59:23 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,11 +137,11 @@ void Controller::handleConnections(void) {
         readFromClient(currentFd);
         HttpRequest *request = connectedClients[currentFd]->getRequest();
         std::string &clientBuffer = connectedClients[currentFd]->getBuffer();
-        request->setHeaderReady(isHTTPRequestComplete(request, clientBuffer));
+        request->setRequestReady(isHTTPRequestComplete(request, clientBuffer));
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         Client *client = connectedClients[currentFd];
 
-        if (client != NULL && client->getRequest()->isHeaderReady()) {
+        if (client != NULL && client->getRequest()->isRequestReady()) {
           sendToClient(currentFd);
         }
       }
@@ -194,7 +194,7 @@ size_t Controller::findContentLength(const std::string& request) {
 bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &requestMsg) {
   if (request->isHeaderReady() && request->getMethod() != "POST") {
       return (true);
-  } 
+  }
 
   size_t pos = requestMsg.find("\r\n\r\n");
 
@@ -204,10 +204,16 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
 
   if (!request->isHeaderReady()) {
     HttpRequestFactory::setupHeader(request, requestMsg);
-  } 
- 
+  // we need to make sure that header is ready before enter POST check.
+  // i`m assuming that the header is always ready after first interaction.
+  // whe should change this.
+    request->setHeaderReady(true);
+  }
+
   if (request->getMethod() == "POST") {
-    size_t contentPos = pos + 4;
+    // this is important, idk why but it is.
+    size_t contentPos = requestMsg.find("\r\n\r\n") + 4;
+    std::cout << contentPos << std::endl;
     std::string body = requestMsg.substr(contentPos);
 
     PostType pType = request->getPostType();
@@ -216,7 +222,7 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
       case None:
         return false;
 
-      case Chunked: 
+      case Chunked:
         return isChunkedBodyComplete(body);
 
       case Multipart:
@@ -228,7 +234,7 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
     }
   }
 
-  return true; 
+  return true;
 }
 
 
@@ -327,7 +333,7 @@ void Controller::sendToClient(int currentFd) {
   std::cout << client->getBuffer() << std::endl;
   Server *server = client->getServer();
   HttpRequest *request = client->getRequest();
-  HttpResponse *response = client->getResponse(); 
+  HttpResponse *response = client->getResponse();
   TCPServerSocket *socket = socketPool[client->getPort()];
 
   client->getBuffer() += '\0';

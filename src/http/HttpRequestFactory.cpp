@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/07 18:36:29 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/08 08:57:34 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,12 +108,12 @@ HttpStatusCode HttpRequestFactory::check(HttpRequest *request) {
 
   if (request->getProtocolName() != "HTTP" ||
       (mainVersion < 1 || minorVersion < 0)) {
-    std::cout << "HERE" << std::endl;
+    std::cout << "PRotocol name not Http" << std::endl;
     return (Bad_Request);
   }
 
   if (!(version == 10 || version == 11)) {
-    std::cout << "" << std::endl;
+    std::cout << "Http Ver Unsupported" << std::endl;
     return (Http_Ver_Unsupported);
   }
 
@@ -126,7 +126,7 @@ HttpStatusCode HttpRequestFactory::check(HttpRequest *request) {
 
   for (size_t i = 0; i < method.size(); i++) {
     if (!std::isupper(method[i])) {
-      std::cout << "HEY" << std::endl;
+      std::cout << "Method check go wrong" << std::endl;
       return (Bad_Request);
     }
   }

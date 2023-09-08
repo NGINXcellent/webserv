@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/07 18:07:36 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/08 07:42:45 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ HttpRequest::HttpRequest(void) {
   protocolSubVersion = -1;
   responseStatusCode = 0;
   hasHeader = false;
+  requestReady = false;
 }
 
 bool HttpRequest::isDirListActive(void) {
@@ -219,4 +220,12 @@ void HttpRequest::setHeaderReady(bool opt) {
 
 bool HttpRequest::isHeaderReady(void) {
   return (hasHeader);
+}
+
+bool HttpRequest::isRequestReady(void) {
+  return (requestReady);
+}
+
+void HttpRequest::setRequestReady(bool set) {
+  requestReady = set;
 }
