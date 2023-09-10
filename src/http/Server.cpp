@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 21:04:03 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 08:28:35 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
 
 void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
   HttpRequestFactory::setupRequest(req, buffer, locations);
-  HttpStatusCode status = HttpRequestFactory::check(req);
+  HttpStatusCode status = HttpRequestFactory::check(req, server_name);
 
   if (status == Ready) {
     res->setProtocol("HTTP", req->getProtocolMainVersion(),
@@ -246,4 +246,12 @@ HttpStatusCode Server::del(HttpRequest *request, HttpResponse *response) {
 
 int   Server::getPort(void) {
   return (port);
+}
+
+std::string Server::getHost(void) {
+  return (host);
+}
+
+std::string Server::getServerName(void) {
+  return (server_name);
 }

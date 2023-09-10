@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:17:02 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/07 18:37:02 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/10 08:28:55 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ class HttpRequestFactory {
                                      LocationList locations);
   static HttpRequest*   createFrom(std::string &requestMsg, LocationList locs);
   static void         findLocation(HttpRequest *request, LocationList locs);
-  static HttpStatusCode check(HttpRequest *request);
+  static HttpStatusCode check(HttpRequest *request, std::string serverName);
   static bool         checkMaxBodySize(HttpRequest *request, LocationList locs);
   static PostType     setupBodyContentType(HttpRequest *request, HttpHeaders &headers);
 

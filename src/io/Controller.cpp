@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 08:59:23 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 08:24:08 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -330,7 +330,7 @@ void Controller::readFromClient(int currentFd) {
 
 void Controller::sendToClient(int currentFd) {
   Client *client = connectedClients[currentFd];
-  std::cout << client->getBuffer() << std::endl;
+  // std::cout << client->getBuffer() << std::endl;
   Server *server = client->getServer();
   HttpRequest *request = client->getRequest();
   HttpResponse *response = client->getResponse();

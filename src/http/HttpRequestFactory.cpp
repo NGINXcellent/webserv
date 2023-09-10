@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 08:57:34 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 08:46:31 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ void HttpRequestFactory::setupHeader(HttpRequest *request, std::string &requestM
 }
 
 void HttpRequestFactory::setupRequest(HttpRequest *req, std::string &requestMsg, \
-                                      LocationList locations) { 
+                                      LocationList locations) {
   findLocation(req, locations);
 
   // setup Body if POST
@@ -101,7 +101,7 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
   return (request);
 }
 
-HttpStatusCode HttpRequestFactory::check(HttpRequest *request) {
+HttpStatusCode HttpRequestFactory::check(HttpRequest *request, std::string serverName) {
   int mainVersion = request->getProtocolMainVersion();
   int minorVersion = request->getProtocolSubVersion();
   int version = mainVersion * 10 + minorVersion;
@@ -129,6 +129,11 @@ HttpStatusCode HttpRequestFactory::check(HttpRequest *request) {
       std::cout << "Method check go wrong" << std::endl;
       return (Bad_Request);
     }
+  }
+  // check host with serverName to see if is the same.
+  if (request->getHost().compare(0, serverName.length(), serverName) != 0) {
+      std::cout << "Host check go wrong" << std::endl;
+      return (Not_Found);
   }
 
   return (Ready);
