@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <iostream>
 
+void cgiCheck(s_locationConfig newLocation);
+
 TEST(InputTests, BasicTests)
 {
   {
@@ -106,6 +108,21 @@ TEST(CheckConfTests, MultipleServersTest)
     EXPECT_EQ(input.serverVector->size(), 6);
   }
 }
+
+TEST(CgiCheckTest, TypeEmptyPathNotEmpty) {
+  s_locationConfig newLocation;
+  newLocation.cgi_type = "";
+  newLocation.cgi_path = "/path/to/cgi";
+  EXPECT_THROW(cgiCheck(newLocation), std::runtime_error);
+}
+
+TEST(CgiCheckTest, TypeNotEmptyPathEmpty) {
+  s_locationConfig newLocation;
+  newLocation.cgi_type = "cgi";
+  newLocation.cgi_path = "";
+  EXPECT_THROW(cgiCheck(newLocation), std::runtime_error);
+}
+
 
 TEST(CheckConfTests, FailTests)
 {

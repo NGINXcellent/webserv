@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 21:53:50 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 14:52:01 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,8 @@ struct s_locationConfig {
   std::string                 index;
   size_t                      loc_max_body_size;
   std::string                 root;
+  std::string                 cgi_path;
+  std::string                 cgi_type;
   std::pair<int, std::string> redirect;
   std::vector<std::string>    allowed_method;
 };

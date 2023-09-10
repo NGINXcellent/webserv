@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 20:48:26 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/10 15:16:15 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,9 +169,18 @@ void redirectCheck(s_locationConfig newLocation) {
             !newLocation.autoindex.empty() ||
             !newLocation.index.empty() ||
             newLocation.loc_max_body_size != SIZE_T_MAX ||
-            !newLocation.allowed_method.empty()) {
+            !newLocation.allowed_method.empty() ||
+            !newLocation.cgi_path.empty() ||
+            !newLocation.cgi_type.empty()) {
             throw std::runtime_error("return is not the only entrance");
         }
+    }
+}
+
+void cgiCheck(s_locationConfig newLocation) {
+    if ((newLocation.cgi_type.empty() && !newLocation.cgi_path.empty()) ||
+        (!newLocation.cgi_type.empty() && newLocation.cgi_path.empty())) {
+        throw std::runtime_error("If CGI type or path is set, both should be set");
     }
 }
 
@@ -204,6 +213,18 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
         throw std::runtime_error("duplicate index inside location");
       addToString(fileStream, newLocation.index);
 
+    } else if (word == "cgi_path") {
+      if (!newLocation.cgi_path.empty())
+        throw std::runtime_error("duplicate index inside location");
+      addToString(fileStream, newLocation.cgi_path);
+
+    } else if (word == "cgi_type") {
+      if (!newLocation.cgi_type.empty())
+        throw std::runtime_error("duplicate index inside location");
+      addToString(fileStream, newLocation.cgi_type);
+      if (newLocation.cgi_type != ".php")
+        throw std::runtime_error("wrong cgi Type for now i only works with .php");
+
     } else if (word == "max_body_size") {
       if (!newLocation.loc_max_body_size != 0)
         throw std::runtime_error("duplicate loc_max_body_size inside location");
@@ -221,6 +242,7 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
       throw std::runtime_error("Error in location");
     }
   }
+  cgiCheck(newLocation);
   redirectCheck(newLocation);
 }
 
@@ -339,6 +361,8 @@ void InputHandler::printLocations(const std::vector<s_locationConfig> &location)
     std::cout << "    autoindex: " << toprint.autoindex << std::endl;
     std::cout << "    index " << toprint.index << std::endl;
     std::cout << "    root: " << toprint.root << std::endl;
+    std::cout << "    cgi_path " << toprint.cgi_path << std::endl;
+    std::cout << "    cgi_type: " << toprint.cgi_type << std::endl;
     if(toprint.loc_max_body_size != SIZE_T_MAX){
       std::cout << "    loc_max_body_size: " << toprint.loc_max_body_size << std::endl;
     }
