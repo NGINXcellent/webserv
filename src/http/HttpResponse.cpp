@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:50:49 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 19:22:56 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/08 10:07:42 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,10 @@ long long HttpResponse::getContentLength(void) {
 void HttpResponse::setStatusCode(int httpCode) {
   statusCode = httpCode;
   statusMessage = HttpStatus::getMessage(httpCode);
+}
+
+int HttpResponse::getStatusCode(void) {
+  return statusCode;
 }
 
 void HttpResponse::setLastModifiedTime(const std::string &lmfTime) {

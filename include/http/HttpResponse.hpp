@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/27 20:52:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/28 19:45:22 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/08 21:03:14 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ class HttpResponse {
   void          setContentLength(long long fileSize);
   void          setLocation(const std::string& location);
   long long     getContentLength(void);
+  int           getStatusCode(void);
   void          setMsgBody(char *data);
   char          *getMsgBody(void);
   void          setLastModifiedTime(const std::string &lmfTime);

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 07:34:57 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/08 21:04:03 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,6 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
     throw std::runtime_error("Wrong POST REQUEST, NONE");
   } else if (pType == Chunked || pType == UrlEncoded) {
     std::string location = request->getLocationWithoutIndex();
-
     if (FileSystem::check(location, F_OK) != 0) {
       response->setStatusCode(No_Content);
     } else {
@@ -147,7 +146,6 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
   if (opStatus != Ready || opStatus != No_Content || opStatus != Created) {
     return opStatus;
   }
-
   response->setContentType(MimeType::identify(request->getResource()));
   response->setContentLength(0);
   return (Ready);
