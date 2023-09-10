@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 06:56:14 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 16:46:26 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ enum PostType {
   None,
   Multipart,
   Chunked,
-  UrlEncoded 
+  UrlEncoded
 };
 
 typedef std::map<std::string, std::string> MultiPartMap;
@@ -32,7 +32,7 @@ class HttpRequest {
   ~HttpRequest(void);
 
   bool                  isDirListActive(void);
-  void                  setDirListActive(const std::string &active);
+  void                  setDirListActive(const bool &active);
   const std::string&    getMethod(void);
   void                  setMethod(const std::string &method);
   const std::string&    getResource(void);
@@ -77,6 +77,8 @@ class HttpRequest {
   void                  setHeaderReady(bool opt);
   bool                  isRequestReady(void);
   void                  setRequestReady(bool set);
+  void                  setCGI(bool toset);
+  bool                  getCGI(void);
   /*bool                  isBodyReady(void);
   void                  setBodyReady(bool opt);*/
 
@@ -107,6 +109,7 @@ class HttpRequest {
   bool                      hasHeader;
   bool                      hasBodyt;
   bool                      requestReady;
+  bool                      isCGI;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);

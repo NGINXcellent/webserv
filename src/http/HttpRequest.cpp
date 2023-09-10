@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 10:12:23 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 16:46:29 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,8 @@ bool HttpRequest::isDirListActive(void) {
   return (this->autoindex);
 }
 
-void  HttpRequest::setDirListActive(const std::string& active) {
-  if (active == "on") {
-    autoindex = true;
-  }
+void  HttpRequest::setDirListActive(const bool &active) {
+    autoindex = active;
 }
 
 HttpRequest::~HttpRequest(void) {}
@@ -215,7 +213,7 @@ void HttpRequest::setRoot(const std::string &rootPath) {
   }
 
 void HttpRequest::setHeaderReady(bool opt) {
-  hasHeader = opt; 
+  hasHeader = opt;
 }
 
 bool HttpRequest::isHeaderReady(void) {
@@ -228,4 +226,12 @@ bool HttpRequest::isRequestReady(void) {
 
 void HttpRequest::setRequestReady(bool set) {
   requestReady = set;
+}
+
+void HttpRequest::setCGI(bool toset) {
+  isCGI = toset;
+}
+
+bool HttpRequest::getCGI(void) {
+  return isCGI;
 }

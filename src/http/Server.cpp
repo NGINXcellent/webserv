@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 08:28:35 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 16:49:09 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,8 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
 void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
   HttpRequestFactory::setupRequest(req, buffer, locations);
   HttpStatusCode status = HttpRequestFactory::check(req, server_name);
+  std::cout << " WILL PRINT CGI HERE ->>>>>>> ";
+  std::cout << req->getCGI() << std::endl;
 
   if (status == Ready) {
     res->setProtocol("HTTP", req->getProtocolMainVersion(),

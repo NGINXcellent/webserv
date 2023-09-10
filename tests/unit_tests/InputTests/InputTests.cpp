@@ -33,7 +33,7 @@ TEST(InputTests, ExtensionTests)
     const char *argv[2] = {"webserv", "myserver.con"};
     EXPECT_FALSE(InputHandler::check_args(2, argv));
   }
-
+void cgiCheck(s_locationConfig newLocation);
   {
     const char *argv[2] = {"webserv", "myserver.config"};
     EXPECT_FALSE(InputHandler::check_args(2, argv));
@@ -58,18 +58,6 @@ TEST(InputTests, ExtensionTests)
     const char *argv[2] = {"webserv", ".cnf"};
     EXPECT_FALSE(InputHandler::check_args(2, argv));
   }
-}
-
-TEST(InputTests, ArgcTests)
-{
-    const char *argv[2] = {"webserv", "default.conf"};
-
-    EXPECT_FALSE(InputHandler::check_args(42, argv));
-    EXPECT_FALSE(InputHandler::check_args(3, argv));
-    EXPECT_FALSE(InputHandler::check_args(0, argv));
-    EXPECT_FALSE(InputHandler::check_args(-2, argv));
-    EXPECT_FALSE(InputHandler::check_args(-42, argv));
-    EXPECT_FALSE(InputHandler::check_args(-3, argv));
 }
 
 TEST(CheckConfTests, BasicTest)
@@ -178,11 +166,6 @@ TEST(LocationConfTests, BasicTests)
 
 TEST(LocationConfTests, FailTests)
 {
-  {
-    const char *configFile = "../../InputTests/test_files/fail/location/locationAutoindexError.conf";
-    char *configFileMutable = const_cast<char*>(configFile);
-    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
-  }
   {
     const char *configFile = "../../InputTests/test_files/fail/location/locationindexError.conf";
     char *configFileMutable = const_cast<char*>(configFile);

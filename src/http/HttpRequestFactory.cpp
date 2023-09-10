@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 08:46:31 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 16:48:57 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -368,6 +368,7 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
 
   tmplocation = locations[locationNb];
   request->setBaseLocation(tmplocation.location);
+  request->setCGI(tmplocation.cgi_php);
 
   if(tmplocation.root.empty()){
     ret = "." + reqLine;

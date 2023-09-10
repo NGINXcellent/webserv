@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 20:48:26 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/10 16:36:59 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,13 +166,28 @@ std::string locationCheck(std::string word) {
 void redirectCheck(s_locationConfig newLocation) {
     if (!newLocation.redirect.second.empty()) {
         if (!newLocation.root.empty() ||
-            !newLocation.autoindex.empty() ||
             !newLocation.index.empty() ||
             newLocation.loc_max_body_size != SIZE_T_MAX ||
             !newLocation.allowed_method.empty()) {
             throw std::runtime_error("return is not the only entrance");
         }
     }
+}
+
+void InputHandler::addToBool(std::ifstream &fileStream, \
+                            bool &toBool) {
+  std::string word;
+  fileStream >> word;
+  std::cout << word << std::endl;
+  if (!(word.find_first_of(";") == word.size() - 1))
+    throw std::runtime_error("no ; in end of line");
+  if (word == "on;") {
+      toBool = true;
+  } else if (word == "off;") {
+      toBool = false;
+  } else {
+      throw std::runtime_error("Wrong input, must be on or off");
+  }
 }
 
 void InputHandler::addLocation(std::ifstream &fileStream, \
@@ -195,14 +210,15 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
       addToString(fileStream, newLocation.root);
 
     } else if (word == "autoindex") {
-      if (!newLocation.autoindex.empty())
-        throw std::runtime_error("duplicate autoindex inside location");
-      addToString(fileStream, newLocation.autoindex);
+      addToBool(fileStream, newLocation.autoindex);
 
     } else if (word == "index") {
       if (!newLocation.index.empty())
         throw std::runtime_error("duplicate index inside location");
       addToString(fileStream, newLocation.index);
+
+    } else if (word == "cgi_php") {
+      addToBool(fileStream, newLocation.cgi_php);
 
     } else if (word == "max_body_size") {
       if (!newLocation.loc_max_body_size != 0)
@@ -284,6 +300,8 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, \
 
     } else if (word == "location") {
       s_locationConfig newLocation;
+      newLocation.autoindex = false;
+      newLocation.cgi_php = false;
       addLocation(fileStream, newLocation);
       server.location.push_back(newLocation);
 
@@ -339,6 +357,7 @@ void InputHandler::printLocations(const std::vector<s_locationConfig> &location)
     std::cout << "    autoindex: " << toprint.autoindex << std::endl;
     std::cout << "    index " << toprint.index << std::endl;
     std::cout << "    root: " << toprint.root << std::endl;
+    std::cout << "    Cgi_php: " << toprint.cgi_php << std::endl;
     if(toprint.loc_max_body_size != SIZE_T_MAX){
       std::cout << "    loc_max_body_size: " << toprint.loc_max_body_size << std::endl;
     }
