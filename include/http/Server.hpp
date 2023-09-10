@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 21:03:50 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 08:19:43 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,8 @@ class Server {
   HttpStatusCode  post(HttpRequest *request, HttpResponse *response);
   HttpStatusCode  del(HttpRequest *request, HttpResponse *response);
   int             getPort(void);
+  std::string     getHost(void);
+  std::string     getServerName(void);
 
  private:
   size_t                        port;

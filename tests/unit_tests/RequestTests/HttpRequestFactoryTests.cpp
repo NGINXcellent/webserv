@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 21:00:10 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/10 08:48:07 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ void testRequestLine(std::string requestMsg, int expectedStatusCode,
   (void)locations;
   HttpRequest *request = new HttpRequest();
   HttpRequestFactory::setupHeader(request, requestMsg);
-  EXPECT_EQ(HttpRequestFactory::check(request), expectedStatusCode)
+  EXPECT_EQ(HttpRequestFactory::check(request, ""), expectedStatusCode)
       << requestMsg;
   delete request;
 }
