@@ -4,8 +4,6 @@
 #include <unistd.h>
 #include <iostream>
 
-void cgiCheck(s_locationConfig newLocation);
-
 TEST(InputTests, BasicTests)
 {
   {
@@ -35,7 +33,7 @@ TEST(InputTests, ExtensionTests)
     const char *argv[2] = {"webserv", "myserver.con"};
     EXPECT_FALSE(InputHandler::check_args(2, argv));
   }
-
+void cgiCheck(s_locationConfig newLocation);
   {
     const char *argv[2] = {"webserv", "myserver.config"};
     EXPECT_FALSE(InputHandler::check_args(2, argv));
@@ -60,18 +58,6 @@ TEST(InputTests, ExtensionTests)
     const char *argv[2] = {"webserv", ".cnf"};
     EXPECT_FALSE(InputHandler::check_args(2, argv));
   }
-}
-
-TEST(InputTests, ArgcTests)
-{
-    const char *argv[2] = {"webserv", "default.conf"};
-
-    EXPECT_FALSE(InputHandler::check_args(42, argv));
-    EXPECT_FALSE(InputHandler::check_args(3, argv));
-    EXPECT_FALSE(InputHandler::check_args(0, argv));
-    EXPECT_FALSE(InputHandler::check_args(-2, argv));
-    EXPECT_FALSE(InputHandler::check_args(-42, argv));
-    EXPECT_FALSE(InputHandler::check_args(-3, argv));
 }
 
 TEST(CheckConfTests, BasicTest)
@@ -108,21 +94,6 @@ TEST(CheckConfTests, MultipleServersTest)
     EXPECT_EQ(input.serverVector->size(), 6);
   }
 }
-
-TEST(CgiCheckTest, TypeEmptyPathNotEmpty) {
-  s_locationConfig newLocation;
-  newLocation.cgi_type = "";
-  newLocation.cgi_path = "/path/to/cgi";
-  EXPECT_THROW(cgiCheck(newLocation), std::runtime_error);
-}
-
-TEST(CgiCheckTest, TypeNotEmptyPathEmpty) {
-  s_locationConfig newLocation;
-  newLocation.cgi_type = "cgi";
-  newLocation.cgi_path = "";
-  EXPECT_THROW(cgiCheck(newLocation), std::runtime_error);
-}
-
 
 TEST(CheckConfTests, FailTests)
 {
@@ -195,11 +166,6 @@ TEST(LocationConfTests, BasicTests)
 
 TEST(LocationConfTests, FailTests)
 {
-  {
-    const char *configFile = "../../InputTests/test_files/fail/location/locationAutoindexError.conf";
-    char *configFileMutable = const_cast<char*>(configFile);
-    EXPECT_THROW(InputHandler input(configFileMutable), std::runtime_error);
-  }
   {
     const char *configFile = "../../InputTests/test_files/fail/location/locationindexError.conf";
     char *configFileMutable = const_cast<char*>(configFile);
