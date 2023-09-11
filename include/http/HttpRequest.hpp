@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:46:26 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/11 15:22:35 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,8 @@ class HttpRequest {
   void                  setRequestReady(bool set);
   void                  setCGI(bool toset);
   bool                  getCGI(void);
+  void                  setQueryString(std::string query);
+  std::string           getQueryString(void);
   /*bool                  isBodyReady(void);
   void                  setBodyReady(bool opt);*/
 
@@ -110,6 +112,7 @@ class HttpRequest {
   bool                      hasBodyt;
   bool                      requestReady;
   bool                      isCGI;
+  std::string               queryString;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);
