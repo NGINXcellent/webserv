@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:49:09 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/11 19:30:47 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include <fstream>
 #include <sstream>  // stringstream
 #include <algorithm>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "../../include/http/HttpTime.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
@@ -38,6 +40,81 @@ Server::Server(const struct s_serverConfig& config) {
 
 Server::~Server(void) {}
 
+HttpStatusCode getCGI(HttpRequest *request, HttpResponse *response) {
+ // Cria um pipe para capturar a saída do processo CGI
+  std::string cgiPath = "./cgi-test.php";
+  std::cout << cgiPath << std::endl;
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    // Cria um novo processo
+    pid_t childPid = fork();
+
+    if (childPid == -1) {
+        // Erro ao criar o processo filho
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (childPid == 0) {
+        // Este é o código executado no processo filho
+
+        // Configura variáveis de ambiente para passar a query string para o CGI
+        std::cout << request->getQueryString() << std::endl;
+        setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
+
+        // Fecha a extremidade de leitura do pipe
+        close(pipefd[0]);
+
+        // Redireciona a saída padrão (stdout) para o pipe
+        dup2(pipefd[1], STDOUT_FILENO);
+
+        // Substitui o processo atual pelo programa CGI
+        execl("/usr/bin/php", "php", cgiPath.c_str(), NULL);
+
+        // Se o execl falhar, algo deu errado
+        perror("execl");
+        exit(EXIT_FAILURE);
+    } else {
+        // Este é o código executado no processo pai
+
+        // Fecha a extremidade de escrita do pipe
+        close(pipefd[1]);
+
+        // Lê a saída do processo filho a partir do pipe
+        std::string cgiOutput;
+        char buffer[4096];
+        ssize_t bytesRead;
+        while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
+            cgiOutput.append(buffer, bytesRead);
+        }
+        // std::cout << cgiOutput << std::endl;
+        const char* bodyData = cgiOutput.c_str(); // Converter para const char*
+        char* bodyCopy = new char[strlen(bodyData) + 1];
+        strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
+
+        // Aguarda o término do processo filho
+        int status;
+        waitpid(childPid, &status, 0);
+
+        if (WIFEXITED(status)) {
+            // O processo filho terminou normalmente
+            int exitStatus = WEXITSTATUS(status);
+            std::cout << "O processo CGI terminou com status " << exitStatus << std::endl;
+        } else {
+            // O processo filho não terminou normalmente
+            std::cerr << "Erro: O processo CGI não terminou normalmente." << std::endl;
+        }
+      response->setMsgBody(bodyCopy);
+      response->setContentLength(strlen(bodyCopy));
+      response->setContentType("text/html");
+    }
+    return (Ready);
+}
+
 HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
 
@@ -57,7 +134,11 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   }
 
   HttpStatusCode opStatus = Ready;
-
+  if(request->getCGI() == true) {
+    if(requestMethod == "GET")
+      opStatus = getCGI(request, response);
+    return opStatus;
+  }
   if (requestMethod == "GET")
     opStatus = get(request, response);
   else if (requestMethod == "DELETE")
@@ -73,8 +154,6 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
 void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
   HttpRequestFactory::setupRequest(req, buffer, locations);
   HttpStatusCode status = HttpRequestFactory::check(req, server_name);
-  std::cout << " WILL PRINT CGI HERE ->>>>>>> ";
-  std::cout << req->getCGI() << std::endl;
 
   if (status == Ready) {
     res->setProtocol("HTTP", req->getProtocolMainVersion(),
