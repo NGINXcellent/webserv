@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:48:57 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/11 15:26:21 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -346,6 +346,17 @@ int findLocationNb(std::vector<std::string> &reqTokens, const std::vector<s_loca
   return maxLocationIndex;
 }
 
+std::string queryStringExtractor(std::string &str) {
+  size_t queryStart = str.find("?");
+
+  if (queryStart == std::string::npos) {
+    return "";
+  }
+  std::string queryString = str.substr(queryStart + 1);
+  str.erase(queryStart);
+  return queryString;
+}
+
 // first find the right location then set request location properties.
 void HttpRequestFactory::findLocation(HttpRequest *request, \
                                       LocationList locations) {
@@ -356,8 +367,9 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
   if(reqLine.empty()) {
     return;
   }
+  // extract query string if have one? otherwise set to empty.
+  request->setQueryString(queryStringExtractor(reqLine));
 
-  // std::cout << "reqLine " << reqLine << std::endl;
   std::vector<std::string> reqTokens = location::splitPath(reqLine);
 
 //  This will find the best match of location and solve the redirection.

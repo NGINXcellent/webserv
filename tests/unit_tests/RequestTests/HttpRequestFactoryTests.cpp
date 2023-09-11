@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 20:01:35 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 08:48:07 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/11 15:10:22 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@
 #include "../../../src/io/FileSystem.cpp"
 #include "../../../src/io/FileReader.cpp"
 #include "../../../src/io/FileWriter.cpp"
-
 
 void testRequestLine(std::string requestMsg, int expectedStatusCode,
                      std::vector<s_locationConfig> locations) {
@@ -674,4 +673,30 @@ TEST(ServerTest, PostMultipart) {
   server.post(&request, &response);
 
   EXPECT_EQ(response.getStatusCode(), HttpStatusCode::Created);
+}
+
+
+std::string queryStringExtractor(std::string &str);
+TEST(QueryStringExtractor, EmptyString) {
+  std::string str = "";
+  std::string queryString = queryStringExtractor(str);
+  EXPECT_EQ(queryString, "");
+}
+
+TEST(QueryStringExtractor, StringWithNoQueryString) {
+  std::string str = "http://www.example.com";
+  std::string queryString = queryStringExtractor(str);
+  EXPECT_EQ(queryString, "");
+}
+
+TEST(QueryStringExtractor, StringWithQueryString) {
+  std::string str = "http://www.example.com?name=John&age=25";
+  std::string queryString = queryStringExtractor(str);
+  EXPECT_EQ(queryString, "name=John&age=25");
+}
+
+TEST(QueryStringExtractor, StringWithMultipleQueryStrings) {
+  std::string str = "http://www.example.com?name=John&age=25&email=john@example.com";
+  std::string queryString = queryStringExtractor(str);
+  EXPECT_EQ(queryString, "name=John&age=25&email=john@example.com");
 }

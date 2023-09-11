@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:46:29 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/11 15:22:52 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -234,4 +234,12 @@ void HttpRequest::setCGI(bool toset) {
 
 bool HttpRequest::getCGI(void) {
   return isCGI;
+}
+
+void HttpRequest::setQueryString(std::string toSet) {
+  queryString = toSet;
+}
+
+std::string HttpRequest::getQueryString(void) {
+  return queryString;
 }
