@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/11 19:30:47 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/13 17:08:15 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,8 +72,11 @@ HttpStatusCode getCGI(HttpRequest *request, HttpResponse *response) {
         // Redireciona a saída padrão (stdout) para o pipe
         dup2(pipefd[1], STDOUT_FILENO);
 
+        close(pipefd[1]);
+
+        char* argv[] = {const_cast<char*>("php"), const_cast<char*>(cgiPath.c_str()), NULL};
         // Substitui o processo atual pelo programa CGI
-        execl("/usr/bin/php", "php", cgiPath.c_str(), NULL);
+        execve("/usr/bin/php", argv, NULL);
 
         // Se o execl falhar, algo deu errado
         perror("execl");
@@ -91,6 +94,7 @@ HttpStatusCode getCGI(HttpRequest *request, HttpResponse *response) {
         while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
             cgiOutput.append(buffer, bytesRead);
         }
+        close(pipefd[0]);
         // std::cout << cgiOutput << std::endl;
         const char* bodyData = cgiOutput.c_str(); // Converter para const char*
         char* bodyCopy = new char[strlen(bodyData) + 1];
@@ -110,7 +114,7 @@ HttpStatusCode getCGI(HttpRequest *request, HttpResponse *response) {
         }
       response->setMsgBody(bodyCopy);
       response->setContentLength(strlen(bodyCopy));
-      response->setContentType("text/html");
+      // response->setContentType("text/html");
     }
     return (Ready);
 }

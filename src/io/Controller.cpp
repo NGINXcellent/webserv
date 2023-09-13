@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:50:21 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/13 17:04:45 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,7 @@ Controller::~Controller(void) {
 }
 
 void Controller::endServer() {
+  // close(epollfd);
   exit(0);
 }
 
