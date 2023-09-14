@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:50:21 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/13 22:30:21 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 
 #include "../../include/io/TcpServerSocket.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
+
+  bool running = true;
 
 Controller::Controller(const InputHandler &input) {
   std::vector<struct s_serverConfig>::iterator it = input.serverVector->begin();
@@ -59,23 +61,23 @@ Controller::~Controller(void) {
   }
 
   close(epollfd);
-  
 }
 
-void Controller::endServer() {
-  exit(0);
-}
+// void Controller::endServer() {
+//   running = false;
+//   // exit(0);
+// }
 
-void Controller::signalHandler(int signal) {
+void signalHandler(int signal) {
   if (signal == SIGINT) {
     std::cout << "\nServer is stopping gracefully, goodbye !" << std::endl;
-    endServer();
+    running = false;
   }
 }
 
 void Controller::init(void) {
   //  Create epollfd
-  std::signal(SIGINT, signalHandler);
+  signal(SIGINT, signalHandler);
   struct epoll_event ev;
   epollfd = epoll_create(1);
 
@@ -114,13 +116,15 @@ void Controller::handleConnections(void) {
   // create just one pool of events, its like a line, if is a new conection, add
   // to poll, if not, handle the client conection.
   //struct epoll_event events[100];
-  while (true) {
+  while (running) {
     int numEvents = epoll_wait(epollfd, events.data(), events.size(), -1);
 
-    if (numEvents == -1) {
-      std::cerr << "epoll_wait error. errno: " << errno << std::endl;
-      continue;
-    }
+    // Se essa situacao ficar, nos temos um print no fim de erro pq quando esse
+    //  while tomar o SIGINT, o epoll_wait vai retornar -1;
+    // if (numEvents == -1) {
+    //   std::cerr << "epoll_wait error. errno: " << errno << std::endl;
+    //   continue;
+    // }
 
     for (int i = 0; i < numEvents; ++i) {
       int currentFd = events[i].data.fd;    // this client fd
@@ -148,6 +152,11 @@ void Controller::handleConnections(void) {
     }
     checkTimeOut();
   }
+if(close(epollfd) == -1)
+	{
+		throw std::runtime_error("ERROR IN FD (CLOSE) MANIPULATION");
+	}
+	return;
 }
 
 bool Controller::isChunkedBodyComplete(const std::string &body) {
@@ -179,7 +188,7 @@ size_t Controller::findContentLength(const std::string& request) {
   size_t contentLengthPos = request.find("Content-Length: ");
 
   if (contentLengthPos != std::string::npos) {
-    contentLengthPos += strlen("Content-Length: "); 
+    contentLengthPos += strlen("Content-Length: ");
     size_t contentLengthEnd = request.find("\r\n", contentLengthPos);
 
     if (contentLengthEnd != std::string::npos) {

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 21:21:11 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/13 22:05:45 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,11 +51,10 @@ class Controller {
   bool  closeConnection(int connectionFd);
 
   // signal handler
-  static void endServer();
-  static void signalHandler(int signal);
+  // static void endServer();
 
   // POST handling
-  bool  isHTTPRequestComplete(HttpRequest *request, std::string &requestMsg); 
+  bool  isHTTPRequestComplete(HttpRequest *request, std::string &requestMsg);
   bool	isChunkedBodyComplete(const std::string &body);
   bool	isMultipartBodyComplete(const std::string &body);
   bool	isUrlEncodedBodyComplete(const std::string &body, size_t cLength);

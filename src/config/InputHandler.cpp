@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:36:59 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/13 21:42:31 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -400,4 +400,3 @@ InputHandler::InputHandler(char* fileArg) {
 InputHandler::~InputHandler(void) {
   delete serverVector;
 }
-

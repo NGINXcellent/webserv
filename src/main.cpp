@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:49 by dvargas           #+#    #+#             */
-/*   Updated: 2023/08/24 18:04:59 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/09/13 21:00:47 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,5 @@ int main(int argc, char **argv) {
     std::cerr << e.what() << '\n';
     return (1);
   }*/
-
   return 0;
 }
