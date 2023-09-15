@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:50:21 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/15 08:12:21 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,11 +137,13 @@ void Controller::handleConnections(void) {
         readFromClient(currentFd);
         HttpRequest *request = connectedClients[currentFd]->getRequest();
         std::string &clientBuffer = connectedClients[currentFd]->getBuffer();
+        // std::cout << clientBuffer << std::endl;
         request->setRequestReady(isHTTPRequestComplete(request, clientBuffer));
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         Client *client = connectedClients[currentFd];
 
         if (client != NULL && client->getRequest()->isRequestReady()) {
+          std::cout << connectedClients[currentFd]->getBuffer() << std::endl;
           sendToClient(currentFd);
         }
       }
@@ -175,22 +177,6 @@ std::string toLowerStr2(std::string str) {
   return (result);
 }
 
-size_t Controller::findContentLength(const std::string& request) {
-  size_t contentLengthPos = request.find("Content-Length: ");
-
-  if (contentLengthPos != std::string::npos) {
-    contentLengthPos += strlen("Content-Length: "); 
-    size_t contentLengthEnd = request.find("\r\n", contentLengthPos);
-
-    if (contentLengthEnd != std::string::npos) {
-        std::string contentLengthStr = request.substr(contentLengthPos, contentLengthEnd - contentLengthPos);
-        return static_cast<size_t>(std::atoi(contentLengthStr.c_str()));
-    }
-  }
-
-  return -1; // Valor padrão se não encontrar ou ocorrer erro na conversão
-}
-
 bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &requestMsg) {
   if (request->isHeaderReady() && request->getMethod() != "POST") {
       return (true);
@@ -215,6 +201,9 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
     size_t contentPos = requestMsg.find("\r\n\r\n") + 4;
     std::cout << contentPos << std::endl;
     std::string body = requestMsg.substr(contentPos);
+    if (body == "") {
+      return (true);
+    }
 
     PostType pType = request->getPostType();
 
@@ -343,7 +332,7 @@ void Controller::sendToClient(int currentFd) {
                    response->getHeaders().size());
   socket->sendData(currentFd, response->getMsgBody(), \
                    response->getContentLength());
-
+  std::cout << response->getHeaders() << std::endl;
   client->reset();
 
   //isso aqui deveria acontecer com keepalive ?

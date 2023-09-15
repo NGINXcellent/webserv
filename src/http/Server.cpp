@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:49:09 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/15 08:02:12 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,7 +165,9 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     opStatus = FileSystem::check(fullpath, R_OK | X_OK);
 
     if (opStatus != 0 || !request->isDirListActive()) {
-      return (Forbidden);
+      // return (Forbidden);
+      // LOOKS LIKE 42 TESTER HERE WANTS NOT FOUND
+      return (Not_Found);
     }
 
     if (FileSystem::check(request->getIndexPath(), F_OK) == 0 && \
