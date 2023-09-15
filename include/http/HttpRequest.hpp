@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/15 09:03:10 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/15 10:41:37 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ class HttpRequest {
   bool                      requestReady;
   bool                      isCGI;
   std::string               cgiPath;
-  std::string               cgiextension;
+  std::string               cgiExtension;
   std::string               queryString;
 
   HttpRequest(const HttpRequest& f);

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/15 09:05:24 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/15 10:43:10 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -229,8 +229,8 @@ void HttpRequest::setRequestReady(bool set) {
 }
 
 void HttpRequest::setCGI(bool toset, std::string cgiPath, std::string cgiExtension) {
-  cgiPath = cgiPath;
-  cgiExtension = cgiExtension;
+  this->cgiPath = cgiPath;
+  this->cgiExtension = cgiExtension;
   isCGI = toset;
 }
 
@@ -243,7 +243,7 @@ std::string HttpRequest::getCGIPath(void) {
 }
 
 std::string HttpRequest::getCGIExtension(void) {
-  return cgiextension;
+  return cgiExtension;
 }
 
 void HttpRequest::setQueryString(std::string toSet) {
