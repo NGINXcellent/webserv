@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "../../../include/config/InputHandler.hpp"
+#include "../../../src/config/InputHandler.cpp"
 #include <fstream>
 #include <unistd.h>
 #include <iostream>
@@ -26,6 +27,34 @@ TEST(InputTests, BasicTests)
     EXPECT_FALSE(InputHandler::check_args(2, argv));
   }
 }
+
+TEST(InputHandlerTest, cgiCheck_BothEmpty) {
+  s_locationConfig newLocation;
+  cgiCheck(newLocation);
+
+  EXPECT_TRUE(newLocation.cgi_path.empty());
+  EXPECT_TRUE(newLocation.cgi_extension.empty());
+}
+
+TEST(InputHandlerTest, cgiCheck_OneEmpty) {
+  s_locationConfig newLocation;
+  newLocation.cgi_path = "/path/to/cgi";
+
+  EXPECT_THROW(cgiCheck(newLocation), std::runtime_error);
+}
+
+TEST(InputHandlerTest, cgiCheck_BothSet) {
+  s_locationConfig newLocation;
+  newLocation.cgi_path = "/path/to/cgi";
+  newLocation.cgi_extension = ".php";
+
+  cgiCheck(newLocation);
+
+  EXPECT_TRUE(newLocation.cgi_path.compare("/path/to/cgi") == 0);
+  EXPECT_TRUE(newLocation.cgi_extension.compare(".php") == 0);
+  EXPECT_TRUE(newLocation.cgi_php);
+}
+
 
 TEST(InputTests, ExtensionTests)
 {

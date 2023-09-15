@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:18:47 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/15 10:03:52 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,8 @@ struct s_locationConfig {
   size_t                      loc_max_body_size;
   std::string                 root;
   bool                        cgi_php;
+  std::string                 cgi_path;
+  std::string                 cgi_extension;
   std::pair<int, std::string> redirect;
   std::vector<std::string>    allowed_method;
 };
@@ -60,6 +62,7 @@ class InputHandler {
   void addToPair(std::ifstream &fileStream, std::pair<int, std::string> &mapi);
   void addToSizeT(std::ifstream &fileStream, size_t &size);
   void addToBool(std::ifstream &fileStream, bool &toBool);
+  void extractExtension(std::ifstream &fileStream, std::string &extension);
 
  public:
   std::vector<s_serverConfig> *serverVector;
@@ -72,4 +75,3 @@ class InputHandler {
 };
 
 #endif
-

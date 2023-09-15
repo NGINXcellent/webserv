@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 16:36:59 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/15 10:16:14 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,6 +139,21 @@ void InputHandler::addToPair(std::ifstream &fileStream, \
   mapi.second = word;
 }
 
+void InputHandler::extractExtension(std::ifstream &fileStream, \
+                                   std::string &extension) {
+  std::string word;
+  fileStream >> word;
+  if (!(word.find_first_of(";") == word.size() - 1))
+    throw std::runtime_error("no ; at the end of line");
+
+  word.resize(word.size() - 1);
+
+  if(!word.empty() && word[0] != '.')
+    throw std::runtime_error("extension should start with .");
+  else
+    extension = word;
+}
+
 void InputHandler::addToMap(std::ifstream &fileStream, \
                             std::map<int, std::string> &mapi) {
   std::string word;
@@ -168,17 +183,30 @@ void redirectCheck(s_locationConfig newLocation) {
         if (!newLocation.root.empty() ||
             !newLocation.index.empty() ||
             newLocation.loc_max_body_size != SIZE_T_MAX ||
-            !newLocation.allowed_method.empty()) {
+            !newLocation.allowed_method.empty() ||
+            !newLocation.cgi_path.empty() ||
+            !newLocation.cgi_extension.empty()) {
             throw std::runtime_error("return is not the only entrance");
         }
     }
+}
+
+void cgiCheck(s_locationConfig &newLocation) {
+    if (newLocation.cgi_path.empty() && newLocation.cgi_extension.empty()) {
+        return;
+    }
+
+    if (newLocation.cgi_path.empty() || newLocation.cgi_extension.empty()) {
+        throw std::runtime_error("Both cgi_path and cgi_extension should be set or unset together");
+    }
+
+    newLocation.cgi_php = true;
 }
 
 void InputHandler::addToBool(std::ifstream &fileStream, \
                             bool &toBool) {
   std::string word;
   fileStream >> word;
-  std::cout << word << std::endl;
   if (!(word.find_first_of(";") == word.size() - 1))
     throw std::runtime_error("no ; in end of line");
   if (word == "on;") {
@@ -217,8 +245,15 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
         throw std::runtime_error("duplicate index inside location");
       addToString(fileStream, newLocation.index);
 
-    } else if (word == "cgi_php") {
-      addToBool(fileStream, newLocation.cgi_php);
+    } else if (word == "cgi_path") {
+      if (!newLocation.cgi_path.empty())
+        throw std::runtime_error("duplicate cgi_path inside location");
+      addToString(fileStream, newLocation.cgi_path);
+
+    } else if (word == "cgi_extension") {
+      if (!newLocation.cgi_extension.empty())
+        throw std::runtime_error("duplicate cgi_extension inside location");
+      extractExtension(fileStream, newLocation.cgi_extension);
 
     } else if (word == "max_body_size") {
       if (!newLocation.loc_max_body_size != 0)
@@ -237,6 +272,7 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
       throw std::runtime_error("Error in location");
     }
   }
+  cgiCheck(newLocation);
   redirectCheck(newLocation);
 }
 
@@ -357,6 +393,8 @@ void InputHandler::printLocations(const std::vector<s_locationConfig> &location)
     std::cout << "    autoindex: " << toprint.autoindex << std::endl;
     std::cout << "    index " << toprint.index << std::endl;
     std::cout << "    root: " << toprint.root << std::endl;
+    std::cout << "    cgi_extension: " << toprint.cgi_extension << std::endl;
+    std::cout << "    cgi_path: " << toprint.cgi_path << std::endl;
     std::cout << "    Cgi_php: " << toprint.cgi_php << std::endl;
     if(toprint.loc_max_body_size != SIZE_T_MAX){
       std::cout << "    loc_max_body_size: " << toprint.loc_max_body_size << std::endl;
