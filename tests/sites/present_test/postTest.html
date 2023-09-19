@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Site</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="./index.php"><img src="./nginxcellent-semfundo.png" style="width: 5%;"></a></li>
+                <li><a href="./galery.php">Galeria</a></li>
+                <li><a href="./postTest.php">Teste de Post</a></li>
+                <li><a href="./mimeTest.php">Teste de MimeType</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1> Aqui vamos testar o metodo POST</h1>
+        <p>Voce vai clicar no botaozinho e escolher uma imagem para subir no servidor</p>
+		<form action="upload.php" method="post" enctype="multipart/form-data">
+        <input type="file" name="fileToUpload" id="fileToUpload" onchange="previewPicture(this);" required>
+        <button class="styled-button" type="submit">Enviar Arquivo</button>
+    </form>
+        <p>Escolha a imagem com sabedoria gafanhoto</p>
+
+</body>
+</html>

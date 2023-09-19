@@ -1,0 +1,107 @@
+/* Estilo do header */
+header {
+	background-color: #333;
+	color: #fff;
+	padding: 20px 0; /* Adicione espaçamento superior e inferior */
+}
+
+body {
+	background-color: #f4f4f4;
+	color: #555;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 16px;
+}
+
+.logo {
+	width: 20%;
+	padding: 500px;
+}
+
+nav ul {
+	list-style: none;
+}
+
+nav li {
+	display: inline;
+	margin-right: 20px;
+}
+
+.image-box {
+	max-width: 80%; /* Largura máxima do box */
+	border: 2px solid #333; /* Borda estilizada */
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Sombra estilizada */
+	overflow: hidden; /* Evita que a imagem ultrapasse a borda */
+}
+
+img {
+	max-width: 100%; /* Imagem se adapta à largura do box */
+	height: auto; /* Mantém a proporção da imagem */
+}
+
+nav a {
+	text-decoration: none;
+	color: #fff;
+	font-weight: bold;
+	padding: 5px 10px; /* Adicione espaçamento interno para os links */
+	border-radius: 5px; /* Arredonde as bordas dos links */
+	transition: background-color 0.3s ease; /* Adicione uma transição suave para a mudança de cor de fundo */
+}
+
+main {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+nav a:hover {
+	background-color: #555; /* Altere a cor de fundo quando o mouse passar sobre os links */
+}
+
+footer {
+	background-color: #333;
+	color: #fff;
+	text-align: center;
+	padding: 20px;
+}
+
+.styled-button {
+	display: inline-block;
+	padding: 10px 20px;
+	background-color: #007BFF; /* Cor de fundo do botão */
+	color: #fff; /* Cor do texto do botão */
+	border: none;
+	border-radius: 5px; /* Borda arredondada */
+	cursor: pointer;
+	font-size: 16px;
+	text-align: center;
+	text-decoration: none;
+	transition: background-color 0.3s ease; /* Efeito de transição suave */
+
+	/* Adicione mais estilos conforme necessário */
+}
+
+.styled-button:hover {
+	background-color: #0056b3; /* Cor de fundo do botão ao passar o mouse */
+}
+
+.image-gallery {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.image-item {
+	width: 100%;
+	text-align: center;
+	margin-bottom: 5%;
+}
+
+.image-item img {
+	width: 25%;
+	height: auto;
+	border: 2px solid #333; /* Borda estilizada */
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Sombra estilizada */
+	overflow: hidden; /* Evita que a imagem ultrapasse a borda */
+}
