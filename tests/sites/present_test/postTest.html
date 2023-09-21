@@ -7,22 +7,16 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="./index.php"><img src="./nginxcellent-semfundo.png" style="width: 5%;"></a></li>
-                <li><a href="./galery.php">Galeria</a></li>
-                <li><a href="./postTest.php">Teste de Post</a></li>
-                <li><a href="./mimeTest.php">Teste de MimeType</a></li>
-            </ul>
-        </nav>
-    </header>
-
     <main>
+        <div class="main-button-container">
+            <a href="./galery.php" class="main-button">Galeria</a>
+            <a href="./index.php"><img src="./nginxcellent-semfundo.png" style="width: 100%;"></a>
+            <a href="./postTest.html" class="main-button">Teste de Post</a>
+        </div>
         <h1> Aqui vamos testar o metodo POST</h1>
-        <p>Voce vai clicar no botaozinho e escolher uma imagem para subir no servidor</p>
+        <p>Voce vai clicar no botaozinho e escolhe uma linda imagem para fazer upload</p>
 		<form action="upload.php" method="post" enctype="multipart/form-data">
-        <input type="file" name="fileToUpload" id="fileToUpload" onchange="previewPicture(this);" required>
+        <input type="file" name="fileToUpload" id="fileToUpload">
         <button class="styled-button" type="submit">Enviar Arquivo</button>
     </form>
         <p>Escolha a imagem com sabedoria gafanhoto</p>

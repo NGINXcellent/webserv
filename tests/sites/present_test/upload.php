@@ -1,47 +1,37 @@
 <?php
+
+// Diretório de destino para salvar os arquivos
+$targetDirectory = "./bin-img/";
+
+// Verifica se o diretório de destino existe e é gravável
+if (!file_exists($targetDirectory)) {
+    mkdir($targetDirectory, 0755, true);
+}
+
+// Verifica se o arquivo foi enviado com sucesso
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Verifica se um arquivo foi enviado corretamente
-    if (isset($_FILES["arquivo"]) && $_FILES["arquivo"]["error"] == UPLOAD_ERR_OK) {
-        // URL do endpoint onde você deseja enviar a imagem
-        $endpoint = "./bin-img/";
+    // Nome do arquivo de destino (usando o nome original do arquivo)
+    $targetFile = $targetDirectory . basename($_FILES["fileToUpload"]["name"]);
 
-        // Caminho temporário do arquivo enviado
-        $arquivo_temporario = $_FILES["arquivo"]["tmp_name"];
+    // Verifica se o arquivo já existe
+    if (file_exists($targetFile)) {
+			echo "<script>alert('Ja existe um arquivo com este nome');</script>";
 
-        // Nome do arquivo original
-        $nome_arquivo = $_FILES["arquivo"]["name"];
-
-        // Inicializa uma sessão cURL
-        $ch = curl_init();
-
-        // Configura as opções da solicitação cURL
-        curl_setopt($ch, CURLOPT_URL, $endpoint);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POST, 1);
-
-        // Cria um array com os dados do formulário, incluindo o campo de arquivo
-        $postData = array(
-            'descricao' => 'Esta é uma imagem legal',
-            'arquivo' => new CURLFile($arquivo_temporario, 'image/jpeg', $nome_arquivo) // Adiciona o arquivo como um CURLFile
-        );
-
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-				echo "123";
-        // Executa a solicitação cURL
-        $response = curl_exec($ch);
-
-        // Verifica se ocorreram erros
-        if (curl_errno($ch)) {
-            echo 'Erro cURL: ' . curl_error($ch);
-        }
-
-        // Fecha a sessão cURL
-        curl_close($ch);
-
-        // Processa a resposta do servidor
-        echo "Resposta do servidor: " . $response;
+			// Retorna para postTest.html
+			echo "<script>window.location.href = 'postTest.html';</script>";
     } else {
-        echo "Erro no upload do arquivo." . $response;
+        // Tenta mover o arquivo para o diretório de destino
+        if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $targetFile)) {
+					echo "<script>alert('Arquivo enviado com sucesso!');</script>";
+
+					// Retorna para postTest.html
+					echo "<script>window.location.href = 'postTest.html';</script>";
+        } else {
+					echo "<script>alert('Falha ao enviar arquivo');</script>";
+
+					// Retorna para postTest.html
+					echo "<script>window.location.href = 'postTest.html';</script>";
+        }
     }
 }
 ?>

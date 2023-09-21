@@ -7,18 +7,14 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-<header>
-        <nav>
-            <ul>
-                <li><a href="./index.php"><img src="./nginxcellent-semfundo.png" style="width: 5%;"></a></li>
-                <li><a href="./galery.php">Galeria</a></li>
-                <li><a href="./postTest.html">Teste de Post</a></li>
-                <li><a href="./mimeTest.php">Teste de Delete</a></li>
-            </ul>
-        </nav>
-    </header>
 <main>
+    <div class="main-button-container">
+        <a href="./galery.php" class="main-button">Galeria</a>
+        <a href="./index.php"><img src="./nginxcellent-semfundo.png" style="width: 100%;"></a>
+        <a href="./postTest.html" class="main-button">Teste de Post</a>
+    </div>
     <h1>Galeria de Imagens</h1>
+    <p>Voce pode excluir imagens clicando no botão "Excluir".</p>
     <div id="image-gallery">
             <?php
             // Diretório das imagens
@@ -40,7 +36,7 @@
                     $div .= '<form action="delete-image.php" method="post">';
                     $div .= '<input type="hidden" name="_method" value="DELETE">';
                     $div .= '<input type="hidden" name="image" value="' . $file . '">';
-                    $div .= '<button type="submit" class="styled-button">Excluir</button>';
+                    $div .= '<button type="submit" class="styled-button styled-button-galery">Excluir</button>';
                     $div .= '</form>';
 
                     // Fecha a div
@@ -52,6 +48,7 @@
             }
             ?>
     </div>
+    <a class="scroll-to-top" href="#">Voltar ao Topo</a>
 </main>
 </body>
 </html>

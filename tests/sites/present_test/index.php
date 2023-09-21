@@ -3,26 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Site</title>
+    <title>Nginxcellent CGI tester</title>
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="./index.php"><img src="./nginxcellent-semfundo.png" style="width: 5%;"></a></li>
-                <li><a href="./galery.php">Galeria</a></li>
-                <li><a href="./postTest.html">Teste de Post</a></li>
-                <li><a href="./mimeTest.php">Teste de Delete</a></li>
-            </ul>
-        </nav>
-    </header>
-
     <main>
-        <h1> Ola incrivel avaliador</h1>
+    <div class="main-button-container">
+        <a href="./galery.php" class="main-button">Galeria</a>
+        <a href="./index.php"><img src="./nginxcellent-semfundo.png" style="width: 100%;"></a>
+        <a href="./postTest.html" class="main-button">Teste de Post</a>
+    </div>
+        <h1>Olá 
+        <?php
+        // Verifique se o parâmetro "avaliador" está presente na querystring
+        if (isset($_GET['avaliador'])) {
+            // Obtém o valor do parâmetro "avaliador"
+            $avaliador = $_GET['avaliador'];
+            // Exibe o valor no HTML
+            echo $avaliador;
+        } else {
+            // Caso o parâmetro não esteja presente, exibe uma mensagem padrão
+            echo "avaliador";
+        }
+    ?>
+        </h1>
         <p>Seja bem vindo ao melhor servidor web do universo 42</p>
-        <p>Esse site serve para testarmos as funcionalidades CGI do nosso projeto</p>
-        <p>No box abaixo voce vera uma imagem aleatoria da pasta bin-img</p>
+        <p>Este site serve para testarmos as funcionalidades CGI do nosso projeto</p>
+        <p>Abaixo, você verá uma imagem aleatória da pasta bin-img</p>
         <div class="image-box">
             <?php
             // Caminho para a pasta que contém as imagens
@@ -58,8 +65,6 @@
             }
             ?>
         </div>
-        <p>Por favor, explore as possibilidades do nosso projeto</p>
     </main>
-
 </body>
 </html>

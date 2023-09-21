@@ -1,21 +1,29 @@
 <?php
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["_method"]) && $_POST["_method"] === "DELETE") {
-    // Caminho completo da imagem a ser excluída
-    $imagePath = $_POST['image'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Diretório das imagens
+    $directory = './bin-img'; // Substitua pelo caminho da sua pasta de imagens
 
-    // Envia a solicitação DELETE para o servidor
-    $curl = curl_init($imagePath);
-    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    $response = curl_exec($curl);
-    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    curl_close($curl);
+    // Obtém o nome do arquivo da imagem a ser excluída
+    $imageToDelete = $_POST['image'];
 
-    // Verifica se a solicitação DELETE foi bem-sucedida
-    if ($httpCode == 200) {
-        echo "A imagem foi excluída com sucesso.";
+    // Verifica se o nome do arquivo é válido (para evitar manipulação)
+    if (is_string($imageToDelete) && !empty($imageToDelete) && preg_match('/^[a-zA-Z0-9\s]+\.[a-zA-Z]{3,4}$/', $imageToDelete)) {
+        // Caminho completo do arquivo a ser excluído
+        $filePath = $directory . '/' . $imageToDelete;
+
+        // Verifica se o arquivo existe antes de excluí-lo
+        if (file_exists($filePath)) {
+            // Tenta excluir o arquivo
+            if (unlink($filePath)) {
+                echo "A imagem foi excluída com sucesso.";
+            } else {
+                echo "Erro ao excluir a imagem.";
+            }
+        } else {
+            echo "A imagem não foi encontrada.";
+        }
     } else {
-        echo "Erro ao excluir a imagem.", $imagePath;
+        echo "Nome de arquivo inválido.";
     }
 } else {
     echo "Requisição inválida.";
