@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $imageToDelete = $_POST['image'];
 
     // Verifica se o nome do arquivo é válido (para evitar manipulação)
-    if (is_string($imageToDelete) && !empty($imageToDelete) && preg_match('/^[a-zA-Z0-9\s]+\.[a-zA-Z]{3,4}$/', $imageToDelete)) {
+    if (is_string($imageToDelete) && !empty($imageToDelete)) {
         // Caminho completo do arquivo a ser excluído
         $filePath = $directory . '/' . $imageToDelete;
 
