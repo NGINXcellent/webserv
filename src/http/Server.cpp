@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/15 08:02:12 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/13 17:39:27 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
   HttpRequestFactory::setupRequest(req, buffer, locations);
   HttpStatusCode status = HttpRequestFactory::check(req, server_name);
   std::cout << " WILL PRINT CGI HERE ->>>>>>> ";
-  std::cout << req->getCGI() << std::endl;
+  //std::cout << req->getCGI() << std::endl;
 
   if (status == Ready) {
     res->setProtocol("HTTP", req->getProtocolMainVersion(),
@@ -87,6 +87,21 @@ void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
                                           req->getProtocolMainVersion(), \
                                           req->getProtocolSubVersion());
   }
+}
+
+void Server::processCgi(HttpRequest *req, int pipe[2], std::vector<std::string> &env_vars) {
+  std::cout << "I HAVE RUN!" << std::endl;
+  setupCgiVars(req, env_vars);
+  std::string method = req->getMethod();
+  HttpStatusCode op_code = Ready;
+
+  if (method == "GET") {
+    op_code = getCgi(req, env_vars);
+  } else if (method == "POST") {
+    op_code = postCgi(req, pipe, env_vars);
+  }
+
+  (void)op_code;
 }
 
 HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
@@ -245,6 +260,41 @@ HttpStatusCode Server::del(HttpRequest *request, HttpResponse *response) {
   response->setStatusCode(No_Content);
   response->setMsgBody(msgBody);
   response->setContentLength(msg.size());
+  return (Ready);
+}
+
+void Server::setupCgiVars(HttpRequest *request, std::vector<std::string> &env_vars) {
+  std::string server_software = "SERVER_SOFTWARE=webserv/0.1"; 
+  std::string server_name = "SERVER_NAME=" + getServerName();
+  // std::string server_port = "SERVER_PORT: " + port; - need to translate this
+  // std::string document_root = "DOCUMENT_ROOT: " + root;
+  //std::string gateway_interface = "CGI/1.1";
+  std::string request_method = "REQUEST_METHOD=" + request->getMethod();
+  
+  std::string http_host = "HTTP_HOST=localhost";
+  std::string http_connection = "HTTP_CONNECTION=Close";
+
+  std::string script_name = "SCRIPT_NAME=" + request->getResource(); // the path used to access the resource
+  //
+  env_vars.push_back(server_software);
+  env_vars.push_back(server_name);
+  //env_vars.push_back(gateway_interface);
+  env_vars.push_back(request_method);
+  env_vars.push_back(http_host);
+  env_vars.push_back(http_connection);
+  env_vars.push_back(script_name);
+}
+
+HttpStatusCode Server::getCgi(HttpRequest *request, std::vector<std::string> &env_vars) {
+  env_vars.push_back(request->getQueryString());
+  return (Ready);
+}
+
+HttpStatusCode Server::postCgi(HttpRequest *request, int pipe[2], std::vector<std::string> &env_vars) {
+
+  (void)pipe; 
+  (void)request;
+  (void)env_vars;
   return (Ready);
 }
 

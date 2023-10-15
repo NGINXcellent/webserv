@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/15 10:43:10 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/06 14:05:44 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ HttpRequest::HttpRequest(void) {
   responseStatusCode = 0;
   hasHeader = false;
   requestReady = false;
+  isCGI = false;
 }
 
 bool HttpRequest::isDirListActive(void) {

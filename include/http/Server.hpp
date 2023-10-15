@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 15:21:58 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/09/17 21:51:39 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,14 @@ class Server {
   ~Server(void);
 
   void            process(std::string &buffer, HttpRequest *req, HttpResponse *res);
+  void            processCgi(HttpRequest *req, int pipe[2], std::vector<std::string> &env_vars);
   HttpStatusCode  resolve(HttpRequest *request, HttpResponse *response);
   HttpStatusCode  get(HttpRequest *request, HttpResponse *response);
+  HttpStatusCode  getCgi(HttpRequest *request, std::vector<std::string> &env_vars);
+  HttpStatusCode  postCgi(HttpRequest *request, int pipe[2], std::vector<std::string> &env_vars);
   HttpStatusCode  post(HttpRequest *request, HttpResponse *response);
   HttpStatusCode  del(HttpRequest *request, HttpResponse *response);
+  void            setupCgiVars(HttpRequest *request, std::vector<std::string> &env_vars);
   int             getPort(void);
   std::string     getHost(void);
   std::string     getServerName(void);

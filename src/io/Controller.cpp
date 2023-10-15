@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/15 08:12:21 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/13 17:38:44 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,12 @@
 
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <iostream>
+#include <cstring>
 
 #include "../../include/io/TcpServerSocket.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
@@ -137,13 +140,11 @@ void Controller::handleConnections(void) {
         readFromClient(currentFd);
         HttpRequest *request = connectedClients[currentFd]->getRequest();
         std::string &clientBuffer = connectedClients[currentFd]->getBuffer();
-        // std::cout << clientBuffer << std::endl;
         request->setRequestReady(isHTTPRequestComplete(request, clientBuffer));
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         Client *client = connectedClients[currentFd];
 
         if (client != NULL && client->getRequest()->isRequestReady()) {
-          std::cout << connectedClients[currentFd]->getBuffer() << std::endl;
           sendToClient(currentFd);
         }
       }
@@ -190,9 +191,6 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
 
   if (!request->isHeaderReady()) {
     HttpRequestFactory::setupHeader(request, requestMsg);
-  // we need to make sure that header is ready before enter POST check.
-  // i`m assuming that the header is always ready after first interaction.
-  // whe should change this.
     request->setHeaderReady(true);
   }
 
@@ -305,6 +303,7 @@ bool Controller::isNewConnection(int currentFD) {
 void Controller::readFromClient(int currentFd) {
   int bytesRead = read(currentFd, buffer, 4096);
 
+  std::cout << buffer << std::endl;
   if (bytesRead < 0) {
     std::cout << " bytesread -1, will break" << errno << std::endl;
   } else if (bytesRead == 0) {
@@ -317,25 +316,68 @@ void Controller::readFromClient(int currentFd) {
   }
 }
 
+void Controller::sendCgiData(int connectionFd, Client *client, TCPServerSocket *socket) {
+  std::cout << "RUNNING CGI" << std::endl;
+  int readPipeFd = client->getCgiFd();
+
+  while(42) {
+    int bytes_read = read(readPipeFd, buffer, 4096);
+    
+    if (bytes_read > 0) {
+      std::cout << "DEBUG cgi: " << buffer << std::endl;
+      socket->sendData(connectionFd, buffer, bytes_read);
+    } else {
+      break;
+    }
+  }
+
+  close(readPipeFd);
+}
+
+
 void Controller::sendToClient(int currentFd) {
   Client *client = connectedClients[currentFd];
+  TCPServerSocket *socket = socketPool[client->getPort()];
+
+  if (client->getCgiPid() != -1) {
+    int status = 0;
+
+    if (waitpid(client->getCgiPid(), &status, WNOHANG) == 0) {
+      return;
+    }
+
+    sendCgiData(currentFd, client, socket);
+    client->reset();
+    closeConnection(currentFd);
+    return;
+  }
   // std::cout << client->getBuffer() << std::endl;
   Server *server = client->getServer();
   HttpRequest *request = client->getRequest();
   HttpResponse *response = client->getResponse();
-  TCPServerSocket *socket = socketPool[client->getPort()];
 
   client->getBuffer() += '\0';
-  server->process(client->getBuffer(), request, response);
 
-  socket->sendData(currentFd, response->getHeaders().c_str(), \
-                   response->getHeaders().size());
-  socket->sendData(currentFd, response->getMsgBody(), \
-                   response->getContentLength());
-  std::cout << response->getHeaders() << std::endl;
+  /* std::cout << "REQUEST CGI? " << request->getCGI() << std::endl;
+  std::cout << "REQUEST CGI PATH " << request->getCGIPath() << std::endl;
+  std::cout << "REQUEST CGI EXTENSION " << request->getCGIExtension() << std::endl; */
+  if (!request->getCGI()) { //  I KNOW I HAVE TO CHANGE
+    bool isReady = handleCgi(server, client);
+    if (!isReady) {
+      return;
+    }
+    
+    sendCgiData(currentFd, client, socket);
+  } else {
+    server->process(client->getBuffer(), request, response);
+    socket->sendData(currentFd, response->getHeaders().c_str(), \
+                                response->getHeaders().size());
+  
+    socket->sendData(currentFd, response->getMsgBody(), \
+                                response->getContentLength());
+  }
+
   client->reset();
-
-  //isso aqui deveria acontecer com keepalive ?
   closeConnection(currentFd);
 }
 
@@ -356,4 +398,85 @@ int Controller::getSocketPort(int socketFd) {
 
   int port = ntohs(address.sin_port);
   return (port);
+}
+
+char** Controller::buildCharMatrix(const std::vector<std::string> &strList) {
+  size_t listSize = strList.size(); 
+  char **char_matrix = new char*[listSize + 1];
+
+  for (size_t i = 0; i < listSize; i++) {
+    size_t str_size = strList[i].size();
+    char *c_string = new char[str_size + 1];
+    std::strcpy(c_string, strList[i].c_str());
+    c_string[strList[i].size()] = '\0';
+    char_matrix[i] = c_string;
+  }
+ 
+  char_matrix[listSize] = NULL;
+  return (char_matrix);
+}
+
+// handlecgi will fork and attach the child pid in the client
+bool Controller::handleCgi(Server *server, Client *client) {
+  int toCgiPipe[2];
+  int fromCgiPipe[2];
+  std::vector<std::string> env_vars;
+  std::vector<std::string> cmd_and_args;
+
+  if (pipe(toCgiPipe) == -1 || pipe(fromCgiPipe) == -1) {
+    std::cerr << "the pipe broke!" << std::endl;
+    return false;
+  }
+
+  // process cgi
+  server->processCgi(client->getRequest(), toCgiPipe, env_vars);
+  pid_t child_pid = fork();
+
+  if (child_pid < 0) {
+    std::cerr << "error on fork" << std::endl;
+    // send a 500 error
+  }
+
+  if (child_pid == 0) {
+    close(toCgiPipe[1]);
+    close(fromCgiPipe[0]);
+
+    dup2(toCgiPipe[0], STDIN_FILENO);
+    close(toCgiPipe[0]);
+
+    dup2(fromCgiPipe[1], STDOUT_FILENO);
+    close(fromCgiPipe[1]);
+
+    cmd_and_args.push_back("/bin/php-cgi");
+    //cmd_and_args.push_back("." + client->getRequest()->getResource());
+    cmd_and_args.push_back("/home/freemanc14/Projects/42cursus/webserv/tests/sites/cgi/index.php");
+    char **cmdMatrix = buildCharMatrix(cmd_and_args);
+    char **envMatrix = buildCharMatrix(env_vars); 
+
+    std::cerr << "DEBUGGING matrixes" << std::endl;
+    for (int i = 0; cmdMatrix[i] != NULL; i++) {
+      std::cerr << "cmd matrix: " << cmdMatrix[i] << std::endl;
+    }
+
+    for (int j = 0; envMatrix[j] != NULL; j++) {
+      std::cerr << "env matrix: " << envMatrix[j] << std::endl;
+    }
+
+    if (execve(cmdMatrix[0], cmdMatrix, envMatrix) < 0) {
+      std::cerr << "!!!!! ERROR: NO CGI FUCKER !!!!!!!" << std::endl;
+      exit(-1);
+    }
+  } else {
+    close(toCgiPipe[0]);
+    close(fromCgiPipe[1]);
+    int status = 0;
+    client->setCgiPid(child_pid); 
+    client->setCgiFd(fromCgiPipe[0]);
+
+    if (waitpid(child_pid, &status, WNOHANG) == 0) {
+      return (false); // not ready
+    }
+  }
+
+  return (true); // ready
 }

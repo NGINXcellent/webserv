@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/05 21:12:23 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/10/13 02:44:34 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,8 @@ Client::Client(int conFd, Server *destServer, int serverPort, time_t conStart) :
   response = new HttpResponse();
   this->buffer = "";
   isReady = false;
+  cgiPid = -1;
+  cgiFd = -1;
 }
 
 
@@ -50,6 +52,22 @@ int Client::getPort(void) {
   return (this->port);
 }
 
+int Client::getCgiPid(void) {
+  return (cgiPid);
+}
+
+void Client::setCgiPid(int pid) {
+  cgiPid = pid;
+}
+
+int Client::getCgiFd(void) {
+  return (cgiFd);
+}
+
+void Client::setCgiFd(int fd) {
+  cgiFd = fd;
+}
+
 void Client::reset() {
   buffer.clear();
   delete request;
@@ -57,6 +75,8 @@ void Client::reset() {
   request = new HttpRequest();
   response = new HttpResponse();
   isReady = false;
+  cgiPid = -1;
+  cgiFd  = -1;
 }
 
 time_t Client::getTimeout(void) {

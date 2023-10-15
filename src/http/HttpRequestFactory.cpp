@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/15 09:01:11 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/05 14:03:03 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,8 +96,6 @@ HttpRequest *HttpRequestFactory::createFrom(std::string &requestMsg, \
     request->setProtocolName("");
   }
 
-  //  setup body if POST
-
   return (request);
 }
 
@@ -132,7 +130,9 @@ HttpStatusCode HttpRequestFactory::check(HttpRequest *request, std::string serve
   }
   // check host with serverName to see if is the same.
   if (request->getHost().compare(0, serverName.length(), serverName) != 0) {
-      std::cout << "Host check go wrong" << std::endl;
+      /*std::cout << "HOST: " << request->getHost() << std::endl;
+      std::cout << "Server Name: " << serverName << std::endl; 
+      std::cout << "Host check go wrong" << std::endl;*/
       return (Not_Found);
   }
 
@@ -352,6 +352,7 @@ std::string queryStringExtractor(std::string &str) {
   if (queryStart == std::string::npos) {
     return "";
   }
+
   std::string queryString = str.substr(queryStart + 1);
   str.erase(queryStart);
   return queryString;
@@ -364,6 +365,7 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
   std::string indexRet;
   std::string reqLine = request->getResource();
   s_locationConfig tmplocation;
+
   if(reqLine.empty()) {
     return;
   }
@@ -384,20 +386,21 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
 
   if(tmplocation.root.empty()){
     ret = "." + reqLine;
-    } else {
-      ret = tmplocation.root;
+  } else {
+    ret = tmplocation.root;
 // Building the path with the root and the rest of the URL.
-      for(size_t i = 0; i < reqTokens.size(); ++i) {
-        ret += "/" + reqTokens[i];
-      }
+    for(size_t i = 0; i < reqTokens.size(); ++i) {
+      ret += "/" + reqTokens[i];
     }
-    request->setLocationWithoutIndex(ret);
+  }
+ request->setLocationWithoutIndex(ret);
 
 // If the directory exists and tmplocation.index is not empty,
 // try adding the index to the path and check if it exists.
 // Otherwise, use the original path.
     if (FileSystem::isDirectory(ret.c_str()) && !tmplocation.index.empty()) {
       indexRet = ret + "/" + tmplocation.index;
+
       if(FileSystem::check(indexRet, F_OK) != Ready){
         indexRet = ret;
       }
