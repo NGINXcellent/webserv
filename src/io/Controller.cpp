@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/13 17:38:44 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/10/19 08:30:38 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -360,7 +360,10 @@ void Controller::sendToClient(int currentFd) {
 
   /* std::cout << "REQUEST CGI? " << request->getCGI() << std::endl;
   std::cout << "REQUEST CGI PATH " << request->getCGIPath() << std::endl;
-  std::cout << "REQUEST CGI EXTENSION " << request->getCGIExtension() << std::endl; */
+  std::cout << "REQUEST CGI EXTENSION " << request->getCGIExtension() << std::endl; 
+    ponto de atençao, essa logica deveria estar em process
+  */
+  
   if (!request->getCGI()) { //  I KNOW I HAVE TO CHANGE
     bool isReady = handleCgi(server, client);
     if (!isReady) {
@@ -401,7 +404,7 @@ int Controller::getSocketPort(int socketFd) {
 }
 
 char** Controller::buildCharMatrix(const std::vector<std::string> &strList) {
-  size_t listSize = strList.size(); 
+  size_t listSize = strList.size();
   char **char_matrix = new char*[listSize + 1];
 
   for (size_t i = 0; i < listSize; i++) {
@@ -411,25 +414,24 @@ char** Controller::buildCharMatrix(const std::vector<std::string> &strList) {
     c_string[strList[i].size()] = '\0';
     char_matrix[i] = c_string;
   }
- 
+
   char_matrix[listSize] = NULL;
   return (char_matrix);
 }
 
-// handlecgi will fork and attach the child pid in the client
 bool Controller::handleCgi(Server *server, Client *client) {
-  int toCgiPipe[2];
-  int fromCgiPipe[2];
+  int cgiPipe[2];
+  std::string cgiPath = "/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php";
   std::vector<std::string> env_vars;
   std::vector<std::string> cmd_and_args;
 
-  if (pipe(toCgiPipe) == -1 || pipe(fromCgiPipe) == -1) {
+  if (pipe(cgiPipe) == -1) {
     std::cerr << "the pipe broke!" << std::endl;
     return false;
   }
 
   // process cgi
-  server->processCgi(client->getRequest(), toCgiPipe, env_vars);
+  server->processCgi(client->getRequest(), cgiPipe, env_vars);
   pid_t child_pid = fork();
 
   if (child_pid < 0) {
@@ -438,45 +440,46 @@ bool Controller::handleCgi(Server *server, Client *client) {
   }
 
   if (child_pid == 0) {
-    close(toCgiPipe[1]);
-    close(fromCgiPipe[0]);
+    close(cgiPipe[0]);
 
-    dup2(toCgiPipe[0], STDIN_FILENO);
-    close(toCgiPipe[0]);
-
-    dup2(fromCgiPipe[1], STDOUT_FILENO);
-    close(fromCgiPipe[1]);
-
-    cmd_and_args.push_back("/bin/php-cgi");
+    dup2(cgiPipe[1], STDOUT_FILENO);
+    close(cgiPipe[1]);
+// char* argv[] = {const_cast<char*>("php"), const_cast<char*>(cgiPath.c_str()), NULL};
+    cmd_and_args.push_back("php");
     //cmd_and_args.push_back("." + client->getRequest()->getResource());
-    cmd_and_args.push_back("/home/freemanc14/Projects/42cursus/webserv/tests/sites/cgi/index.php");
+    cmd_and_args.push_back("/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php");
     char **cmdMatrix = buildCharMatrix(cmd_and_args);
-    char **envMatrix = buildCharMatrix(env_vars); 
+    char **envMatrix = buildCharMatrix(env_vars);
 
-    std::cerr << "DEBUGGING matrixes" << std::endl;
-    for (int i = 0; cmdMatrix[i] != NULL; i++) {
-      std::cerr << "cmd matrix: " << cmdMatrix[i] << std::endl;
-    }
+    // Somente se quiser printar a matrix se pa
+    // std::cerr << "DEBUGGING matrixes" << std::endl;
+    // for (int i = 0; cmdMatrix[i] != NULL; i++) {
+    //   std::cerr << "cmd matrix: " << cmdMatrix[i] << std::endl;
+    // }
 
-    for (int j = 0; envMatrix[j] != NULL; j++) {
-      std::cerr << "env matrix: " << envMatrix[j] << std::endl;
-    }
-
-    if (execve(cmdMatrix[0], cmdMatrix, envMatrix) < 0) {
-      std::cerr << "!!!!! ERROR: NO CGI FUCKER !!!!!!!" << std::endl;
+    // for (int j = 0; envMatrix[j] != NULL; j++) {
+    //   std::cerr << "env matrix: " << envMatrix[j] << std::endl;
+    // }
+    if (execve("/usr/bin/php", cmdMatrix, envMatrix) < 0) {
+      std::cerr << "execve error" << std::endl;
       exit(-1);
     }
   } else {
-    close(toCgiPipe[0]);
-    close(fromCgiPipe[1]);
+    close(cgiPipe[1]);
     int status = 0;
-    client->setCgiPid(child_pid); 
-    client->setCgiFd(fromCgiPipe[0]);
+    client->setCgiPid(child_pid);
+    client->setCgiFd(cgiPipe[0]);
 
-    if (waitpid(child_pid, &status, WNOHANG) == 0) {
-      return (false); // not ready
+    waitpid(child_pid, &status, 0);
+    if (WIFEXITED(status)) {
+        // O processo filho terminou normalmente
+        int exitStatus = WEXITSTATUS(status);
+        std::cout << "CGI return status: " << exitStatus << std::endl;
+    } else {
+        // O processo filho não terminou normalmente
+        std::cerr << "CGI process ERROR" << std::endl;
     }
   }
-
-  return (true); // ready
+  //se chegar aqui deu ruim
+  return false;
 }
