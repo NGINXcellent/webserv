@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/19 08:30:38 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/24 09:18:58 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -305,7 +305,7 @@ void Controller::readFromClient(int currentFd) {
 
   std::cout << buffer << std::endl;
   if (bytesRead < 0) {
-    std::cout << " bytesread -1, will break" << errno << std::endl;
+    std::cout << " bytesread -1, will break" << errno << std::endl; // esse errno, tem que fechar a conexao
   } else if (bytesRead == 0) {
     std::cout << " bytesread 0, will close" << std::endl;
   } else if (bytesRead > 0) {
@@ -316,42 +316,42 @@ void Controller::readFromClient(int currentFd) {
   }
 }
 
-void Controller::sendCgiData(int connectionFd, Client *client, TCPServerSocket *socket) {
-  std::cout << "RUNNING CGI" << std::endl;
-  int readPipeFd = client->getCgiFd();
+// void Controller::sendCgiData(int connectionFd, Client *client, TCPServerSocket *socket) {
+//   std::cout << "RUNNING CGI" << std::endl;
+//   int readPipeFd = client->getCgiFd();
 
-  while(42) {
-    int bytes_read = read(readPipeFd, buffer, 4096);
-    
-    if (bytes_read > 0) {
-      std::cout << "DEBUG cgi: " << buffer << std::endl;
-      socket->sendData(connectionFd, buffer, bytes_read);
-    } else {
-      break;
-    }
-  }
+//   while(42) {
+//     int bytes_read = read(readPipeFd, buffer, 4096);
 
-  close(readPipeFd);
-}
+//     if (bytes_read > 0) {
+//       std::cout << "DEBUG cgi: " << buffer << std::endl;
+//       socket->sendData(connectionFd, buffer, bytes_read);
+//     } else {
+//       break;
+//     }
+//   }
+
+//   close(readPipeFd);
+// }
 
 
 void Controller::sendToClient(int currentFd) {
   Client *client = connectedClients[currentFd];
   TCPServerSocket *socket = socketPool[client->getPort()];
 
-  if (client->getCgiPid() != -1) {
-    int status = 0;
+  // if (client->getCgiPid() != -1) {
+  //   int status = 0;
 
-    if (waitpid(client->getCgiPid(), &status, WNOHANG) == 0) {
-      return;
-    }
+  //   if (waitpid(client->getCgiPid(), &status, WNOHANG) == 0) {
+  //     return;
+  //   }
 
-    sendCgiData(currentFd, client, socket);
-    client->reset();
-    closeConnection(currentFd);
-    return;
-  }
-  // std::cout << client->getBuffer() << std::endl;
+  //   sendCgiData(currentFd, client, socket);
+  //   client->reset();
+  //   closeConnection(currentFd);
+  //   return;
+  // }
+  std::cout << client->getBuffer() << std::endl;
   Server *server = client->getServer();
   HttpRequest *request = client->getRequest();
   HttpResponse *response = client->getResponse();
@@ -363,22 +363,22 @@ void Controller::sendToClient(int currentFd) {
   std::cout << "REQUEST CGI EXTENSION " << request->getCGIExtension() << std::endl; 
     ponto de atençao, essa logica deveria estar em process
   */
-  
-  if (!request->getCGI()) { //  I KNOW I HAVE TO CHANGE
-    bool isReady = handleCgi(server, client);
-    if (!isReady) {
-      return;
-    }
+  // LOGICA ANTIGA CGI
+  // // if (!request->getCGI()) { //  I KNOW I HAVE TO CHANGE
+  // //   bool isReady = handleCgi(server, client);
+  // //   if (!isReady) {
+  // //     return;
+  // //   }
     
-    sendCgiData(currentFd, client, socket);
-  } else {
+  // //   sendCgiData(currentFd, client, socket);
+  // } else {
     server->process(client->getBuffer(), request, response);
     socket->sendData(currentFd, response->getHeaders().c_str(), \
                                 response->getHeaders().size());
   
     socket->sendData(currentFd, response->getMsgBody(), \
                                 response->getContentLength());
-  }
+  // }
 
   client->reset();
   closeConnection(currentFd);
@@ -403,83 +403,68 @@ int Controller::getSocketPort(int socketFd) {
   return (port);
 }
 
-char** Controller::buildCharMatrix(const std::vector<std::string> &strList) {
-  size_t listSize = strList.size();
-  char **char_matrix = new char*[listSize + 1];
 
-  for (size_t i = 0; i < listSize; i++) {
-    size_t str_size = strList[i].size();
-    char *c_string = new char[str_size + 1];
-    std::strcpy(c_string, strList[i].c_str());
-    c_string[strList[i].size()] = '\0';
-    char_matrix[i] = c_string;
-  }
+// bool Controller::handleCgi(Server *server, Client *client) {
+//   int cgiPipe[2];
+//   std::string cgiPath = "/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php";
+//   std::vector<std::string> env_vars;
+//   std::vector<std::string> cmd_and_args;
 
-  char_matrix[listSize] = NULL;
-  return (char_matrix);
-}
+//   if (pipe(cgiPipe) == -1) {
+//     std::cerr << "the pipe broke!" << std::endl;
+//     return false;
+//   }
 
-bool Controller::handleCgi(Server *server, Client *client) {
-  int cgiPipe[2];
-  std::string cgiPath = "/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php";
-  std::vector<std::string> env_vars;
-  std::vector<std::string> cmd_and_args;
+//   // process cgi
+//   server->processCgi(client->getRequest(), cgiPipe, env_vars);
+//   pid_t child_pid = fork();
 
-  if (pipe(cgiPipe) == -1) {
-    std::cerr << "the pipe broke!" << std::endl;
-    return false;
-  }
+//   if (child_pid < 0) {
+//     std::cerr << "error on fork" << std::endl;
+//     // send a 500 error
+//   }
 
-  // process cgi
-  server->processCgi(client->getRequest(), cgiPipe, env_vars);
-  pid_t child_pid = fork();
+//   if (child_pid == 0) {
+//     close(cgiPipe[0]);
 
-  if (child_pid < 0) {
-    std::cerr << "error on fork" << std::endl;
-    // send a 500 error
-  }
+//     dup2(cgiPipe[1], STDOUT_FILENO);
+//     close(cgiPipe[1]);
+// // char* argv[] = {const_cast<char*>("php"), const_cast<char*>(cgiPath.c_str()), NULL};
+//     cmd_and_args.push_back("php");
+//     //cmd_and_args.push_back("." + client->getRequest()->getResource());
+//     cmd_and_args.push_back("/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php");
+//     char **cmdMatrix = buildCharMatrix(cmd_and_args);
+//     char **envMatrix = buildCharMatrix(env_vars);
 
-  if (child_pid == 0) {
-    close(cgiPipe[0]);
+//     // Somente se quiser printar a matrix se pa
+//     // std::cerr << "DEBUGGING matrixes" << std::endl;
+//     // for (int i = 0; cmdMatrix[i] != NULL; i++) {
+//     //   std::cerr << "cmd matrix: " << cmdMatrix[i] << std::endl;
+//     // }
 
-    dup2(cgiPipe[1], STDOUT_FILENO);
-    close(cgiPipe[1]);
-// char* argv[] = {const_cast<char*>("php"), const_cast<char*>(cgiPath.c_str()), NULL};
-    cmd_and_args.push_back("php");
-    //cmd_and_args.push_back("." + client->getRequest()->getResource());
-    cmd_and_args.push_back("/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php");
-    char **cmdMatrix = buildCharMatrix(cmd_and_args);
-    char **envMatrix = buildCharMatrix(env_vars);
+//     // for (int j = 0; envMatrix[j] != NULL; j++) {
+//     //   std::cerr << "env matrix: " << envMatrix[j] << std::endl;
+//     // }
+//     if (execve("/usr/bin/php", cmdMatrix, envMatrix) < 0) {
+//       std::cerr << "execve error" << std::endl;
+//       exit(-1);
+//     }
+//   } else {
+//     close(cgiPipe[1]);
+//     int status = 0;
+//     client->setCgiPid(child_pid);
+//     client->setCgiFd(cgiPipe[0]);
 
-    // Somente se quiser printar a matrix se pa
-    // std::cerr << "DEBUGGING matrixes" << std::endl;
-    // for (int i = 0; cmdMatrix[i] != NULL; i++) {
-    //   std::cerr << "cmd matrix: " << cmdMatrix[i] << std::endl;
-    // }
-
-    // for (int j = 0; envMatrix[j] != NULL; j++) {
-    //   std::cerr << "env matrix: " << envMatrix[j] << std::endl;
-    // }
-    if (execve("/usr/bin/php", cmdMatrix, envMatrix) < 0) {
-      std::cerr << "execve error" << std::endl;
-      exit(-1);
-    }
-  } else {
-    close(cgiPipe[1]);
-    int status = 0;
-    client->setCgiPid(child_pid);
-    client->setCgiFd(cgiPipe[0]);
-
-    waitpid(child_pid, &status, 0);
-    if (WIFEXITED(status)) {
-        // O processo filho terminou normalmente
-        int exitStatus = WEXITSTATUS(status);
-        std::cout << "CGI return status: " << exitStatus << std::endl;
-    } else {
-        // O processo filho não terminou normalmente
-        std::cerr << "CGI process ERROR" << std::endl;
-    }
-  }
-  //se chegar aqui deu ruim
-  return false;
-}
+//     waitpid(child_pid, &status, WNOHANG);
+//     if (WIFEXITED(status)) {
+//         // O processo filho terminou normalmente
+//         int exitStatus = WEXITSTATUS(status);
+//         std::cout << "CGI return status: " << exitStatus << std::endl;
+//     } else {
+//         // O processo filho não terminou normalmente
+//         std::cerr << "CGI process ERROR" << std::endl;
+//     }
+//   }
+//   //se chegar aqui deu ruim
+//   return false;
+// }

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/17 21:51:39 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/10/24 09:18:19 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,11 @@ class Server {
   int             getPort(void);
   std::string     getHost(void);
   std::string     getServerName(void);
+  int			getCgiPid(void);
+  void			setCgiPid(int pid);
+  int			getCgiFd(void);
+  void			setCgiFd(int fd);
+  bool            handleCgiGet(HttpRequest *request, char* resourceData, long long resourceSize);
 
  private:
   size_t                        port;
@@ -52,6 +57,8 @@ class Server {
   TCPServerSocket               *socket;
   std::map<int, std::string>    error_pages;
   std::vector<s_locationConfig> locations;
+  int			cgiPid;
+  int			cgiFd;
 
   Server(const Server& f);
   Server& operator=(const Server& t);

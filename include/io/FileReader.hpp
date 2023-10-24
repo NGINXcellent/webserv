@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   FileReader.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:51:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/02 19:27:37 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/10/24 09:14:44 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class FileReader {
 
   static HttpStatusCode getDirContent(const std::string &dirName, \
                            std::map<std::string, struct file_info *> &entries);
-
+  static bool getfdContent(int fd, char **resourceData, long long *resourceSize);
  private:
   FileReader(void);
   FileReader(const FileReader& f);

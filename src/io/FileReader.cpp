@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   FileReader.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/10 20:32:28 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 15:42:13 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/10/24 09:30:56 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,10 +112,30 @@ int getFileInfo(const std::string &filename, struct file_info *info) {
     return (-1);
   }
   
-  info->isDir = S_ISDIR(fileDetails.st_mode); 
+  info->isDir = S_ISDIR(fileDetails.st_mode);
   info->isRegFile = S_ISREG(fileDetails.st_mode);
   info->lastModified = fileDetails.st_mtime;
   info->fileSize = fileDetails.st_size;
   return (Ready);
 }
 
+bool FileReader::getfdContent(int fd, char **resourceData, long long *resourceSize) {
+  struct stat fileStat;
+  if (fstat(fd, &fileStat) < 0) {
+    std::cerr << "error getting file size" << std::endl;
+    return false;
+  }
+
+  *resourceSize = fileStat.st_size;
+  *resourceData = new char[*resourceSize + 1];
+
+  int bytesRead = read(fd, *resourceData, *resourceSize);
+  if (bytesRead < 0) {
+    std::cerr << "error reading file" << std::endl;
+    delete[] *resourceData;
+    return false;
+  }
+
+  (*resourceData)[*resourceSize] = '\0';
+  return true;
+}
