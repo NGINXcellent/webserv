@@ -6,6 +6,7 @@ header("Content-Type: text/html");
 $name = getenv('USER_NAME');
 $server = getenv('WEBSERV');
 
-echo "Hello ${name} to the amazing ${server}";
+echo "Hello ${name} to the aaaamazing ${server}";
 echo "For some reason this is not working as it should";
+
 ?>

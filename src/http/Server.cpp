@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/24 10:28:19 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/24 18:43:21 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,6 @@ void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
 }
 
 void Server::processCgi(HttpRequest *req, int pipe[2], std::vector<std::string> &env_vars) {
-  return;
   std::cout << "I HAVE RUN!" << std::endl;
   setupCgiVars(req, env_vars);
   std::string method = req->getMethod();
@@ -186,177 +185,90 @@ char** buildCharMatrix(const std::vector<std::string> &strList) {
   return (char_matrix);
 }
 
-// to delete
-char* my_strdup(const char* str) {
-    // Aloca memória para a nova string
-    char* new_str = new char[strlen(str) + 1];
-    // Copia a string para a memória alocada
-    strcpy(new_str, str);
-    return new_str;
+
+bool Server::handleCgiGet(HttpRequest *request) {
+  int cgiPipe[2];
+  std::string cgiPath = "/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php";
+  std::vector<std::string> env_vars;
+  std::vector<std::string> cmd_and_args;
+
+  if (pipe(cgiPipe) == -1) {
+    std::cerr << "the pipe broke!" << std::endl;
+    return false;
+  }
+
+  // process cgi
+  processCgi(request, cgiPipe, env_vars);
+  pid_t child_pid = fork();
+
+  if (child_pid < 0) {
+    std::cerr << "error on fork" << std::endl;
+    // send a 500 error
+  }
+
+  if (child_pid == 0) {
+    close(cgiPipe[0]);
+    dup2(cgiPipe[1], STDOUT_FILENO);
+    close(cgiPipe[1]);
+// char* argv[] = {const_cast<char*>("php"), const_cast<char*>(cgiPath.c_str()), NULL};
+    cmd_and_args.push_back("php");
+    //cmd_and_args.push_back("." + client->getRequest()->getResource());
+    cmd_and_args.push_back("/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php");
+    char **cmdMatrix = buildCharMatrix(cmd_and_args);
+    char **envMatrix = buildCharMatrix(env_vars);
+    // char *cmdMatrix1[] = { "php", "/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php", NULL };
+    // char *envMatrix2[] = { NULL };
+
+    // Somente se quiser printar a matrix se pa
+    // std::cerr << "DEBUGGING matrixes" << std::endl;
+    // for (int i = 0; cmdMatrix[i] != NULL; i++) {
+    //   std::cerr << "cmd matrix: " << cmdMatrix[i] << std::endl;
+    // }
+
+    // for (int j = 0; envMatrix[j] != NULL; j++) {
+    //   std::cerr << "env matrix: " << envMatrix[j] << std::endl;
+    // }
+    if (execve("/usr/bin/php", cmdMatrix, envMatrix) < 0) {
+      std::cerr << "execve error" << std::endl;
+      exit(-1);
+    }
+  } else {
+    close(cgiPipe[1]);
+    int status = 0;
+    setCgiPid(child_pid);
+    setCgiFd(cgiPipe[0]);
+    // waitpid(child_pid, &status, WNOHANG);
+    waitpid(child_pid, &status, 0);
+    if (WIFEXITED(status)) {
+        // O processo filho terminou normalmente
+        int exitStatus = WEXITSTATUS(status);
+        std::cout << "CGI return status: " << exitStatus << std::endl;
+    } else {
+        // O processo filho não terminou normalmente
+        std::cerr << "CGI process ERROR" << std::endl;
+    }
+  }
+  return true;
 }
 
-bool Server::handleCgiGet(HttpRequest *request, char* resourceData, long long resourceSize) {
-    int outputPipe[2]; // Pipe para a saída do CGI para o processo pai
-    int inputPipe[2];  // Pipe para enviar dados de volta para o CGI
+void Server::prepareData(char* resourceData, long long resourceSize) {
+  std::cout << "RUNNING CGI" << std::endl;
+  int readPipeFd = getCgiFd();
+  // char buffer[4096];
 
-    if (pipe(outputPipe) == -1 || pipe(inputPipe) == -1) {
-        std::cerr << "Error creating pipes" << std::endl;
-        return false;
+  while(42) {
+    int bytes_read = read(readPipeFd, resourceData, resourceSize);
+    
+    if (bytes_read > 0) {
+      std::cout << "DEBUG cgi: " << resourceData << std::endl;
+      // socket->sendData(connectionFd, resourceData, bytes_read);
+    } else {
+      break;
     }
+  }
 
-    std::vector<std::string> env_vars;
-    processCgi(request, inputPipe, env_vars);
-
-    pid_t child_pid = fork();
-
-    if (child_pid < 0) {
-        std::cerr << "Error on fork" << std::endl;
-        close(outputPipe[0]);
-        close(outputPipe[1]);
-        close(inputPipe[0]);
-        close(inputPipe[1]);
-        return false;
-    }
-
-    if (child_pid == 0) { // Código do processo filho
-        close(outputPipe[0]); // Fecha o descritor de leitura do pipe de saída
-        dup2(outputPipe[1], STDOUT_FILENO); // Redireciona a saída padrão para o pipe de saída
-        close(outputPipe[1]); // Fecha o descritor de escrita do pipe de saída
-
-        close(inputPipe[1]); // Fecha o descritor de escrita do pipe de entrada
-        dup2(inputPipe[0], STDIN_FILENO); // Redireciona a entrada padrão para o pipe de entrada
-        close(inputPipe[0]); // Fecha o descritor de leitura do pipe de entrada
-
-        // Executa o CGI
-        if (execl("/usr/bin/php", "php", "/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php", NULL) < 0) {
-            std::cerr << "Execve error" << std::endl;
-            exit(EXIT_FAILURE);
-        }
-    } else { // Código do processo pai
-        close(outputPipe[1]); // Fecha o descritor de escrita do pipe de saída
-        close(inputPipe[0]);  // Fecha o descritor de leitura do pipe de entrada
-
-        // Escreve dados para o pipe de entrada do CGI, se necessário
-        // (por exemplo, enviar dados do corpo da requisição para o CGI)
-        // write(inputPipe[1], data_to_send, size_of_data);
-
-        // Lê dados da saída do CGI
-        ssize_t bytesRead = read(outputPipe[0], resourceData, resourceSize);
-        close(outputPipe[0]); // Fecha o descritor de leitura do pipe de saída
-
-        if (bytesRead == -1) {
-            std::cerr << "Error reading from pipe" << std::endl;
-            return false;
-        }
-
-        resourceData[bytesRead] = '\0'; // Null-terminate a string
-
-        // Agora você pode usar os dados em resourceData
-        std::cout << "CGI output: " << resourceData << std::endl;
-
-        // Espera pelo processo filho
-        int status = 0;
-        waitpid(child_pid, &status, 0);
-
-        if (WIFEXITED(status)) {
-            int exitStatus = WEXITSTATUS(status);
-            std::cout << "CGI process exited with status: " << exitStatus << std::endl;
-        } else {
-            std::cerr << "CGI process ERROR" << std::endl;
-        }
-    }
-
-    return true;
+  close(readPipeFd);
 }
-
-
-// bool Server::handleCgiGet(HttpRequest *request, char* resourceData, long long resourceSize) {
-//   int cgiPipe[2];
-//   std::string cgiPath = "/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php";
-//   std::vector<std::string> env_vars;
-//   // std::vector<std::string> cmd_and_args;
-
-//   if (pipe(cgiPipe) == -1) {
-//     std::cerr << "the pipe broke!" << std::endl;
-//     return false;
-//   }
-
-//   // process cgi
-//   processCgi(request, cgiPipe, env_vars);
-//   pid_t child_pid = fork();
-
-//   if (child_pid < 0) {
-//     std::cerr << "error on fork" << std::endl;
-//     // send a 500 error
-//   }
-
-//   if (child_pid == 0) {
-//     close(cgiPipe[0]);
-//     dup2(cgiPipe[1], STDOUT_FILENO);
-//     close(cgiPipe[1]);
-// // char* argv[] = {const_cast<char*>("php"), const_cast<char*>(cgiPath.c_str()), NULL};
-//     // cmd_and_args.push_back("php");
-//     //cmd_and_args.push_back("." + client->getRequest()->getResource());
-//     // cmd_and_args.push_back("/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php");
-//     // char **cmdMatrix = buildCharMatrix(cmd_and_args);
-//     // char **envMatrix = buildCharMatrix(env_vars);
-// char *cmdMatrix[] = {
-//     my_strdup("php"),
-//     my_strdup("/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php"),
-//     NULL
-// };
-//     // char *cmdMatrix1[] = { "php", "/home/dvargas/Desktop/webserv/tests/sites/cgi/index.php", NULL };
-//     // char *envMatrix2[] = { NULL };
-
-//     // Somente se quiser printar a matrix se pa
-//     // std::cerr << "DEBUGGING matrixes" << std::endl;
-//     // for (int i = 0; cmdMatrix[i] != NULL; i++) {
-//     //   std::cerr << "cmd matrix: " << cmdMatrix[i] << std::endl;
-//     // }
-
-//     // for (int j = 0; envMatrix[j] != NULL; j++) {
-//     //   std::cerr << "env matrix: " << envMatrix[j] << std::endl;
-//     // }
-//     if (execve("/usr/bin/php", cmdMatrix, NULL) < 0) {
-//       std::cerr << "execve error" << std::endl;
-//       exit(-1);
-//     }
-//   } else {
-//     close(cgiPipe[1]);
-//     int status = 0;
-//     setCgiPid(child_pid);
-//     setCgiFd(cgiPipe[0]);
-//     (void)resourceSize;
-//     // waitpid(child_pid, &status, WNOHANG);
-//     waitpid(child_pid, &status, 0);
-//     if (WIFEXITED(status)) {
-//         // O processo filho terminou normalmente
-//         int exitStatus = WEXITSTATUS(status);
-//         std::cout << "CGI return status: " << exitStatus << std::endl;
-//         // if(FileReader::getfdContent(cgiPipe[0],
-//         //                               &resourceData, &resourceSize)) {
-//         // std::cout << "CGI return status: " << resourceData << std::endl;
-//         //                               }
-//          while(42) {
-//           int bytes_read = read(cgiPipe[0], resourceData, 4096);
-
-//           if (bytes_read > 0) {
-//             std::cout << "DEBUG cgi: " << resourceData << std::endl;
-//             socket->sendData(cgiPipe[0], resourceData, bytes_read);
-//           } else {
-//             std::cout<< errno<< std::endl;
-//             break;
-//           }
-//         }
-//         std::cout << "CGI return status10: " << resourceData << std::endl;
-//     } else {
-//         // O processo filho não terminou normalmente
-//         std::cerr << "CGI process ERROR" << std::endl;
-//     }
-//   }
-//   //se chegar aqui deu ruim
-//   return false;
-// }
 
 HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
   if (request->getRedirectionCode() != 0) {
@@ -391,16 +303,20 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     }
   }
 
-  char *resourceData;
-  long long resourceSize;
 
   if (request->getCGI() == true) {
-    handleCgiGet(request, resourceData, resourceSize);
-    return (Ready);
+    char* resourceData= new char[4096];
+    long long resourceSize = 999999;
+    handleCgiGet(request);
+    prepareData(resourceData, resourceSize);
+    response->setMsgBody(resourceData);
+    response->setContentLength(resourceSize);
+    delete[] resourceData;
   }
   else {
     opStatus = FileSystem::check(fullpath, F_OK | R_OK);
-
+    char* resourceData;
+    long long resourceSize;
     if (opStatus != 0) {
       return (opStatus);
     }
@@ -418,12 +334,12 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     if (opStatus != 0) {
       return (opStatus);
     }
+      response->setMsgBody(resourceData);
+      response->setContentLength(resourceSize);
   }
 
   response->setLastModifiedTime(HttpTime::getLastModifiedTime(fullpath));
   response->setContentType(MimeType::identify(fullpath));
-  response->setMsgBody(resourceData);
-  response->setContentLength(resourceSize);
   return (Ready);
 }
 

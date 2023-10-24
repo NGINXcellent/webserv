@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/24 09:18:19 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/24 14:29:17 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,9 @@ class Server {
   void			setCgiPid(int pid);
   int			getCgiFd(void);
   void			setCgiFd(int fd);
-  bool            handleCgiGet(HttpRequest *request, char* resourceData, long long resourceSize);
+  bool            handleCgiGet(HttpRequest *request);
+
+void prepareData(char* resourceData, long long resourceSize);
 
  private:
   size_t                        port;
