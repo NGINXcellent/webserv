@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/18 15:42:36 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/25 14:53:42 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ HttpRequest::HttpRequest(void) {
   responseStatusCode = 0;
   hasHeader = false;
   requestReady = false;
+  isCGI = false;
 }
 
 bool HttpRequest::isDirListActive(void) {
@@ -130,7 +131,7 @@ const std::string& HttpRequest::getRedirectionPath(void) {
 }
 
 void HttpRequest::setRedirectionPath(const std::string &path) {
-  redirectionPath = path; 
+  redirectionPath = path;
 }
 
 void HttpRequest::setRedirectionCode(int toset) {
@@ -231,6 +232,7 @@ void HttpRequest::setRequestReady(bool set) {
 void HttpRequest::setCGI(bool toset, std::string cgiPath, std::string cgiExtension) {
   this->cgiPath = cgiPath;
   this->cgiExtension = cgiExtension;
+  
   isCGI = toset;
 }
 

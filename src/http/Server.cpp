@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/15 08:02:12 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/25 15:36:16 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,9 @@
 #include <fstream>
 #include <sstream>  // stringstream
 #include <algorithm>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 
 #include "../../include/http/HttpTime.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
@@ -34,9 +37,128 @@ Server::Server(const struct s_serverConfig& config) {
   srv_max_body_size = config.srv_max_body_size;
   error_pages = config.error_page;
   locations = config.location;
+        epollfd = epoll_create(1);
+        if (epollfd == -1) {
+            perror("epoll_create1");
+            exit(EXIT_FAILURE);
+        }
 }
 
-Server::~Server(void) {}
+Server::~Server(void) { close(epollfd); }
+void Server::addDescriptorToEpoll(int fd) {
+        // Adiciona o descritor ao epoll para monitoramento
+        struct epoll_event event;
+        event.events = EPOLLIN;
+        event.data.fd = fd;
+        if (epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event) == -1) {
+            perror("epoll_ctl");
+            exit(EXIT_FAILURE);
+        }
+    }
+void setNonBlocking(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1) {
+        perror("fcntl");
+        exit(EXIT_FAILURE);
+    }
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+        perror("fcntl");
+        exit(EXIT_FAILURE);
+    }
+}
+void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
+  // Espera por eventos usando epoll com o timeout especificado
+  std::cout << "chegamos no handle epoll events" << std::endl;
+  struct epoll_event events[10];
+  int numEvents = epoll_wait(epollfd, events, 10, timeout);
+
+  if (numEvents == -1) {
+    perror("epoll_wait");
+    exit(EXIT_FAILURE);
+  }
+  for (int i = 0; i < numEvents; ++i) {
+    if (events[i].events & EPOLLIN) {
+      // O descritor está pronto para leitura (events[i].data.fd contém o
+      // descritor de arquivo)
+      ssize_t bytesRead;
+      char buffer[4096];
+      while ((bytesRead = read(events[i].data.fd, buffer, sizeof(buffer))) >
+             0) {
+        cgiOutput.append(buffer, bytesRead);
+        // std::cout << "cgiOutputttttttttt: " << cgiOutput << std::endl;
+      }
+
+      if (bytesRead == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+        // Não há mais dados para ler no momento
+      } else if (bytesRead == -1) {
+        perror("read");
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
+}
+HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
+  // Cria um pipe para capturar a saída do processo CGI
+  std::string cgiPath = request->getLocationWithoutIndex();
+  std::cout << cgiPath << std::endl;
+  int pipefd[2];
+  if (pipe(pipefd) == -1) {
+    perror("pipe");
+    exit(EXIT_FAILURE);
+  }
+  setNonBlocking(pipefd[0]);
+  setNonBlocking(pipefd[1]);
+
+  // Cria um novo processo
+  pid_t childPid = fork();
+
+  if (childPid == -1) {
+    // Erro ao criar o processo filho
+    perror("fork");
+    exit(EXIT_FAILURE);
+  }
+
+    std::cout << request->getQueryString() << std::endl;
+    setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
+
+  if (childPid == 0) {
+    // Este é o código executado no processo filho
+
+    // Configura variáveis de ambiente para passar a query string para o CGI
+
+    // Fecha a extremidade de leitura do pipe
+    close(pipefd[0]);
+
+    // Redireciona a saída padrão (stdout) para o pipe
+    dup2(pipefd[1], STDOUT_FILENO);
+
+    close(pipefd[1]);
+
+    char *argv[] = {const_cast<char *>("php"),
+                    const_cast<char *>(cgiPath.c_str()), NULL};
+    // Substitui o processo atual pelo programa CGI
+    execve(request->getCGIPath().c_str(), argv, NULL);
+    perror("execve");
+    exit(EXIT_FAILURE);
+  } else {
+    // Este é o código executado no processo pai
+
+    // Fecha a extremidade de escrita do pipe
+    close(pipefd[1]);
+    addDescriptorToEpoll(pipefd[0]);
+    std::string cgiOutput;
+    handleEpollEvents(5000, cgiOutput);
+    close(pipefd[0]);
+    // std::cout << cgiOutput << std::endl;
+    const char *bodyData = cgiOutput.c_str();  // Converter para const char*
+    char *bodyCopy = new char[strlen(bodyData) + 1];
+    strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
+    response->setMsgBody(bodyCopy);
+    response->setContentLength(strlen(bodyCopy));
+    // response->setContentType("text/html");
+  }
+  return (Ready);
+}
 
 HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
@@ -73,8 +195,6 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
 void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
   HttpRequestFactory::setupRequest(req, buffer, locations);
   HttpStatusCode status = HttpRequestFactory::check(req, server_name);
-  std::cout << " WILL PRINT CGI HERE ->>>>>>> ";
-  std::cout << req->getCGI() << std::endl;
 
   if (status == Ready) {
     res->setProtocol("HTTP", req->getProtocolMainVersion(),
@@ -181,7 +301,7 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
 
       HttpResponseComposer::buildDirListResponse(request, response, entries);
       return (Ready); // or opStatus Code
-    } else {
+    } else { // possivelmente nao precisamos desse else
       fullpath = request->getIndexPath();
     }
   }
@@ -198,7 +318,14 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     response->setStatusCode(Not_Modified);
     return (Ready);
   }
-
+  // std::cout << request->getQueryString() << std::endl;
+  std::string location = request->getLocationWithoutIndex();
+  std::string ext = request->getCGIExtension();
+  std::string checkExt = location.substr(location.size() - ext.size());
+    if(checkExt == request->getCGIExtension()){
+      opStatus = getCGI(request, response);
+    return opStatus;
+  }
   char *resourceData;
   long long resourceSize;
   opStatus = FileReader::getContent(fullpath.c_str(), \
