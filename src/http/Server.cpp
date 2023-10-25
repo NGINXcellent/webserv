@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 08:25:36 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/25 15:36:16 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,113 +66,98 @@ void setNonBlocking(int fd) {
         exit(EXIT_FAILURE);
     }
 }
-    void Server::handleEpollEvents(int timeout, std::string& cgiOutput) {
-        // Espera por eventos usando epoll com o timeout especificado
-        std::cout << "chegamos no handle epoll events" << std::endl;
-        struct epoll_event events[10];
-        int numEvents = epoll_wait(epollfd, events, 10, timeout);
+void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
+  // Espera por eventos usando epoll com o timeout especificado
+  std::cout << "chegamos no handle epoll events" << std::endl;
+  struct epoll_event events[10];
+  int numEvents = epoll_wait(epollfd, events, 10, timeout);
 
-        if (numEvents == -1) {
-            perror("epoll_wait");
-            exit(EXIT_FAILURE);
-        }
-    for (int i = 0; i < numEvents; ++i) {
-        if (events[i].events & EPOLLIN) {
-            // O descritor está pronto para leitura (events[i].data.fd contém o descritor de arquivo)
-            ssize_t bytesRead;
-            char buffer[4096];
-            while ((bytesRead = read(events[i].data.fd, buffer, sizeof(buffer))) > 0) {
-                cgiOutput.append(buffer, bytesRead);
-                // std::cout << "cgiOutputttttttttt: " << cgiOutput << std::endl;
-            }
+  if (numEvents == -1) {
+    perror("epoll_wait");
+    exit(EXIT_FAILURE);
+  }
+  for (int i = 0; i < numEvents; ++i) {
+    if (events[i].events & EPOLLIN) {
+      // O descritor está pronto para leitura (events[i].data.fd contém o
+      // descritor de arquivo)
+      ssize_t bytesRead;
+      char buffer[4096];
+      while ((bytesRead = read(events[i].data.fd, buffer, sizeof(buffer))) >
+             0) {
+        cgiOutput.append(buffer, bytesRead);
+        // std::cout << "cgiOutputttttttttt: " << cgiOutput << std::endl;
+      }
 
-            if (bytesRead == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-                // Não há mais dados para ler no momento
-            } else if (bytesRead == -1) {
-                perror("read");
-                exit(EXIT_FAILURE);
-            }
-
-            // Processar cgiOutput conforme necessário
-        } else {
-            // Outros tipos de eventos, se necessário
-        }
+      if (bytesRead == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+        // Não há mais dados para ler no momento
+      } else if (bytesRead == -1) {
+        perror("read");
+        exit(EXIT_FAILURE);
+      }
     }
-    }
+  }
+}
 HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
- // Cria um pipe para capturar a saída do processo CGI
-  std::string cgiPath = "./cgi-test.php";
+  // Cria um pipe para capturar a saída do processo CGI
+  std::string cgiPath = request->getLocationWithoutIndex();
   std::cout << cgiPath << std::endl;
-    int pipefd[2];
-    if (pipe(pipefd) == -1) {
-        perror("pipe");
-        exit(EXIT_FAILURE);
-    }
-    setNonBlocking(pipefd[0]);
-    setNonBlocking(pipefd[1]);
+  int pipefd[2];
+  if (pipe(pipefd) == -1) {
+    perror("pipe");
+    exit(EXIT_FAILURE);
+  }
+  setNonBlocking(pipefd[0]);
+  setNonBlocking(pipefd[1]);
 
-    // Cria um novo processo
-    pid_t childPid = fork();
+  // Cria um novo processo
+  pid_t childPid = fork();
 
-    if (childPid == -1) {
-        // Erro ao criar o processo filho
-        perror("fork");
-        exit(EXIT_FAILURE);
-    }
+  if (childPid == -1) {
+    // Erro ao criar o processo filho
+    perror("fork");
+    exit(EXIT_FAILURE);
+  }
 
-    if (childPid == 0) {
-        // Este é o código executado no processo filho
+    std::cout << request->getQueryString() << std::endl;
+    setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
 
-        // Configura variáveis de ambiente para passar a query string para o CGI
-        std::cout << request->getQueryString() << std::endl;
-        setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
+  if (childPid == 0) {
+    // Este é o código executado no processo filho
 
-        // Fecha a extremidade de leitura do pipe
-        close(pipefd[0]);
+    // Configura variáveis de ambiente para passar a query string para o CGI
 
-        // Redireciona a saída padrão (stdout) para o pipe
-        dup2(pipefd[1], STDOUT_FILENO);
+    // Fecha a extremidade de leitura do pipe
+    close(pipefd[0]);
 
-        close(pipefd[1]);
+    // Redireciona a saída padrão (stdout) para o pipe
+    dup2(pipefd[1], STDOUT_FILENO);
 
-        char* argv[] = {const_cast<char*>("php"), const_cast<char*>(cgiPath.c_str()), NULL};
-        // Substitui o processo atual pelo programa CGI
-        execve("/usr/bin/php", argv, NULL);
+    close(pipefd[1]);
 
-        // Se o execl falhar, algo deu errado
-        perror("execl");
-        exit(EXIT_FAILURE);
-    } else {
-        // Este é o código executado no processo pai
+    char *argv[] = {const_cast<char *>("php"),
+                    const_cast<char *>(cgiPath.c_str()), NULL};
+    // Substitui o processo atual pelo programa CGI
+    execve(request->getCGIPath().c_str(), argv, NULL);
+    perror("execve");
+    exit(EXIT_FAILURE);
+  } else {
+    // Este é o código executado no processo pai
 
-        // Fecha a extremidade de escrita do pipe
-        close(pipefd[1]);
-        addDescriptorToEpoll(pipefd[0]);
-        std::string cgiOutput;
-        handleEpollEvents(5000, cgiOutput);
-        close(pipefd[0]);
-        // std::cout << cgiOutput << std::endl;
-        const char* bodyData = cgiOutput.c_str(); // Converter para const char*
-        char* bodyCopy = new char[strlen(bodyData) + 1];
-        strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
-
-        // Aguarda o término do processo filho
-        // int status;
-        // waitpid(childPid, &status, WNOHANG);
-
-        // if (WIFEXITED(status)) {
-        //     // O processo filho terminou normalmente
-        //     int exitStatus = WEXITSTATUS(status);
-        //     std::cout << "O processo CGI terminou com status " << exitStatus << std::endl;
-        // } else {
-        //     // O processo filho não terminou normalmente
-        //     std::cerr << "Erro: O processo CGI não terminou normalmente." << std::endl;
-        // }
-      response->setMsgBody(bodyCopy);
-      response->setContentLength(strlen(bodyCopy));
-      // response->setContentType("text/html");
-    }
-    return (Ready);
+    // Fecha a extremidade de escrita do pipe
+    close(pipefd[1]);
+    addDescriptorToEpoll(pipefd[0]);
+    std::string cgiOutput;
+    handleEpollEvents(5000, cgiOutput);
+    close(pipefd[0]);
+    // std::cout << cgiOutput << std::endl;
+    const char *bodyData = cgiOutput.c_str();  // Converter para const char*
+    char *bodyCopy = new char[strlen(bodyData) + 1];
+    strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
+    response->setMsgBody(bodyCopy);
+    response->setContentLength(strlen(bodyCopy));
+    // response->setContentType("text/html");
+  }
+  return (Ready);
 }
 
 HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
@@ -194,11 +179,7 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   }
 
   HttpStatusCode opStatus = Ready;
-  if(request->getCGI() == true) {
-    if(requestMethod == "GET")
-      opStatus = getCGI(request, response);
-    return opStatus;
-  }
+
   if (requestMethod == "GET")
     opStatus = get(request, response);
   else if (requestMethod == "DELETE")
@@ -214,8 +195,6 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
 void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
   HttpRequestFactory::setupRequest(req, buffer, locations);
   HttpStatusCode status = HttpRequestFactory::check(req, server_name);
-  std::cout << " WILL PRINT CGI HERE ->>>>>>> ";
-  std::cout << req->getCGI() << std::endl;
 
   if (status == Ready) {
     res->setProtocol("HTTP", req->getProtocolMainVersion(),
@@ -322,7 +301,7 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
 
       HttpResponseComposer::buildDirListResponse(request, response, entries);
       return (Ready); // or opStatus Code
-    } else {
+    } else { // possivelmente nao precisamos desse else
       fullpath = request->getIndexPath();
     }
   }
@@ -339,7 +318,14 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     response->setStatusCode(Not_Modified);
     return (Ready);
   }
-
+  // std::cout << request->getQueryString() << std::endl;
+  std::string location = request->getLocationWithoutIndex();
+  std::string ext = request->getCGIExtension();
+  std::string checkExt = location.substr(location.size() - ext.size());
+    if(checkExt == request->getCGIExtension()){
+      opStatus = getCGI(request, response);
+    return opStatus;
+  }
   char *resourceData;
   long long resourceSize;
   opStatus = FileReader::getContent(fullpath.c_str(), \
