@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/24 19:02:09 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/25 07:23:53 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ const std::string& HttpRequest::getRedirectionPath(void) {
 }
 
 void HttpRequest::setRedirectionPath(const std::string &path) {
-  redirectionPath = path; 
+  redirectionPath = path;
 }
 
 void HttpRequest::setRedirectionCode(int toset) {

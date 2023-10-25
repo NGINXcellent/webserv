@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/10 15:21:58 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/25 07:53:35 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,9 @@ class Server {
   int             getPort(void);
   std::string     getHost(void);
   std::string     getServerName(void);
+  HttpStatusCode  getCGI(HttpRequest *request, HttpResponse *response);
+  void handleEpollEvents(int timeout, std::string& cgiOutput);
+  void addDescriptorToEpoll(int fd);
 
  private:
   size_t                        port;
@@ -48,6 +51,7 @@ class Server {
   TCPServerSocket               *socket;
   std::map<int, std::string>    error_pages;
   std::vector<s_locationConfig> locations;
+  int epollfd;
 
   Server(const Server& f);
   Server& operator=(const Server& t);
