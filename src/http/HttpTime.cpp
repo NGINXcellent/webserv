@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 22:34:12 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/08 09:04:40 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/25 20:36:40 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ int getMonthNumber(const std::string &monthName) {
 }
 
 long long parseToMillis(std::string dateTimeStr) {
-  std::cout << "If-Modified-Since: " << dateTimeStr << std::endl;
+  // std::cout << "If-Modified-Since: " << dateTimeStr << std::endl;
 
   if (dateTimeStr == "")
     return (-1);

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 15:36:16 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/25 21:25:18 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,10 +81,13 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
       // O descritor está pronto para leitura (events[i].data.fd contém o
       // descritor de arquivo)
       ssize_t bytesRead;
-      char buffer[4096];
+      char buffer[4960];
       while ((bytesRead = read(events[i].data.fd, buffer, sizeof(buffer))) >
              0) {
         cgiOutput.append(buffer, bytesRead);
+        int i = 0;
+        std::cout << "ja passei aqui -> " << i << std::endl;
+        i++;
         // std::cout << "cgiOutputttttttttt: " << cgiOutput << std::endl;
       }
 
@@ -141,6 +144,8 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
     perror("execve");
     exit(EXIT_FAILURE);
   } else {
+    sleep(1);
+    // to tentnado ler antes do CGI acabar de rodar, por isso da ruim, resolva esta amanha.
     // Este é o código executado no processo pai
 
     // Fecha a extremidade de escrita do pipe
@@ -162,7 +167,8 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
 
 HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
-
+  //  DEBUG
+  std::cout << request->getLocationWithoutIndex() << std::endl;
   if (!uTimestamp.empty() && \
       HttpTime::isModifiedSince(uTimestamp, request->getResource())) {
     // shim

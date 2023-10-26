@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 07:03:57 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/25 20:43:33 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,8 @@ void Controller::handleConnections(void) {
         Client *client = connectedClients[currentFd];
 
         if (client != NULL && client->getRequest()->isRequestReady()) {
-          std::cout << connectedClients[currentFd]->getBuffer() << std::endl;
+          // DEBUG? 
+          // std::cout << connectedClients[currentFd]->getBuffer() << std::endl;
           sendToClient(currentFd);
         }
       }
@@ -198,7 +199,8 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
   if (request->getMethod() == "POST") {
     // this is important, idk why but it is.
     size_t contentPos = requestMsg.find("\r\n\r\n") + 4;
-    std::cout << contentPos << std::endl;
+    //  DEBUG
+    // std::cout << contentPos << std::endl;
     std::string body = requestMsg.substr(contentPos);
     if (body == "") {
       return (true);
@@ -309,7 +311,8 @@ void Controller::readFromClient(int currentFd) {
   } else if (bytesRead == 0) {
     std::cout << " bytesread 0, will close" << std::endl;
   } else if (bytesRead > 0) {
-    std::cout << " i read -> " << bytesRead << " bytes" << std::endl;
+    // DEBUG
+    // std::cout << " i read -> " << bytesRead << " bytes" << std::endl;
     if(connectedClients[currentFd] != NULL) {
       connectedClients[currentFd]->buffer.append(buffer, bytesRead);
     }
@@ -331,10 +334,10 @@ void Controller::sendToClient(int currentFd) {
                    response->getHeaders().size());
   socket->sendData(currentFd, response->getMsgBody(), \
                    response->getContentLength());
-  std::cout << response->getHeaders() << std::endl;
+  // DEBUG
+  // std::cout << response->getHeaders() << std::endl;
+  std::cout << response->getContentLength() << std::endl;
   client->reset();
-
-  //isso aqui deveria acontecer com keepalive ?
   closeConnection(currentFd);
 }
 

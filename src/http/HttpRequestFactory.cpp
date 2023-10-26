@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/15 09:01:11 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/25 20:12:06 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -409,7 +409,8 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
     request->setDirListActive(tmplocation.autoindex);
     request->setAllowedMethods(tmplocation.allowed_method);
     request->setIndexPath(indexRet);
-    std::cout<<request->getIndexPath()<<std::endl;
+    //  DEBUG
+    // std::cout<<request->getIndexPath()<<std::endl;
   }
 
 std::string HttpRequestFactory::getHeaderValue(std::string headerName, \

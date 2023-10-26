@@ -18,8 +18,8 @@
     <div id="image-gallery">
             <?php
             // Diretório das imagens
-            $directory = './bin-img'; // Substitua pelo caminho da sua pasta de imagens
-
+            $directory = './tests/sites/present_test/bin-img/'; // Substitua pelo caminho da sua pasta de imagens
+// problema, esta dando request dobrado na imagem: ./tests/sites/present_test/tests/sites/present_test/bin-img/nginxcellent.png
             // Lista todos os arquivos na pasta
             $files = scandir($directory);
 
@@ -30,7 +30,7 @@
                     $div = '<div class="image-item">';
 
                     // Adiciona a imagem à div
-                    $div .= '<img src="' . $directory . '/' . $file . '" alt="' . $file . '">';
+                    $div .= '<img src="' . "./bin-img" . '/' . $file . '" alt="' . $file . '">';
 
                     // Adiciona o formulário de exclusão
                     $div .= '<form action="delete-image.php" method="post">';

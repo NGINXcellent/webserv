@@ -1,7 +1,7 @@
 <?php
 
 // Diretório de destino para salvar os arquivos
-$targetDirectory = "./bin-img/";
+$targetDirectory = "./tests/sites/present_test/bin-img/";
 
 // Verifica se o diretório de destino existe e é gravável
 if (!file_exists($targetDirectory)) {

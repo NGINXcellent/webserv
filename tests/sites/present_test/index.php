@@ -33,7 +33,7 @@
         <div class="image-box">
             <?php
             // Caminho para a pasta que contém as imagens
-            $dir = './bin-img/';
+            $dir = './tests/sites/present_test/bin-img/';
 
             // Lista de extensões de arquivo de imagem permitidas
             $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
@@ -59,7 +59,7 @@
                 $randomImage = $imageFiles[array_rand($imageFiles)];
 
                 // Exibe a imagem
-                echo '<img src="' . $dir . $randomImage . '" alt="Imagem Aleatória">';
+                echo '<img src="' . "./bin-img/" . $randomImage . '" alt="Imagem Aleatória">';
             } else {
                 echo 'Nenhuma imagem encontrada na pasta.';
             }
