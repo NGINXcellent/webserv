@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 21:25:18 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/26 18:49:06 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,15 +80,19 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
     if (events[i].events & EPOLLIN) {
       // O descritor está pronto para leitura (events[i].data.fd contém o
       // descritor de arquivo)
+      int status;
+      waitpid(0, &status, 0);
+      if(status == 0) {
       ssize_t bytesRead;
+      int j = 0;
       char buffer[4960];
       while ((bytesRead = read(events[i].data.fd, buffer, sizeof(buffer))) >
              0) {
         cgiOutput.append(buffer, bytesRead);
-        int i = 0;
-        std::cout << "ja passei aqui -> " << i << std::endl;
-        i++;
+        std::cout << "ja passei aqui -> " << j << std::endl;
+        j++;
         // std::cout << "cgiOutputttttttttt: " << cgiOutput << std::endl;
+
       }
 
       if (bytesRead == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
@@ -96,6 +100,9 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
       } else if (bytesRead == -1) {
         perror("read");
         exit(EXIT_FAILURE);
+      }
+      } else {
+        exit(1);
       }
     }
   }
@@ -144,23 +151,20 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
     perror("execve");
     exit(EXIT_FAILURE);
   } else {
-    sleep(1);
-    // to tentnado ler antes do CGI acabar de rodar, por isso da ruim, resolva esta amanha.
-    // Este é o código executado no processo pai
-
     // Fecha a extremidade de escrita do pipe
     close(pipefd[1]);
     addDescriptorToEpoll(pipefd[0]);
+
     std::string cgiOutput;
     handleEpollEvents(5000, cgiOutput);
     close(pipefd[0]);
+
     // std::cout << cgiOutput << std::endl;
     const char *bodyData = cgiOutput.c_str();  // Converter para const char*
     char *bodyCopy = new char[strlen(bodyData) + 1];
     strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
     response->setMsgBody(bodyCopy);
     response->setContentLength(strlen(bodyCopy));
-    // response->setContentType("text/html");
   }
   return (Ready);
 }
@@ -270,7 +274,13 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
       opStatus = FileWriter::writeToFile(filename, it->second);
     }
   }
-
+  // std::string location = request->getLocationWithoutIndex();
+  // std::string ext = request->getCGIExtension();
+  // std::string checkExt = location.substr(location.size() - ext.size());
+  //   if(checkExt == request->getCGIExtension()){
+  //     opStatus = postCGI(request, response);
+  //   return opStatus;
+  // }
   if (opStatus != Ready || opStatus != No_Content || opStatus != Created) {
     return opStatus;
   }

@@ -46,6 +46,7 @@
                     echo $div;
                 }
             }
+            // sleep(9999);
             ?>
     </div>
     <a class="scroll-to-top" href="#">Voltar ao Topo</a>
