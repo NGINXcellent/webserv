@@ -6,13 +6,14 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 14:53:42 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/27 09:42:08 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequest.hpp"
 
 #include <sstream>
+#include <iostream>
 
 HttpRequest::HttpRequest(void) {
   protocolMainVersion = -1;
@@ -195,6 +196,8 @@ void HttpRequest::setMultipartMap(const MultiPartMap& parts) {
 
   for (; it != parts.end(); ++it) {
       multipartMap[it->first] = it->second;
+      std::cout << it->first << std::endl;
+      std::cout << it->second << std::endl;
   }
 }
 

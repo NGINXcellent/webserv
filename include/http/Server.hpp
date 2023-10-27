@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 07:53:35 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/26 20:48:19 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class Server {
   HttpStatusCode  getCGI(HttpRequest *request, HttpResponse *response);
   void handleEpollEvents(int timeout, std::string& cgiOutput);
   void addDescriptorToEpoll(int fd);
+  HttpStatusCode postCGI(HttpRequest *request, HttpResponse *response);
 
  private:
   size_t                        port;

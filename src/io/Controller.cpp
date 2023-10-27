@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 20:43:33 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/26 22:21:36 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,13 +136,14 @@ void Controller::handleConnections(void) {
         readFromClient(currentFd);
         HttpRequest *request = connectedClients[currentFd]->getRequest();
         std::string &clientBuffer = connectedClients[currentFd]->getBuffer();
+        // DEBUG
         // std::cout << clientBuffer << std::endl;
         request->setRequestReady(isHTTPRequestComplete(request, clientBuffer));
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         Client *client = connectedClients[currentFd];
 
         if (client != NULL && client->getRequest()->isRequestReady()) {
-          // DEBUG? 
+          // DEBUG
           // std::cout << connectedClients[currentFd]->getBuffer() << std::endl;
           sendToClient(currentFd);
         }
