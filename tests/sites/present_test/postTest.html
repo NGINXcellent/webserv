@@ -10,19 +10,59 @@
     <main>
         <div class="main-button-container">
             <a href="./galery.php" class="main-button">Galeria</a>
-            <a href="./index.php"><img src="./nginxcellent-semfundo.png" style="width: 100%;"></a>
+            <a href="./index.php"><img src="./nginxcellent-semfundo.png" alt="Logo do site" style="width: 100%;"></a>
             <a href="./postTest.html" class="main-button">Teste de Post</a>
         </div>
-        <h1> Aqui vamos testar o metodo POST</h1>
-        <!-- <p>Voce vai clicar no botaozinho e escolhe uma linda imagem para fazer upload</p>
-		<form action="upload.php" method="post" enctype="multipart/form-data">
-        <input type="file" name="fileToUpload" id="fileToUpload">
-        <button class="styled-button" type="submit">Enviar Arquivo</button> -->
-    </form>
-        <p>Escolha a imagem com sabedoria gafanhoto</p>
+        <h1>Aqui vamos testar o método POST</h1>
+        <p>Você vai clicar no botãozinho e escolher uma linda imagem para fazer upload</p>
+<!-- 
         <form action="upload2.php" method="POST" enctype="multipart/form-data">
-            <input type="text" name="text">
+            <input type="file" name="file1" id="file">
+            <input type="submit" value="Enviar imagem">
+        </form> -->
+
+        <!-- <form action="upload2.php" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file1" id="file">
+            <input type="text" id="text" name="text">
+            <input type="submit" value="Enviar texto">
+        </form> -->
+        <form action="upload2.php" method="POST" enctype="multipart/form-data">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome" required>
+          
+            <label for="email">E-mail:</label>
+            <input type="email" id="email" name="email" required>
+          
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" name="senha" required>
+          
+            <label for="idade">Idade:</label>
+            <input type="number" id="idade" name="idade" min="18" max="120" required>
+          
+            <label for="sexo">Sexo:</label>
+            <select id="sexo" name="sexo" required>
+              <option value="">Selecione</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+              <option value="O">Outro</option>
+            </select>
+          
+            <label for="interesses">Interesses:</label>
+            <br>
+            <input type="checkbox" id="esportes" name="interesses[]" value="esportes">
+            <label for="esportes">Esportes</label>
+            <br>
+            <input type="checkbox" id="musica" name="interesses[]" value="musica">
+            <label for="musica">Música</label>
+            <br>
+            <input type="checkbox" id="cinema" name="interesses[]" value="cinema">
+            <label for="cinema">Cinema</label>
+            <br>
+            <input type="file" name="file1" id="file">
+            <label for="mensagem">Mensagem:</label>
+            <textarea id="mensagem" name="mensagem" rows="5" cols="30"></textarea>
             <input type="submit" value="Enviar">
-        </form>
+          </form>
+    </main>
 </body>
 </html>

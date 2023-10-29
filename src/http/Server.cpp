@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/27 11:33:40 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/28 22:34:12 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,22 +249,14 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
 
     std::cout << request->getQueryString() << std::endl;
     setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
+
+    std::string towrite = request->getBodyNotParsed();
+    std::cout << "size to write:" << towrite.size() << std::endl;
   if (childPid == 0) {
     // Este é o código executado no processo filho
-    if(request->getPostType() != Multipart){
-      std::cout << request->getRequestBody() << std::endl;
-      std::string towrite = request->getRequestBody();
-      write(pipe_to_child[0], towrite.c_str(), towrite.size());
-    }
-    else {
-    std::map<std::string, std::string>::const_iterator it = request->getMultipartMap().begin();
-    if (it != request->getMultipartMap().end()){
-        std::string firstElement = it->first + "=" + it->second;
-        std::cout << "DEBUG:" << firstElement << std::endl;
-        write(pipe_to_child[1], firstElement.c_str(), firstElement.size());
-    }
-    }
     // Fecha a extremidade de leitura do pipe
+    //Escreva na stdin do cgi
+    write(pipe_to_child[1], towrite.c_str(), towrite.size());
 
     dup2(pipe_to_child[0], STDIN_FILENO);
     dup2(pipe_to_parent[1], STDOUT_FILENO);
@@ -330,12 +322,15 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
   if (pType == None) {
     throw std::runtime_error("Wrong POST REQUEST, NONE");
   }
+
+  if (request->getCGI()) {
   std::string location = request->getLocationWithoutIndex();
   std::string ext = request->getCGIExtension();
   std::string checkExt = location.substr(location.size() - ext.size());
   if(checkExt == ext) {
     opStatus = postCGI(request, response);
     return opStatus;
+  }
   }
   else {
   if (pType == Chunked || pType == UrlEncoded) {
@@ -423,12 +418,14 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     return (Ready);
   }
   // std::cout << request->getQueryString() << std::endl;
+  if (request->getCGI()) {
   std::string location = request->getLocationWithoutIndex();
   std::string ext = request->getCGIExtension();
   std::string checkExt = location.substr(location.size() - ext.size());
     if(checkExt == request->getCGIExtension()){
       opStatus = getCGI(request, response);
     return opStatus;
+  }
   }
   char *resourceData;
   long long resourceSize;

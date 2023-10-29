@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 20:12:06 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/28 17:53:52 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,19 @@ namespace location {
   std::vector<std::string> splitPath(const std::string &path);
 }
 
+std::string extractRequestBody(const std::string& httpRequest) {
+  size_t bodyStart = httpRequest.find("\r\n\r\n") + 4; // Encontra a separação entre headers e corpo
+  if (bodyStart != std::string::npos && bodyStart < httpRequest.length()) {
+    return httpRequest.substr(bodyStart, httpRequest.length() - bodyStart); // Extrai o corpo da requisição
+  }
+  return ""; // Retorna uma string vazia se o corpo não for encontrado
+}
+
 void HttpRequestFactory::setupHeader(HttpRequest *request, std::string &requestMsg) {
   HttpParser parser;
   size_t pos = requestMsg.find_first_of("\n", 0);
-
+  //  DEBUg, header
+  // std::cout << requestMsg << std::endl;
   if (pos == std::string::npos) {
     std::cout << "debug: no newline on requestline" << std::endl;
     return;
@@ -262,6 +271,8 @@ void chunkBodyType(const std::string &msg, HttpRequest *request) {
 
 void post::setupRequestBody(const std::string &msg, HttpRequest *request) {
   PostType p_type = request->getPostType();
+  request->setBodyNotParsed(extractRequestBody(msg));
+  std::cout << "O SET NO BODY SEM PARSE" <<request->getBodyNotParsed() << std::endl;
 
   switch (p_type) {
     case Chunked:
@@ -369,6 +380,7 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
   }
   // extract query string if have one? otherwise set to empty.
   request->setQueryString(queryStringExtractor(reqLine));
+
 
   std::vector<std::string> reqTokens = location::splitPath(reqLine);
 
