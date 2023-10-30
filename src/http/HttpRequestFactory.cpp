@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/29 07:59:38 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/30 09:46:47 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,8 +69,6 @@ void HttpRequestFactory::setupHeader(HttpRequest *request, std::string &requestM
   request->setPostType(setupBodyContentType(request, headers));
   request->setContentLength(getHeaderValue("content-length", &headers));
   request->setContentType(getHeaderValue("content-type", &headers));
-  std::cout << "\n\nCONTENT TYPE DESSA MERDA" << std::endl;
-  std::cout << request->getContentType() << std::endl;
 }
 
 void HttpRequestFactory::setupRequest(HttpRequest *req, std::string &requestMsg, \
@@ -275,8 +273,6 @@ void chunkBodyType(const std::string &msg, HttpRequest *request) {
 void post::setupRequestBody(const std::string &msg, HttpRequest *request) {
   PostType p_type = request->getPostType();
   request->setBodyNotParsed(extractRequestBody(msg));
-  std::cout << "O SET NO BODY SEM PARSE" <<request->getBodyNotParsed() << std::endl;
-
   switch (p_type) {
     case Chunked:
       chunkBodyType(msg, request);
@@ -407,6 +403,8 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
       }
     }
     request->setLocationWithoutIndex(ret);
+    request->setFileName(ret);
+    request->setAbsolutePath(ret);
 
 // If the directory exists and tmplocation.index is not empty,
 // try adding the index to the path and check if it exists.
@@ -424,7 +422,7 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
     request->setDirListActive(tmplocation.autoindex);
     request->setAllowedMethods(tmplocation.allowed_method);
     request->setIndexPath(indexRet);
-    //  DEBUG
+    //  DEBUG INDEX PATH
     // std::cout<<request->getIndexPath()<<std::endl;
   }
 

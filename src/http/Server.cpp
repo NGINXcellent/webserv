@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/29 21:44:55 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/30 10:31:51 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,15 +85,10 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
       waitpid(0, &status, 0);
       if(status == 0) {
       ssize_t bytesRead;
-      int j = 0;
       char buffer[4960];
       while ((bytesRead = read(events[i].data.fd, buffer, sizeof(buffer))) >
              0) {
         cgiOutput.append(buffer, bytesRead);
-        std::cout << "ja passei aqui -> " << j << std::endl;
-        j++;
-        // std::cout << "cgiOutputttttttttt: " << cgiOutput << std::endl;
-
       }
 
       if (bytesRead == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
@@ -103,6 +98,7 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
         exit(EXIT_FAILURE);
       }
       } else {
+        perror("DEU RUIM DOIDAO");
         exit(1);
       }
     }
@@ -112,7 +108,6 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
 HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
   // Cria um pipe para capturar a saída do processo CGI
   std::string cgiPath = request->getLocationWithoutIndex();
-  std::cout << cgiPath << std::endl;
   int pipefd[2];
   if (pipe(pipefd) == -1) {
     perror("pipe");
@@ -132,7 +127,9 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
 
     std::cout << request->getQueryString() << std::endl;
     setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
-
+    char *argv[] = {const_cast<char *>("php"),
+                    const_cast<char *>(cgiPath.c_str()), NULL};
+    char **env = createCGIEnv(request);
   if (childPid == 0) {
     // Este é o código executado no processo filho
 
@@ -146,10 +143,8 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
 
     close(pipefd[1]);
 
-    char *argv[] = {const_cast<char *>("/usr/bin/php-cgi"),
-                    const_cast<char *>("index.php"), NULL};
     // Substitui o processo atual pelo programa CGI
-    execve("/usr/bin/php-cgi", argv, NULL);
+    execve("/usr/bin/php", argv, env);
     perror("execve");
     exit(EXIT_FAILURE);
   } else {
@@ -162,6 +157,9 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
     close(pipefd[0]);
 
     // std::cout << cgiOutput << std::endl;
+    if (cgiOutput.empty()) {
+      return (No_Content);
+    }
     const char *bodyData = cgiOutput.c_str();  // Converter para const char*
     char *bodyCopy = new char[strlen(bodyData) + 1];
     strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
@@ -232,26 +230,30 @@ char** Server::createCGIEnv(HttpRequest *request)
     std::string tmp2;
     // std::string = getcwd(NULL, 0);
     // env_tmp.insert(std::pair<std::string, std::string>("AUTH_TYPE", "null"));
-    env_tmp.insert(std::pair<std::string, std::string>("PATH_INFO", request->getLocationWithoutIndex()));
-    env_tmp.insert(std::pair<std::string, std::string>("PATH_TRANSLATED", "/home/dvargas/Desktop/webserv/tests/sites/present_test/upload.php"));
+    env_tmp.insert(std::pair<std::string, std::string>("PATH_INFO", "/"));
+    env_tmp.insert(std::pair<std::string, std::string>("PATH_TRANSLATED", request->getAbsolutePath()));
     env_tmp.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
     env_tmp.insert(std::pair<std::string, std::string>("REQUEST_METHOD", request->getMethod()));
     env_tmp.insert(std::pair<std::string, std::string>("CONTENT_TYPE", request->getContentType()));
+    if(request->getMethod() == "GET") {
+      env_tmp.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", "0"));
+    }
+    if (request->getMethod() == "POST") {
     ss << request->getBodyNotParsed().size() - 1;
     env_tmp.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ss.str()));
-    std::cout << ss.str() << std::endl;
-    env_tmp.insert(std::pair<std::string, std::string>("QUERY_STRING", request->getBodyNotParsed()));
+    }
+    env_tmp.insert(std::pair<std::string, std::string>("QUERY_STRING", request->getQueryString()));
     // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_IDENT", "null"));
-    env_tmp.insert(std::pair<std::string, std::string>("DOCUMENT_ROOT", request->getLocationWithoutIndex()));
+    env_tmp.insert(std::pair<std::string, std::string>("DOCUMENT_ROOT", request->getAbsolutePath()));
     // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_USER", "null"));
-    env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", "/home/dvargas/Desktop/webserv/tests/sites/present_test/upload.php"));
-    env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_PATH", "upload.php"));
-    env_tmp.insert(std::pair<std::string, std::string>("REQUEST_URI", request->getLocationWithoutIndex()));
-    env_tmp.insert(std::pair<std::string, std::string>("SERVER_NAME", "lfarias.42.fr"));
-    env_tmp.insert(std::pair<std::string, std::string>("SERVER_PORT", "8080"));
+    // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", request->getFileName()));
+    // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_PATH", request->getFileName()));
+    // env_tmp.insert(std::pair<std::string, std::string>("REQUEST_URI", request->getLocationWithoutIndex()));
+    env_tmp.insert(std::pair<std::string, std::string>("SERVER_NAME", request->getServerName()));
+    env_tmp.insert(std::pair<std::string, std::string>("SERVER_PORT", request->getPort()));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", "HTTP/1.1"));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_SOFTWARE", "nginxcelent"));
-    env_tmp.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "CGI"));
+    env_tmp.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "200"));
     // env_tmp.insert(std::pair<std::string, std::string>("Protocol-Specific Meta-Variables", "null"));
 
     env = new char*[env_tmp.size() + 1];
@@ -277,8 +279,6 @@ char** Server::createCGIEnv(HttpRequest *request)
 HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
   // Cria um pipe para capturar a saída do processo CGI
   std::string cgiPath = request->getLocationWithoutIndex();
-  std::cout << "ENTREI NO POSTCGI AMIGOOOOO" << std::endl;
-  std::cout << cgiPath << std::endl;
   int pipe_to_child[2];
   int pipe_to_parent[2];
   if (pipe(pipe_to_child) == -1 || pipe(pipe_to_parent) == -1) {
@@ -297,14 +297,10 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
         close(pipe_to_child[1]);
         _exit(1);
     }
-    std::cout << request->getQueryString() << std::endl;
-    setenv("QUERY_STRING", "TESTE", 1);
 
     std::string towrite = request->getBodyNotParsed();
-    // std::cout << "size to write:" << towrite.size() << std::endl;
-        //Escreva na stdin do cgi
     // char **arg = 0;
-    char* argv[] = {const_cast<char*>("/usr/bin/php-cgi"), const_cast<char*>("upload.php"), NULL};
+    char* argv[] = {const_cast<char*>("php-cgi"), const_cast<char*>("/usr/bin/php-cgi"), NULL};
     char **env = createCGIEnv(request);
   pid_t childPid = fork();
 
@@ -341,11 +337,11 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
     const char *bodyData = cgiOutput.c_str();  // Converter para const char*
     char *bodyCopy = new char[strlen(bodyData) + 1];
     strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
-    // int i;
-    // for (i = 0 ; env[i] != 0; i++)
-    //     delete[] env[i];
-    // delete[] env[i];
-    // delete[] env;
+    int i;
+    for (i = 0 ; env[i] != 0; i++)
+        delete[] env[i];
+    delete[] env[i];
+    delete[] env;
     response->setMsgBody(bodyCopy);
     response->setContentLength(strlen(bodyCopy));
   }

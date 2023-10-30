@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/29 07:58:57 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/30 09:51:40 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,14 @@ class HttpRequest {
   std::string           getBodyNotParsed(void);
   void                  setContentType(std::string toset);
   std::string           getContentType(void);
+  void                  setFileName(std::string toset);
+  std::string           getFileName(void);
+  void                  setAbsolutePath(std::string toset);
+  std::string           getAbsolutePath(void);
+  void                  setPort(std::string toset);
+  std::string           getPort(void);
+  void                  setServerName(std::string toset);
+  std::string           getServerName(void);
 
 
  private:
@@ -110,6 +118,7 @@ class HttpRequest {
   std::string               baseLocation;
   std::string               location;
   std::string               locationWithoutIndex;
+  std::string               fileName;
   std::string               boundary;
   MultiPartMap              multipartMap;
   PostType                  postType;
@@ -123,6 +132,9 @@ class HttpRequest {
   std::string               queryString;
   std::string               bodyNotParsed;
   std::string               contentType;
+  std::string               absolutePath;
+  std::string               port;
+  std::string               serverName;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);

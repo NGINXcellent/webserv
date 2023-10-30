@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/29 06:48:01 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/30 10:15:50 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,17 +134,16 @@ void Controller::handleConnections(void) {
         closeConnection(currentFd);
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         readFromClient(currentFd);
-        // sleep(1);
         HttpRequest *request = connectedClients[currentFd]->getRequest();
         std::string &clientBuffer = connectedClients[currentFd]->getBuffer();
         // DEBUG CLIENT BUFFER
-        std::cout << clientBuffer << std::endl;
+        // std::cout << clientBuffer << std::endl;
         request->setRequestReady(isHTTPRequestComplete(request, clientBuffer));
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         Client *client = connectedClients[currentFd];
 
         if (client != NULL && client->getRequest()->isRequestReady()) {
-          // DEBUG
+          // DEBUG CLIENT BUFFER
           // std::cout << connectedClients[currentFd]->getBuffer() << std::endl;
           sendToClient(currentFd);
         }
@@ -344,7 +343,6 @@ void Controller::sendToClient(int currentFd) {
                    response->getContentLength());
   // DEBUG
   // std::cout << response->getHeaders() << std::endl;
-  std::cout << response->getContentLength() << std::endl;
   client->reset();
   closeConnection(currentFd);
 }
