@@ -6,13 +6,15 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 14:53:42 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/30 10:12:22 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/HttpRequest.hpp"
 
 #include <sstream>
+#include <iostream>
+#include <unistd.h>
 
 HttpRequest::HttpRequest(void) {
   protocolMainVersion = -1;
@@ -75,6 +77,8 @@ const std::string &HttpRequest::getHost(void) {
 }
 
 void HttpRequest::setHost(const std::string &nHost) {
+  setPort(nHost);
+  setServerName(nHost);
   host = nHost;
 }
 
@@ -195,6 +199,7 @@ void HttpRequest::setMultipartMap(const MultiPartMap& parts) {
 
   for (; it != parts.end(); ++it) {
       multipartMap[it->first] = it->second;
+      // std::cout << it->first << " " << it->second << std::endl;
   }
 }
 
@@ -229,10 +234,18 @@ void HttpRequest::setRequestReady(bool set) {
   requestReady = set;
 }
 
+void HttpRequest::setBodyNotParsed(std::string toset) {
+  bodyNotParsed = toset;
+}
+
+std::string HttpRequest::getBodyNotParsed(void) {
+  return bodyNotParsed;
+}
+
 void HttpRequest::setCGI(bool toset, std::string cgiPath, std::string cgiExtension) {
   this->cgiPath = cgiPath;
   this->cgiExtension = cgiExtension;
-  
+
   isCGI = toset;
 }
 
@@ -254,4 +267,57 @@ void HttpRequest::setQueryString(std::string toSet) {
 
 std::string HttpRequest::getQueryString(void) {
   return queryString;
+}
+
+void HttpRequest::setContentType(std::string toset) {
+  contentType = toset;
+}
+
+std::string HttpRequest::getContentType(void) {
+  return contentType;
+}
+
+void HttpRequest::setFileName(std::string toset) {
+  size_t lastIndex = toset.find_last_of("/");
+    if (lastIndex != std::string::npos) {
+        fileName = toset.substr(lastIndex + 1);
+    }
+}
+
+std::string HttpRequest::getFileName(void) {
+  return fileName;
+}
+
+void HttpRequest::setAbsolutePath(std::string toset) {
+    char buffer[4096];
+    if (getcwd(buffer, sizeof(buffer)) != NULL) {
+        toset = toset.substr(1);
+        absolutePath = std::string(buffer) + toset;
+    } else {
+        absolutePath = "Error getting current working directory";
+    }
+}
+
+std::string HttpRequest::getAbsolutePath(void) {
+  return absolutePath;
+}
+
+void HttpRequest::setPort(std::string toset) {
+  size_t lastIndex = toset.find_last_of(":");
+  if (lastIndex != std::string::npos)
+    port = toset.substr(lastIndex + 1);
+}
+
+std::string HttpRequest::getPort(void) {
+  return port;
+}
+
+void HttpRequest::setServerName(std::string toset) {
+  size_t lastIndex = toset.find_last_of(":");
+  if (lastIndex != std::string::npos)
+    serverName = toset.substr(0, lastIndex);
+}
+
+std::string HttpRequest::getServerName(void) {
+  return serverName;
 }

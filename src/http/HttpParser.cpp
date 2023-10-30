@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpParser.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/02 20:36:09 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 15:46:16 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/10/28 22:04:21 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,6 @@ bool HttpParser::parseHeaders(std::string *msg, HttpHeaders *headers) {
 
     headers->insert(std::make_pair(key, value));
   }
-
 
   return true;
 }

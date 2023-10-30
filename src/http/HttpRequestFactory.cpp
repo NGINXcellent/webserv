@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 20:12:06 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/30 09:46:47 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,19 @@ namespace location {
   std::vector<std::string> splitPath(const std::string &path);
 }
 
+std::string extractRequestBody(const std::string& httpRequest) {
+  size_t bodyStart = httpRequest.find("\r\n\r\n") + 4; // Encontra a separação entre headers e corpo
+  if (bodyStart != std::string::npos && bodyStart < httpRequest.length()) {
+    return httpRequest.substr(bodyStart, httpRequest.length() - bodyStart); // Extrai o corpo da requisição
+  }
+  return ""; // Retorna uma string vazia se o corpo não for encontrado
+}
+
 void HttpRequestFactory::setupHeader(HttpRequest *request, std::string &requestMsg) {
   HttpParser parser;
   size_t pos = requestMsg.find_first_of("\n", 0);
-
+  //  DEBUg, header
+  // std::cout << requestMsg << std::endl;
   if (pos == std::string::npos) {
     std::cout << "debug: no newline on requestline" << std::endl;
     return;
@@ -59,6 +68,7 @@ void HttpRequestFactory::setupHeader(HttpRequest *request, std::string &requestM
                                 getHeaderValue("if-unmodified-since", &headers));
   request->setPostType(setupBodyContentType(request, headers));
   request->setContentLength(getHeaderValue("content-length", &headers));
+  request->setContentType(getHeaderValue("content-type", &headers));
 }
 
 void HttpRequestFactory::setupRequest(HttpRequest *req, std::string &requestMsg, \
@@ -262,7 +272,7 @@ void chunkBodyType(const std::string &msg, HttpRequest *request) {
 
 void post::setupRequestBody(const std::string &msg, HttpRequest *request) {
   PostType p_type = request->getPostType();
-
+  request->setBodyNotParsed(extractRequestBody(msg));
   switch (p_type) {
     case Chunked:
       chunkBodyType(msg, request);
@@ -370,6 +380,7 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
   // extract query string if have one? otherwise set to empty.
   request->setQueryString(queryStringExtractor(reqLine));
 
+
   std::vector<std::string> reqTokens = location::splitPath(reqLine);
 
 //  This will find the best match of location and solve the redirection.
@@ -392,6 +403,8 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
       }
     }
     request->setLocationWithoutIndex(ret);
+    request->setFileName(ret);
+    request->setAbsolutePath(ret);
 
 // If the directory exists and tmplocation.index is not empty,
 // try adding the index to the path and check if it exists.
@@ -409,7 +422,7 @@ void HttpRequestFactory::findLocation(HttpRequest *request, \
     request->setDirListActive(tmplocation.autoindex);
     request->setAllowedMethods(tmplocation.allowed_method);
     request->setIndexPath(indexRet);
-    //  DEBUG
+    //  DEBUG INDEX PATH
     // std::cout<<request->getIndexPath()<<std::endl;
   }
 

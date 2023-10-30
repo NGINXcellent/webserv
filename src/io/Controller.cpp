@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 20:43:33 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/30 10:15:50 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,13 +136,14 @@ void Controller::handleConnections(void) {
         readFromClient(currentFd);
         HttpRequest *request = connectedClients[currentFd]->getRequest();
         std::string &clientBuffer = connectedClients[currentFd]->getBuffer();
+        // DEBUG CLIENT BUFFER
         // std::cout << clientBuffer << std::endl;
         request->setRequestReady(isHTTPRequestComplete(request, clientBuffer));
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         Client *client = connectedClients[currentFd];
 
         if (client != NULL && client->getRequest()->isRequestReady()) {
-          // DEBUG? 
+          // DEBUG CLIENT BUFFER
           // std::cout << connectedClients[currentFd]->getBuffer() << std::endl;
           sendToClient(currentFd);
         }
@@ -178,6 +179,8 @@ std::string toLowerStr2(std::string str) {
 }
 
 bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &requestMsg) {
+  // Esta entrando aqui duas vezes e tirando o host
+  // possivelmente vamos dividir header e body e só passar quando os dois estiverem prontos.
   if (request->isHeaderReady() && request->getMethod() != "POST") {
       return (true);
   }
@@ -189,12 +192,13 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
   }
 
   if (!request->isHeaderReady()) {
+  if (request->getHost().empty())
     HttpRequestFactory::setupHeader(request, requestMsg);
   // we need to make sure that header is ready before enter POST check.
   // i`m assuming that the header is always ready after first interaction.
   // whe should change this.
+  if(request->getMethod() != "POST")
     request->setHeaderReady(true);
-  }
 
   if (request->getMethod() == "POST") {
     // this is important, idk why but it is.
@@ -203,28 +207,31 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
     // std::cout << contentPos << std::endl;
     std::string body = requestMsg.substr(contentPos);
     if (body == "") {
-      return (true);
+      return request->isHeaderReady();
     }
 
     PostType pType = request->getPostType();
-
+    size_t cLenght = request->getContentLength();
     switch(pType) {
       case None:
         return false;
 
       case Chunked:
-        return isChunkedBodyComplete(body);
+        request->setHeaderReady(isUrlEncodedBodyComplete(body, cLenght));
+        return request->isHeaderReady();
 
       case Multipart:
-        return isMultipartBodyComplete(body);
+        request->setHeaderReady(isUrlEncodedBodyComplete(body, cLenght));
+        return request->isHeaderReady();
 
       case UrlEncoded:
-        size_t cLenght = request->getContentLength();
-        return isUrlEncodedBodyComplete(body, cLenght);
+        request->setHeaderReady(isUrlEncodedBodyComplete(body, cLenght));
+        return request->isHeaderReady();
     }
   }
+  }
 
-  return true;
+  return request->isHeaderReady();
 }
 
 
@@ -336,7 +343,6 @@ void Controller::sendToClient(int currentFd) {
                    response->getContentLength());
   // DEBUG
   // std::cout << response->getHeaders() << std::endl;
-  std::cout << response->getContentLength() << std::endl;
   client->reset();
   closeConnection(currentFd);
 }

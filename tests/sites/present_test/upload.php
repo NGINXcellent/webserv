@@ -1,7 +1,15 @@
 <?php
 
+// echo "<pre>";
+// print_r($_SERVER);
+// print_r($_FILES);
+// print_r($_POST);
+// echo "</pre>";
+
+// phpinfo();
+
 // Diretório de destino para salvar os arquivos
-$targetDirectory = "./tests/sites/present_test/bin-img/";
+$targetDirectory = "./bin-img/";
 
 // Verifica se o diretório de destino existe e é gravável
 if (!file_exists($targetDirectory)) {

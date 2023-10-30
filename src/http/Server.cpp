@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/25 21:25:18 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/30 11:23:45 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <string>
 
 #include "../../include/http/HttpTime.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
@@ -80,15 +81,14 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
     if (events[i].events & EPOLLIN) {
       // O descritor está pronto para leitura (events[i].data.fd contém o
       // descritor de arquivo)
+      int status;
+      waitpid(0, &status, 0);
+      if(status == 0) {
       ssize_t bytesRead;
       char buffer[4960];
       while ((bytesRead = read(events[i].data.fd, buffer, sizeof(buffer))) >
              0) {
         cgiOutput.append(buffer, bytesRead);
-        int i = 0;
-        std::cout << "ja passei aqui -> " << i << std::endl;
-        i++;
-        // std::cout << "cgiOutputttttttttt: " << cgiOutput << std::endl;
       }
 
       if (bytesRead == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
@@ -97,13 +97,17 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
         perror("read");
         exit(EXIT_FAILURE);
       }
+      } else {
+        perror("DEU RUIM DOIDAO");
+        exit(1);
+      }
     }
   }
 }
+
 HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
   // Cria um pipe para capturar a saída do processo CGI
   std::string cgiPath = request->getLocationWithoutIndex();
-  std::cout << cgiPath << std::endl;
   int pipefd[2];
   if (pipe(pipefd) == -1) {
     perror("pipe");
@@ -123,7 +127,9 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
 
     std::cout << request->getQueryString() << std::endl;
     setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
-
+    char *argv[] = {const_cast<char *>("php-cgi"),
+                    const_cast<char *>("/usr/bin/php-cgi"), NULL};
+    char **env = createCGIEnv(request);
   if (childPid == 0) {
     // Este é o código executado no processo filho
 
@@ -137,30 +143,29 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
 
     close(pipefd[1]);
 
-    char *argv[] = {const_cast<char *>("php"),
-                    const_cast<char *>(cgiPath.c_str()), NULL};
     // Substitui o processo atual pelo programa CGI
-    execve(request->getCGIPath().c_str(), argv, NULL);
+    execve("/usr/bin/php-cgi", argv, env);
     perror("execve");
     exit(EXIT_FAILURE);
   } else {
-    sleep(1);
-    // to tentnado ler antes do CGI acabar de rodar, por isso da ruim, resolva esta amanha.
-    // Este é o código executado no processo pai
-
     // Fecha a extremidade de escrita do pipe
     close(pipefd[1]);
     addDescriptorToEpoll(pipefd[0]);
+
     std::string cgiOutput;
     handleEpollEvents(5000, cgiOutput);
     close(pipefd[0]);
+
     // std::cout << cgiOutput << std::endl;
+    if (cgiOutput.empty()) {
+      return (No_Content);
+    }
     const char *bodyData = cgiOutput.c_str();  // Converter para const char*
     char *bodyCopy = new char[strlen(bodyData) + 1];
     strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
     response->setMsgBody(bodyCopy);
     response->setContentLength(strlen(bodyCopy));
-    // response->setContentType("text/html");
+    response->setContentType("text/html");
   }
   return (Ready);
 }
@@ -168,7 +173,7 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
 HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
   //  DEBUG
-  std::cout << request->getLocationWithoutIndex() << std::endl;
+  // std::cout << request->getLocationWithoutIndex() << std::endl;
   if (!uTimestamp.empty() && \
       HttpTime::isModifiedSince(uTimestamp, request->getResource())) {
     // shim
@@ -215,6 +220,136 @@ void Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
   }
 }
 
+
+char** Server::createCGIEnv(HttpRequest *request)
+{
+    char** env;
+    char* buf;
+    int i = 0;
+    std::map<std::string, std::string> env_tmp;
+    std::stringstream ss;
+    std::string tmp2;
+    // std::string = getcwd(NULL, 0);
+    // env_tmp.insert(std::pair<std::string, std::string>("AUTH_TYPE", "null"));
+    env_tmp.insert(std::pair<std::string, std::string>("PATH_INFO", "/"));
+    env_tmp.insert(std::pair<std::string, std::string>("PATH_TRANSLATED", request->getAbsolutePath()));
+    env_tmp.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
+    env_tmp.insert(std::pair<std::string, std::string>("REQUEST_METHOD", request->getMethod()));
+    env_tmp.insert(std::pair<std::string, std::string>("CONTENT_TYPE", request->getContentType()));
+    if(request->getMethod() == "GET") {
+      env_tmp.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", "0"));
+    }
+    if (request->getMethod() == "POST") {
+    ss << request->getBodyNotParsed().size() - 1;
+    env_tmp.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ss.str()));
+    }
+    env_tmp.insert(std::pair<std::string, std::string>("QUERY_STRING", request->getQueryString()));
+    // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_IDENT", "null"));
+    // env_tmp.insert(std::pair<std::string, std::string>("DOCUMENT_ROOT", request->getAbsolutePath()));
+    // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_USER", "null"));
+    // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", request->getFileName()));
+    // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_PATH", request->getFileName()));
+    // env_tmp.insert(std::pair<std::string, std::string>("REQUEST_URI", request->getLocationWithoutIndex()));
+    env_tmp.insert(std::pair<std::string, std::string>("SERVER_NAME", request->getServerName()));
+    env_tmp.insert(std::pair<std::string, std::string>("SERVER_PORT", request->getPort()));
+    env_tmp.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", "HTTP/1.1"));
+    env_tmp.insert(std::pair<std::string, std::string>("SERVER_SOFTWARE", "nginxcelent"));
+    env_tmp.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "200"));
+    // env_tmp.insert(std::pair<std::string, std::string>("Protocol-Specific Meta-Variables", "null"));
+
+    env = new char*[env_tmp.size() + 1];
+    std::map<std::string, std::string>::iterator it;
+    std::map<std::string, std::string>::iterator its;
+    std::map<std::string, std::string>::iterator ite;
+    its = env_tmp.begin();
+    ite = env_tmp.end();
+    for (it = its; it != ite; it++)
+    {
+        tmp2 = it->first + "=" + it->second;
+        buf = new char[tmp2.size() + 1];
+        strncpy(buf, tmp2.c_str(), tmp2.size() + 1);
+        env[i] = buf;
+        i++;
+    }
+    env[i] = NULL;
+    return env;
+}
+
+// CGI DO POST LETSGOOOOOOOOOOOOOOOO
+
+HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
+  // Cria um pipe para capturar a saída do processo CGI
+  std::string cgiPath = request->getLocationWithoutIndex();
+  int pipe_to_child[2];
+  int pipe_to_parent[2];
+  if (pipe(pipe_to_child) == -1 || pipe(pipe_to_parent) == -1) {
+    perror("pipe");
+    exit(EXIT_FAILURE);
+  }
+  // setNonBlocking(pipe_to_child[0]);
+  // setNonBlocking(pipe_to_child[1]);
+  // setNonBlocking(pipe_to_parent[0]);
+  // setNonBlocking(pipe_to_parent[1]);
+    int flags = fcntl(pipe_to_child[1], F_GETFL);
+    flags |= O_NONBLOCK;
+    if (fcntl(pipe_to_child[1], F_SETFL, flags) < 0)
+    {
+        std::cout << "add connection fcntl() error" << std::endl;
+        close(pipe_to_child[1]);
+        _exit(1);
+    }
+
+    std::string towrite = request->getBodyNotParsed();
+    // char **arg = 0;
+    char* argv[] = {const_cast<char*>("php-cgi"), const_cast<char*>("/usr/bin/php-cgi"), NULL};
+    char **env = createCGIEnv(request);
+  pid_t childPid = fork();
+
+  if (childPid == -1) {
+    // Erro ao criar o processo filho
+    perror("fork");
+    exit(EXIT_FAILURE);
+  }
+  if (childPid == 0) {
+    // Este é o código executado no processo filho
+    // Fecha a extremidade de leitura do pipe
+    dup2(pipe_to_child[0], STDIN_FILENO);
+    dup2(pipe_to_parent[1], STDOUT_FILENO);
+    close(pipe_to_child[1]);
+    close(pipe_to_parent[0]);
+
+    // Substitui o processo atual pelo programa CGI
+    execve("/usr/bin/php-cgi", argv, env);
+    perror("execve");
+    exit(EXIT_FAILURE);
+  } else {
+    // Fecha a extremidade de escrita do pipe
+    // int status;
+    close(pipe_to_child[0]);
+    close(pipe_to_parent[1]);
+    write(pipe_to_child[1], towrite.c_str(), towrite.size() + 100);
+    close(pipe_to_child[1]);
+    addDescriptorToEpoll(pipe_to_parent[0]);
+
+    std::string cgiOutput;
+    handleEpollEvents(5000, cgiOutput);
+    // close(pipe_to_parent[0]);
+    // std::cout << cgiOutput << std::endl;
+    const char *bodyData = cgiOutput.c_str();  // Converter para const char*
+    char *bodyCopy = new char[strlen(bodyData) + 1];
+    strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
+    int i;
+    for (i = 0 ; env[i] != 0; i++)
+        delete[] env[i];
+    delete[] env[i];
+    delete[] env;
+    response->setMsgBody(bodyCopy);
+    response->setContentLength(strlen(bodyCopy));
+    response->setContentType("text/html");
+  }
+  return (Ready);
+}
+
 HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
   HttpStatusCode opStatus = Ready;
   response->setLastModifiedTime(
@@ -241,7 +376,19 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
 
   if (pType == None) {
     throw std::runtime_error("Wrong POST REQUEST, NONE");
-  } else if (pType == Chunked || pType == UrlEncoded) {
+  }
+
+  if (request->getCGI()) {
+  std::string location = request->getLocationWithoutIndex();
+  std::string ext = request->getCGIExtension();
+  std::string checkExt = location.substr(location.size() - ext.size());
+  if(checkExt == ext) {
+    opStatus = postCGI(request, response);
+    return opStatus;
+  }
+  }
+  else {
+  if (pType == Chunked || pType == UrlEncoded) {
     std::string location = request->getLocationWithoutIndex();
     if (FileSystem::check(location, F_OK) != 0) {
       response->setStatusCode(No_Content);
@@ -268,6 +415,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
       }
 
       opStatus = FileWriter::writeToFile(filename, it->second);
+    }
     }
   }
 
@@ -325,12 +473,14 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
     return (Ready);
   }
   // std::cout << request->getQueryString() << std::endl;
+  if (request->getCGI()) {
   std::string location = request->getLocationWithoutIndex();
   std::string ext = request->getCGIExtension();
   std::string checkExt = location.substr(location.size() - ext.size());
     if(checkExt == request->getCGIExtension()){
       opStatus = getCGI(request, response);
     return opStatus;
+  }
   }
   char *resourceData;
   long long resourceSize;

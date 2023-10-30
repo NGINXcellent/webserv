@@ -18,7 +18,7 @@
     <div id="image-gallery">
             <?php
             // Diretório das imagens
-            $directory = './tests/sites/present_test/bin-img/'; // Substitua pelo caminho da sua pasta de imagens
+            $directory = './bin-img/'; // Substitua pelo caminho da sua pasta de imagens
 // problema, esta dando request dobrado na imagem: ./tests/sites/present_test/tests/sites/present_test/bin-img/nginxcellent.png
             // Lista todos os arquivos na pasta
             $files = scandir($directory);
@@ -46,6 +46,7 @@
                     echo $div;
                 }
             }
+            // sleep(9999);
             ?>
     </div>
     <a class="scroll-to-top" href="#">Voltar ao Topo</a>
