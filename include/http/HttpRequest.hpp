@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:34:36 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/27 14:12:23 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/29 07:58:57 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,8 @@ class HttpRequest {
   void                  setBodyReady(bool opt);*/
   void                  setBodyNotParsed(std::string toset);
   std::string           getBodyNotParsed(void);
+  void                  setContentType(std::string toset);
+  std::string           getContentType(void);
 
 
  private:
@@ -120,6 +122,7 @@ class HttpRequest {
   std::string               cgiExtension;
   std::string               queryString;
   std::string               bodyNotParsed;
+  std::string               contentType;
 
   HttpRequest(const HttpRequest& f);
   HttpRequest& operator=(const HttpRequest& t);

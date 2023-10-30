@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 00:36:19 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/28 17:07:30 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/29 08:03:08 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -264,4 +264,12 @@ void HttpRequest::setQueryString(std::string toSet) {
 
 std::string HttpRequest::getQueryString(void) {
   return queryString;
+}
+
+void HttpRequest::setContentType(std::string toset) {
+  contentType = toset;
+}
+
+std::string HttpRequest::getContentType(void) {
+  return contentType;
 }

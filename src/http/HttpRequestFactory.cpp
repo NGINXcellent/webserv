@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 21:44:48 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/28 17:53:52 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/29 07:59:38 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,9 @@ void HttpRequestFactory::setupHeader(HttpRequest *request, std::string &requestM
                                 getHeaderValue("if-unmodified-since", &headers));
   request->setPostType(setupBodyContentType(request, headers));
   request->setContentLength(getHeaderValue("content-length", &headers));
+  request->setContentType(getHeaderValue("content-type", &headers));
+  std::cout << "\n\nCONTENT TYPE DESSA MERDA" << std::endl;
+  std::cout << request->getContentType() << std::endl;
 }
 
 void HttpRequestFactory::setupRequest(HttpRequest *req, std::string &requestMsg, \
