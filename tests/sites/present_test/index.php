@@ -33,7 +33,7 @@
         <div class="image-box">
             <?php
             // Caminho para a pasta que contém as imagens
-            $dir = './tests/sites/present_test/bin-img/';
+            $dir = './bin-img/';
 
             // Lista de extensões de arquivo de imagem permitidas
             $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];

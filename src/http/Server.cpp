@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/30 10:31:51 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/30 11:23:45 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,8 +127,8 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
 
     std::cout << request->getQueryString() << std::endl;
     setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
-    char *argv[] = {const_cast<char *>("php"),
-                    const_cast<char *>(cgiPath.c_str()), NULL};
+    char *argv[] = {const_cast<char *>("php-cgi"),
+                    const_cast<char *>("/usr/bin/php-cgi"), NULL};
     char **env = createCGIEnv(request);
   if (childPid == 0) {
     // Este é o código executado no processo filho
@@ -144,7 +144,7 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
     close(pipefd[1]);
 
     // Substitui o processo atual pelo programa CGI
-    execve("/usr/bin/php", argv, env);
+    execve("/usr/bin/php-cgi", argv, env);
     perror("execve");
     exit(EXIT_FAILURE);
   } else {
@@ -165,6 +165,7 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
     strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
     response->setMsgBody(bodyCopy);
     response->setContentLength(strlen(bodyCopy));
+    response->setContentType("text/html");
   }
   return (Ready);
 }
@@ -244,7 +245,7 @@ char** Server::createCGIEnv(HttpRequest *request)
     }
     env_tmp.insert(std::pair<std::string, std::string>("QUERY_STRING", request->getQueryString()));
     // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_IDENT", "null"));
-    env_tmp.insert(std::pair<std::string, std::string>("DOCUMENT_ROOT", request->getAbsolutePath()));
+    // env_tmp.insert(std::pair<std::string, std::string>("DOCUMENT_ROOT", request->getAbsolutePath()));
     // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_USER", "null"));
     // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", request->getFileName()));
     // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_PATH", request->getFileName()));
@@ -344,6 +345,7 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
     delete[] env;
     response->setMsgBody(bodyCopy);
     response->setContentLength(strlen(bodyCopy));
+    response->setContentType("text/html");
   }
   return (Ready);
 }
