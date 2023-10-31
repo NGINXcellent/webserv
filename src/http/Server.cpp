@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/30 11:23:45 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/10/31 10:32:57 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,9 +83,10 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
       // descritor de arquivo)
       int status;
       waitpid(0, &status, 0);
-      if(status == 0) {
+      if((WIFEXITED(status) && WEXITSTATUS(status) == 0)) {
       ssize_t bytesRead;
       char buffer[4960];
+      memset(buffer, 0, sizeof(buffer));
       while ((bytesRead = read(events[i].data.fd, buffer, sizeof(buffer))) >
              0) {
         cgiOutput.append(buffer, bytesRead);
@@ -104,6 +105,38 @@ void Server::handleEpollEvents(int timeout, std::string &cgiOutput) {
     }
   }
 }
+
+int waitForData(int fd) {
+    fd_set readFds;
+    FD_ZERO(&readFds);
+    FD_SET(fd, &readFds);
+
+    struct timeval timeout;
+    timeout.tv_sec = 10; // Timeout de 5 segundos
+    timeout.tv_usec = 0;
+
+    int readyFds = select(fd + 1, &readFds, NULL, NULL, &timeout);
+    return readyFds;
+}
+
+void handleSelectEvents(int fd, std::string& output) {
+    char buffer[BUFSIZ];
+    ssize_t bytesRead = 0;
+
+    while ((bytesRead = read(fd, buffer, BUFSIZ)) > 0) {
+        buffer[bytesRead] = '\0';
+        output += buffer;
+    }
+
+    if (bytesRead == -1) {
+        if (errno != EAGAIN && errno != EWOULDBLOCK) {
+            perror("read");
+            exit(EXIT_FAILURE);
+        }
+        // Se errno é EAGAIN ou EWOULDBLOCK, não há dados disponíveis agora, tente novamente mais tarde.
+    }
+}
+
 
 HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
   // Cria um pipe para capturar a saída do processo CGI
@@ -124,11 +157,9 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
     perror("fork");
     exit(EXIT_FAILURE);
   }
-
-    std::cout << request->getQueryString() << std::endl;
-    setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
     char *argv[] = {const_cast<char *>("php-cgi"),
-                    const_cast<char *>("/usr/bin/php-cgi"), NULL};
+                    const_cast<char *>("/usr/bin/php-cgi"),
+                    const_cast<char *>("-q"), NULL};
     char **env = createCGIEnv(request);
   if (childPid == 0) {
     // Este é o código executado no processo filho
@@ -150,22 +181,46 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
   } else {
     // Fecha a extremidade de escrita do pipe
     close(pipefd[1]);
-    addDescriptorToEpoll(pipefd[0]);
+    int readyFds = waitForData(pipefd[0]);
+    if (readyFds == -1) {
+        perror("select");
+        exit(EXIT_FAILURE);
+    } else if (readyFds == 0) {
+        // Timeout ocorreu
+        close(pipefd[0]);
+        return (No_Content);
+    } else {
+        // Descritor de arquivo está pronto para leitura
+        std::string cgiOutput;
+        handleSelectEvents(pipefd[0], cgiOutput);
+        close(pipefd[0]);
 
-    std::string cgiOutput;
-    handleEpollEvents(5000, cgiOutput);
-    close(pipefd[0]);
+        if (cgiOutput.empty()) {
+            return (No_Content);
+        }
+        // int status;
+        // waitpid(childPid, &status, 0);
 
-    // std::cout << cgiOutput << std::endl;
-    if (cgiOutput.empty()) {
-      return (No_Content);
+        // // Verificar o status do processo filho se necessário
+        // if (WIFEXITED(status)) {
+        //     // O processo filho terminou normalmente
+        //     int exitStatus = WEXITSTATUS(status);
+        //     std::cout << exitStatus << std::endl;
+        //     std::cout << errno << std::endl;
+        //     // Faça algo com o exitStatus se necessário
+        // } else if (WIFSIGNALED(status)) {
+        //     // O processo filho terminou devido a um sinal
+        //     int signalNumber = WTERMSIG(status);
+        //     std::cout << signalNumber << std::endl;
+        //     std::cout << errno << std::endl;
+        // }
+        const char* bodyData = cgiOutput.c_str();
+        char* bodyCopy = new char[strlen(bodyData) + 1];
+        strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
+        response->setMsgBody(bodyCopy);
+        response->setContentLength(strlen(bodyCopy));
+        response->setContentType("text/html");
     }
-    const char *bodyData = cgiOutput.c_str();  // Converter para const char*
-    char *bodyCopy = new char[strlen(bodyData) + 1];
-    strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
-    response->setMsgBody(bodyCopy);
-    response->setContentLength(strlen(bodyCopy));
-    response->setContentType("text/html");
   }
   return (Ready);
 }
@@ -229,8 +284,6 @@ char** Server::createCGIEnv(HttpRequest *request)
     std::map<std::string, std::string> env_tmp;
     std::stringstream ss;
     std::string tmp2;
-    // std::string = getcwd(NULL, 0);
-    // env_tmp.insert(std::pair<std::string, std::string>("AUTH_TYPE", "null"));
     env_tmp.insert(std::pair<std::string, std::string>("PATH_INFO", "/"));
     env_tmp.insert(std::pair<std::string, std::string>("PATH_TRANSLATED", request->getAbsolutePath()));
     env_tmp.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
@@ -244,18 +297,11 @@ char** Server::createCGIEnv(HttpRequest *request)
     env_tmp.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ss.str()));
     }
     env_tmp.insert(std::pair<std::string, std::string>("QUERY_STRING", request->getQueryString()));
-    // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_IDENT", "null"));
-    // env_tmp.insert(std::pair<std::string, std::string>("DOCUMENT_ROOT", request->getAbsolutePath()));
-    // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_USER", "null"));
-    // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", request->getFileName()));
-    // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_PATH", request->getFileName()));
-    // env_tmp.insert(std::pair<std::string, std::string>("REQUEST_URI", request->getLocationWithoutIndex()));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_NAME", request->getServerName()));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_PORT", request->getPort()));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", "HTTP/1.1"));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_SOFTWARE", "nginxcelent"));
     env_tmp.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "200"));
-    // env_tmp.insert(std::pair<std::string, std::string>("Protocol-Specific Meta-Variables", "null"));
 
     env = new char*[env_tmp.size() + 1];
     std::map<std::string, std::string>::iterator it;
@@ -286,22 +332,22 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
     perror("pipe");
     exit(EXIT_FAILURE);
   }
-  // setNonBlocking(pipe_to_child[0]);
-  // setNonBlocking(pipe_to_child[1]);
-  // setNonBlocking(pipe_to_parent[0]);
-  // setNonBlocking(pipe_to_parent[1]);
-    int flags = fcntl(pipe_to_child[1], F_GETFL);
-    flags |= O_NONBLOCK;
-    if (fcntl(pipe_to_child[1], F_SETFL, flags) < 0)
-    {
-        std::cout << "add connection fcntl() error" << std::endl;
-        close(pipe_to_child[1]);
-        _exit(1);
-    }
+  setNonBlocking(pipe_to_child[0]);
+  setNonBlocking(pipe_to_child[1]);
+  setNonBlocking(pipe_to_parent[0]);
+  setNonBlocking(pipe_to_parent[1]);
+    // int flags = fcntl(pipe_to_child[1], F_GETFL);
+    // flags |= O_NONBLOCK;
+    // if (fcntl(pipe_to_child[1], F_SETFL, flags) < 0)
+    // {
+    //     std::cout << "add connection fcntl() error" << std::endl;
+    //     close(pipe_to_child[1]);
+    //     _exit(1);
+    // }
 
     std::string towrite = request->getBodyNotParsed();
-    // char **arg = 0;
-    char* argv[] = {const_cast<char*>("php-cgi"), const_cast<char*>("/usr/bin/php-cgi"), NULL};
+    // char* argv[] = {const_cast<char*>("php-cgi"), const_cast<char*>("/usr/bin/php-cgi"), NULL};
+    char* argv[] = {NULL};
     char **env = createCGIEnv(request);
   pid_t childPid = fork();
 
@@ -327,14 +373,41 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
     // int status;
     close(pipe_to_child[0]);
     close(pipe_to_parent[1]);
-    write(pipe_to_child[1], towrite.c_str(), towrite.size() + 100);
+    write(pipe_to_child[1], towrite.c_str(), towrite.size());
     close(pipe_to_child[1]);
-    addDescriptorToEpoll(pipe_to_parent[0]);
+    int readyFds = waitForData(pipe_to_parent[0]);
+        if (readyFds == -1) {
+            perror("select");
+            exit(EXIT_FAILURE);
+        } else if (readyFds == 0) {
+            // Timeout ocorreu
+            close(pipe_to_parent[0]);
+            return (No_Content);
+        } else {
+            // Descritor de arquivo está pronto para leitura
+            std::string cgiOutput;
+            handleSelectEvents(pipe_to_parent[0], cgiOutput);
+            close(pipe_to_parent[0]);
 
-    std::string cgiOutput;
-    handleEpollEvents(5000, cgiOutput);
-    // close(pipe_to_parent[0]);
-    // std::cout << cgiOutput << std::endl;
+            if (cgiOutput.empty()) {
+                return (No_Content);
+            }
+        int status;
+        waitpid(childPid, &status, WNOHANG);
+
+        // Verificar o status do processo filho se necessário
+        if (WIFEXITED(status)) {
+            // O processo filho terminou normalmente
+            int exitStatus = WEXITSTATUS(status);
+            std::cout << exitStatus << std::endl;
+            std::cout << errno << std::endl;
+            // Faça algo com o exitStatus se necessário
+        } else if (WIFSIGNALED(status)) {
+            // O processo filho terminou devido a um sinal
+            int signalNumber = WTERMSIG(status);
+            std::cout << signalNumber << std::endl;
+            std::cout << errno << std::endl;
+        }
     const char *bodyData = cgiOutput.c_str();  // Converter para const char*
     char *bodyCopy = new char[strlen(bodyData) + 1];
     strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
@@ -346,6 +419,7 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
     response->setMsgBody(bodyCopy);
     response->setContentLength(strlen(bodyCopy));
     response->setContentType("text/html");
+  }
   }
   return (Ready);
 }
