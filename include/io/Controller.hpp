@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/28 09:43:15 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/01 11:32:54 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,17 @@
 #include "../http/Server.hpp"
 #include "./TcpServerSocket.hpp"
 #include "./Client.hpp"
+#include "../http/HttpRequest.hpp"
+#include "../http/HttpResponse.hpp"
+#include "../http/Server.hpp"
 
 #include <csignal>
 #include <vector>
 #include <map>
 
 #define TIMEOUT 60
+
+class Client;
 
 class Controller {
  public:
@@ -31,6 +36,8 @@ class Controller {
 
   void  init(void);
   void  handleConnections(void);
+  void  addCGItoEpoll(int fd, Server* serv, int port, HttpRequest* req, HttpResponse* res);
+  // static void addNewCGI(int fd, std::string kind, HttpResponse* res, HttpRequest* req);
 
  private:
   int                               epollfd;
@@ -45,9 +52,10 @@ class Controller {
 
   // event handlers
   bool  isNewConnection(int connectionFd);
-  void  addNewConnection(int connectionFd);
+  void  addNewConnection(int connectionFd, std::string kind);
   void  readFromClient(int connectionFd);
   void  sendToClient(int connectionFd);
+  void  sendCgiToClient(int connectionFd);
   bool  closeConnection(int connectionFd);
 
   // signal handler

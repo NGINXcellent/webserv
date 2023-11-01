@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpStatus.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:13:54 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/03 15:32:31 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/01 11:03:33 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,8 @@ enum HttpStatusCode {
   Unsupported_Media_Type = 415,
   Internal_Server_Error = 500,
   Not_Implemented = 501,
-  Http_Ver_Unsupported = 505
+  Http_Ver_Unsupported = 505,
+  CGI = 666
 };
 
 class HttpStatus {

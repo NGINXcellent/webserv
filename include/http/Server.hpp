@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/10/29 10:17:53 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/01 11:09:25 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+#include "../io/Controller.hpp"
 #include "./HttpRequest.hpp"
 #include "./HttpResponse.hpp"
 #include "./HttpStatus.hpp"
@@ -25,12 +26,14 @@
 #include <map>
 #include <vector>
 
+class Controller;
+
 class Server {
  public:
   Server(const struct s_serverConfig& config);
   ~Server(void);
 
-  void            process(std::string &buffer, HttpRequest *req, HttpResponse *res);
+  HttpStatusCode            process(std::string &buffer, HttpRequest *req, HttpResponse *res);
   HttpStatusCode  resolve(HttpRequest *request, HttpResponse *response);
   HttpStatusCode  get(HttpRequest *request, HttpResponse *response);
   HttpStatusCode  post(HttpRequest *request, HttpResponse *response);
@@ -39,10 +42,12 @@ class Server {
   std::string     getHost(void);
   std::string     getServerName(void);
   HttpStatusCode  getCGI(HttpRequest *request, HttpResponse *response);
-  void handleEpollEvents(int timeout, std::string& cgiOutput);
   void addDescriptorToEpoll(int fd);
   HttpStatusCode postCGI(HttpRequest *request, HttpResponse *response);
   char** createCGIEnv(HttpRequest *request);
+  void setEpollfd(int epollfd);
+  void setControllerPtr(Controller* controllerPtr);
+
  private:
   size_t                        port;
   std::string                   host;
@@ -52,7 +57,7 @@ class Server {
   TCPServerSocket               *socket;
   std::map<int, std::string>    error_pages;
   std::vector<s_locationConfig> locations;
-  int epollfd;
+  Controller* controllerPtr;
 
   Server(const Server& f);
   Server& operator=(const Server& t);

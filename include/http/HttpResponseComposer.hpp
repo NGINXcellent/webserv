@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponseComposer.hpp                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
+/*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:05:17 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/08/29 20:28:06 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/01 11:22:38 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 
 #include "../../include/http/HttpResponse.hpp"
 #include "../../include/http/HttpRequest.hpp"
+#include "../../include/http/HttpStatus.hpp"
 
 class HttpResponseComposer {
  public:
@@ -30,7 +31,7 @@ class HttpResponseComposer {
   static void buildDirListResponse(HttpRequest *request, HttpResponse *response, \
                                    std::map<std::string, struct file_info *> &entries);
 
-  static void buildErrorResponse(HttpResponse *response, int error_code, \
+  static HttpStatusCode buildErrorResponse(HttpResponse *response, int error_code, \
                                   std::map<int, std::string> error_pages, \
                                   int protoMainVersion, int protoSubVersion);
 
