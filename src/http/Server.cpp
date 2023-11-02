@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/01 11:23:52 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/02 09:20:32 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ void setNonBlocking(int fd) {
     }
 }
 
-HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::getCGI(Client* client, HttpRequest *request, HttpResponse *response) {
   // Cria um pipe para capturar a saída do processo CGI
   std::string cgiPath = request->getLocationWithoutIndex();
   int pipefd[2];
@@ -79,7 +79,7 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
     std::stringstream ss(request->getPort());
     int porta;
     ss >> porta;
-    controllerPtr->addCGItoEpoll(pipefd[0], this, porta, request, response);
+    controllerPtr->addCGItoEpoll(pipefd[0], this, porta, request, response, client);
   pid_t childPid = fork();
 
   if (childPid == -1) {
@@ -125,7 +125,7 @@ HttpStatusCode Server::getCGI(HttpRequest *request, HttpResponse *response) {
   return (Ready);
 }
 
-HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::resolve(Client* client, HttpRequest *request, HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
   //  DEBUG
   // std::cout << request->getLocationWithoutIndex() << std::endl;
@@ -147,7 +147,7 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   HttpStatusCode opStatus = Ready;
 
   if (requestMethod == "GET")
-    opStatus = get(request, response);
+    opStatus = get(client, request, response);
   else if (requestMethod == "DELETE")
     opStatus = del(request, response);
   else if (requestMethod == "POST")
@@ -158,14 +158,15 @@ HttpStatusCode Server::resolve(HttpRequest *request, HttpResponse *response) {
   return (opStatus);
 }
 
-HttpStatusCode Server::process(std::string &buffer, HttpRequest *req, HttpResponse *res) {
+HttpStatusCode Server::process(Client* client, HttpRequest *req, HttpResponse *res) {
+  std::string buffer = client->getBuffer();
   HttpRequestFactory::setupRequest(req, buffer, locations);
   HttpStatusCode status = HttpRequestFactory::check(req, server_name);
 
   if (status == Ready) {
     res->setProtocol("HTTP", req->getProtocolMainVersion(),
                                   req->getProtocolSubVersion());
-    status = resolve(req, res);
+    status = resolve(client, req, res);
   }
   if (status == CGI) {
     return status;
@@ -387,7 +388,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
   return (Ready);
 }
 
-HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::get(Client* client, HttpRequest *request, HttpResponse *response) {
   if (request->getRedirectionCode() != 0) {
     response->setStatusCode(request->getRedirectionCode());
   }
@@ -438,7 +439,7 @@ HttpStatusCode Server::get(HttpRequest *request, HttpResponse *response) {
   std::string ext = request->getCGIExtension();
   std::string checkExt = location.substr(location.size() - ext.size());
     if(checkExt == request->getCGIExtension()){
-      opStatus = getCGI(request, response);
+      opStatus = getCGI(client, request, response);
     return opStatus;
   }
   }

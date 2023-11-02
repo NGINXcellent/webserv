@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/01 11:09:25 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/01 15:42:11 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 #include "./HttpStatus.hpp"
 #include "../io/TcpServerSocket.hpp"
 #include "../config/InputHandler.hpp"
+#include "../io/Client.hpp"
+#include "./HttpStatus.hpp"
 
 #include <cstddef>
 #include <string>
@@ -33,15 +35,15 @@ class Server {
   Server(const struct s_serverConfig& config);
   ~Server(void);
 
-  HttpStatusCode            process(std::string &buffer, HttpRequest *req, HttpResponse *res);
-  HttpStatusCode  resolve(HttpRequest *request, HttpResponse *response);
-  HttpStatusCode  get(HttpRequest *request, HttpResponse *response);
+  HttpStatusCode            process(Client* client, HttpRequest *req, HttpResponse *res);
+  HttpStatusCode  resolve(Client* client, HttpRequest *request, HttpResponse *response);
+  HttpStatusCode  get(Client* client, HttpRequest *request, HttpResponse *response);
   HttpStatusCode  post(HttpRequest *request, HttpResponse *response);
   HttpStatusCode  del(HttpRequest *request, HttpResponse *response);
   int             getPort(void);
   std::string     getHost(void);
   std::string     getServerName(void);
-  HttpStatusCode  getCGI(HttpRequest *request, HttpResponse *response);
+  HttpStatusCode  getCGI(Client* client, HttpRequest *request, HttpResponse *response);
   void addDescriptorToEpoll(int fd);
   HttpStatusCode postCGI(HttpRequest *request, HttpResponse *response);
   char** createCGIEnv(HttpRequest *request);

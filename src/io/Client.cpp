@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/01 10:49:30 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/02 09:20:21 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ Client::Client(int conFd, Server *destServer, int serverPort, time_t conStart, s
   request = new HttpRequest();
   response = new HttpResponse();
   this->buffer = "";
+  cgiClient = NULL;
   isReady = false;
 }
 
@@ -80,4 +81,20 @@ void Client::setCgiClient(Client* client) {
 
 Client* Client::getCgiClient(void) {
   return (this->cgiClient);
+}
+
+void Client::setRequestStatus(HttpStatusCode status) {
+  this->requestStatus = status;
+}
+
+HttpStatusCode Client::getRequestStatus(void) {
+  return (this->requestStatus);
+}
+
+void Client::setKind(std::string kind) {
+  this->kind = kind;
+}
+
+void Client::setBuffer(std::string toset) {
+  this->buffer = toset;
 }

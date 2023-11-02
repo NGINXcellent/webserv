@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/19 17:56:00 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/01 10:49:04 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/02 09:20:18 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "../http/Server.hpp"
 #include "../http/HttpResponse.hpp"
 #include "../http/HttpRequest.hpp"
+#include "../http/HttpStatus.hpp"
 
 class Client {
  public:
@@ -35,8 +36,12 @@ class Client {
   int			getPort(void);
   std::string     getKind(void);
   void			reset(void);
+  HttpStatusCode     getRequestStatus(void);
+  void     setRequestStatus(HttpStatusCode status);
+  void setKind(std::string kind);
   std::string		buffer;
   bool			isReady;
+  void setBuffer(std::string toset);
 
  private:
   int			connectionFd;
@@ -47,5 +52,6 @@ class Client {
   HttpResponse*		response;
   std::string      kind;
   Client*        cgiClient;
+  HttpStatusCode        requestStatus;
 };
 #endif

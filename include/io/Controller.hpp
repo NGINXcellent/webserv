@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/01 11:32:54 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/02 09:36:29 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class Controller {
 
   void  init(void);
   void  handleConnections(void);
-  void  addCGItoEpoll(int fd, Server* serv, int port, HttpRequest* req, HttpResponse* res);
+  void  addCGItoEpoll(int fd, Server* serv, int port, HttpRequest* req, HttpResponse* res, Client* client);
   // static void addNewCGI(int fd, std::string kind, HttpResponse* res, HttpRequest* req);
 
  private:
@@ -73,5 +73,7 @@ class Controller {
   int   getPortFromFd(int connectionFd);
   int	getSocketPort(int socketFd);
   void	checkTimeOut();
+  std::string readFromPipe(int currentFd);
+  void removeFromLine(int currentFd);
 };
 #endif
