@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/02 09:20:21 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/04 07:59:56 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ Client::Client(int conFd, Server *destServer, int serverPort, time_t conStart, s
   this->buffer = "";
   cgiClient = NULL;
   isReady = false;
+  requestStatus = New_Status;
 }
 
 Client::Client(int conFd, Server *destServer, int serverPort, time_t conStart, std::string kind, HttpRequest* request, HttpResponse* response) :

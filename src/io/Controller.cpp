@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/02 09:51:31 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/04 08:26:53 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,7 +147,7 @@ void Controller::handleConnections(void) {
           removeFromLine(currentFd);
         }
         if (client->getKind() == "CLIENT") {
-        client->setBuffer(readFromPipe(currentFd));
+        readFromClient(currentFd);
         HttpRequest *request = client->getRequest();
         HttpResponse *response = client->getResponse();
         std::string &clientBuffer = client->getBuffer();
@@ -162,6 +162,7 @@ void Controller::handleConnections(void) {
         }
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         Client *client = connectedClients[currentFd];
+        std::cout << client->getKind() << ",   " << client->getRequestStatus() << std::endl;
         if(client->getKind() == "CLIENT") {
         if(client->getCgiClient() != NULL) {
         if (client->getCgiClient()->getRequestStatus() == Ready)
@@ -386,13 +387,6 @@ std::string Controller::readFromPipe(int currentFd) {
         {
            toret.append(buf);
         }
-        else
-        {
-            //std::string check = buf;
-            //if (check.find("\r\n") != std::string::npos)
-             //   break;
-        }
-        // 음수일 때 에러 처리 필요할까?
     }
     std::cout << "pipe read complete!" << toret <<  std::endl;
     return toret;
@@ -447,7 +441,7 @@ void Controller::sendToClient(int currentFd) {
     closeConnection(currentFd);
   }
   }
-  if(!client->getBuffer().empty()){
+  else {
   // server->process(client->getBuffer(), request, response);
   socket->sendData(currentFd, response->getHeaders().c_str(), \
                    response->getHeaders().size());

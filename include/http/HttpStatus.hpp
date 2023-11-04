@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/02 16:13:54 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/01 11:03:33 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/04 07:59:47 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,8 @@ enum HttpStatusCode {
   Internal_Server_Error = 500,
   Not_Implemented = 501,
   Http_Ver_Unsupported = 505,
-  CGI = 666
+  CGI = 666,
+  New_Status = 999
 };
 
 class HttpStatus {
