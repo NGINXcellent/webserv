@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/04 21:27:54 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 06:25:31 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -292,7 +292,7 @@ void Controller::checkTimeOut() {
   }
 }
 
-void Controller::addCGItoEpoll(int fd, Server* serv, int port, HttpRequest* req, HttpResponse* res, Client* client) {
+void Controller::addCGItoEpoll(int fd, int port, Client* client) {
   struct epoll_event ev;
   initEpollEvent(&ev, EPOLLIN, fd);
   if (epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &ev) == -1) {
@@ -304,7 +304,7 @@ void Controller::addCGItoEpoll(int fd, Server* serv, int port, HttpRequest* req,
 
   // IDENTIFICAR SE EU PRECISO DE REQUEST E RESPONSE AQUI
   // ESSAS BUDEGA TAO ME FUDENDO DE ALGUMA FORMA.
-  Client *newClient = new Client(fd, serv, port, 0, "CGI", req, res);
+  Client *newClient = new Client(fd, NULL, port, 0, "CGI", NULL, NULL);
   newClient->setRequestStatus(CGI);
   client->setCgiClient(newClient);
   connectedClients.insert(std::make_pair(fd, newClient));

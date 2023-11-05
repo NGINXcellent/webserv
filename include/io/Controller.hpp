@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/04 08:41:05 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 06:17:18 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class Controller {
 
   void  init(void);
   void  handleConnections(void);
-  void  addCGItoEpoll(int fd, Server* serv, int port, HttpRequest* req, HttpResponse* res, Client* client);
+  void  addCGItoEpoll(int fd, int port, Client* client);
   // static void addNewCGI(int fd, std::string kind, HttpResponse* res, HttpRequest* req);
 
  private:

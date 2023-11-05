@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/02 09:20:32 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 06:21:42 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,9 +58,8 @@ void setNonBlocking(int fd) {
     }
 }
 
-HttpStatusCode Server::getCGI(Client* client, HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::getCGI(Client* client, HttpRequest *request) {
   // Cria um pipe para capturar a saída do processo CGI
-  std::string cgiPath = request->getLocationWithoutIndex();
   int pipefd[2];
   if (pipe(pipefd) == -1) {
     perror("pipe");
@@ -71,15 +70,13 @@ HttpStatusCode Server::getCGI(Client* client, HttpRequest *request, HttpResponse
 
   // Cria um novo processo
 
-      std::cout << request->getQueryString() << std::endl;
-    setenv("QUERY_STRING", request->getQueryString().c_str(), 1);
     char *argv[] = {const_cast<char *>("php-cgi"),
                     const_cast<char *>("/usr/bin/php-cgi"), NULL};
     char **env = createCGIEnv(request);
     std::stringstream ss(request->getPort());
     int porta;
     ss >> porta;
-    controllerPtr->addCGItoEpoll(pipefd[0], this, porta, request, response, client);
+    controllerPtr->addCGItoEpoll(pipefd[0], porta, client);
   pid_t childPid = fork();
 
   if (childPid == -1) {
@@ -439,7 +436,7 @@ HttpStatusCode Server::get(Client* client, HttpRequest *request, HttpResponse *r
   std::string ext = request->getCGIExtension();
   std::string checkExt = location.substr(location.size() - ext.size());
     if(checkExt == request->getCGIExtension()){
-      opStatus = getCGI(client, request, response);
+      opStatus = getCGI(client, request);
     return opStatus;
   }
   }

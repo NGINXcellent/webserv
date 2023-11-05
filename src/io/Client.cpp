@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/04 20:57:04 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 06:47:13 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,9 +70,9 @@ void Client::reset() {
     if (response != NULL) {
         response = NULL;
     }
-  // delete cgiClient;
   request = new HttpRequest();
   response = new HttpResponse();
+  cgiClient = NULL;
   isReady = false;
 }
 

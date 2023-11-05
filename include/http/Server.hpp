@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/01 15:42:11 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 06:21:05 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ class Server {
   int             getPort(void);
   std::string     getHost(void);
   std::string     getServerName(void);
-  HttpStatusCode  getCGI(Client* client, HttpRequest *request, HttpResponse *response);
+  HttpStatusCode  getCGI(Client* client, HttpRequest *request);
   void addDescriptorToEpoll(int fd);
   HttpStatusCode postCGI(HttpRequest *request, HttpResponse *response);
   char** createCGIEnv(HttpRequest *request);
