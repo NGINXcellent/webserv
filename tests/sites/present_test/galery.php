@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+
 <main>
     <div class="main-button-container">
         <a href="./galery.php" class="main-button">Galeria</a>
@@ -17,6 +18,7 @@
     <p>Voce pode excluir imagens clicando no botão "Excluir".</p>
     <div id="image-gallery">
             <?php
+
             // Diretório das imagens
             $directory = './bin-img/'; // Substitua pelo caminho da sua pasta de imagens
 // problema, esta dando request dobrado na imagem: ./tests/sites/present_test/tests/sites/present_test/bin-img/nginxcellent.png

@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 06:21:42 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 11:04:45 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,7 +148,7 @@ HttpStatusCode Server::resolve(Client* client, HttpRequest *request, HttpRespons
   else if (requestMethod == "DELETE")
     opStatus = del(request, response);
   else if (requestMethod == "POST")
-    opStatus = post(request, response);
+    opStatus = post(client, request, response);
   else
     opStatus = Not_Implemented;
 
@@ -233,7 +233,7 @@ char** Server::createCGIEnv(HttpRequest *request)
 
 // CGI DO POST LETSGOOOOOOOOOOOOOOOO
 
-HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpResponse *response) {
   // Cria um pipe para capturar a saída do processo CGI
   std::string cgiPath = request->getLocationWithoutIndex();
   int pipe_to_child[2];
@@ -259,6 +259,10 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
     // char **arg = 0;
     char* argv[] = {const_cast<char*>("php-cgi"), const_cast<char*>("/usr/bin/php-cgi"), NULL};
     char **env = createCGIEnv(request);
+  std::stringstream ss(request->getPort());
+    int porta;
+    ss >> porta;
+    controllerPtr->addCGItoEpoll(pipe_to_parent[0], porta, client);
   pid_t childPid = fork();
 
   if (childPid == -1) {
@@ -288,7 +292,12 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
     // addDescriptorToEpoll(pipe_to_parent[0]);
 
     std::string cgiOutput;
-    return(Ready);
+    int i;
+    for (i = 0 ; env[i] != 0; i++)
+        delete[] env[i];
+    delete[] env[i];
+    delete[] env;
+    return(CGI);
     (void) response;
     // controllerPtr->addCGItoEpoll(pipe_to_parent[0], request, response);
     // // close(pipe_to_parent[0]);
@@ -296,19 +305,11 @@ HttpStatusCode Server::postCGI(HttpRequest *request, HttpResponse *response) {
     // const char *bodyData = cgiOutput.c_str();  // Converter para const char*
     // char *bodyCopy = new char[strlen(bodyData) + 1];
     // strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
-    // int i;
-    // for (i = 0 ; env[i] != 0; i++)
-    //     delete[] env[i];
-    // delete[] env[i];
-    // delete[] env;
-    // response->setMsgBody(bodyCopy);
-    // response->setContentLength(strlen(bodyCopy));
-    // response->setContentType("text/html");
   }
   return (Ready);
 }
 
-HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::post(Client* client, HttpRequest *request, HttpResponse *response) {
   HttpStatusCode opStatus = Ready;
   response->setLastModifiedTime(
       HttpTime::getLastModifiedTime(request->getResource()));
@@ -341,7 +342,7 @@ HttpStatusCode Server::post(HttpRequest *request, HttpResponse *response) {
   std::string ext = request->getCGIExtension();
   std::string checkExt = location.substr(location.size() - ext.size());
   if(checkExt == ext) {
-    opStatus = postCGI(request, response);
+    opStatus = postCGI(client, request, response);
     return opStatus;
   }
   }

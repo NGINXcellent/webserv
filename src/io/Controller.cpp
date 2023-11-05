@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 06:25:31 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 10:23:34 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -452,9 +452,9 @@ void Controller::sendToClient(int currentFd) {
                    response->getHeaders().size());
     socket->sendData(currentFd, response->getMsgBody(), \
                    response->getContentLength());
-    // closeConnection(client->getCgiClient()->getConnectionFd()); //porque isso aqui esta fazendo o codigo dar segfault ?
+    closeConnection(client->getCgiClient()->getConnectionFd()); //porque isso aqui esta fazendo o codigo dar segfault ?
     // client->getCgiClient()->reset();
-    removeFromLine(client->getCgiClient()->getConnectionFd());
+    // removeFromLine(client->getCgiClient()->getConnectionFd());
     client->reset();
     closeConnection(currentFd);
   }

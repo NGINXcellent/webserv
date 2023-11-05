@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 06:21:05 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 10:59:45 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,14 +38,14 @@ class Server {
   HttpStatusCode            process(Client* client, HttpRequest *req, HttpResponse *res);
   HttpStatusCode  resolve(Client* client, HttpRequest *request, HttpResponse *response);
   HttpStatusCode  get(Client* client, HttpRequest *request, HttpResponse *response);
-  HttpStatusCode  post(HttpRequest *request, HttpResponse *response);
+  HttpStatusCode  post(Client* client, HttpRequest *request, HttpResponse *response);
   HttpStatusCode  del(HttpRequest *request, HttpResponse *response);
   int             getPort(void);
   std::string     getHost(void);
   std::string     getServerName(void);
   HttpStatusCode  getCGI(Client* client, HttpRequest *request);
   void addDescriptorToEpoll(int fd);
-  HttpStatusCode postCGI(HttpRequest *request, HttpResponse *response);
+  HttpStatusCode postCGI(Client* client, HttpRequest *request, HttpResponse *response);
   char** createCGIEnv(HttpRequest *request);
   void setEpollfd(int epollfd);
   void setControllerPtr(Controller* controllerPtr);
