@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/02 09:36:29 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/04 08:41:05 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,5 +75,6 @@ class Controller {
   void	checkTimeOut();
   std::string readFromPipe(int currentFd);
   void removeFromLine(int currentFd);
+  void removeFromConnectedCLients(int currentFd);
 };
 #endif

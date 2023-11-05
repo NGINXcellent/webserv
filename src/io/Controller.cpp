@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/04 08:26:53 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/04 21:27:54 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,30 +141,37 @@ void Controller::handleConnections(void) {
         if (client->getKind() == "CGI") {
           std::cout << "OLA EU SOU UM CGI E PASSEI POR AQUI" << std::endl;
           client->setBuffer(readFromPipe(currentFd));
+          // readFromClient(currentFd);
           client->setRequestStatus(Ready);
           // client->reset();
           // closeConnection(currentFd);
-          removeFromLine(currentFd);
+          // removeFromLine(currentFd);
         }
         if (client->getKind() == "CLIENT") {
         readFromClient(currentFd);
         HttpRequest *request = client->getRequest();
-        HttpResponse *response = client->getResponse();
+        // HttpResponse *response = client->getResponse();
         std::string &clientBuffer = client->getBuffer();
         // DEBUG CLIENT BUFFER
         // std::cout << clientBuffer << std::endl;
         request->setRequestReady(isHTTPRequestComplete(request, clientBuffer));
-        if (request->isRequestReady()){
+        }
+      } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
+        Client *client = connectedClients[currentFd];
+        HttpRequest *request = client->getRequest();
+        HttpResponse *response = client->getResponse();
+        std::cout << client->getKind() << ",   " << client->getRequestStatus() << std::endl;
+        if (client->getCgiClient() == NULL)
+          std::cout << "O CGI CLIENT É NULL" << std::endl;
+        if(client->getKind() == "CLIENT") {
+
+        if (request->isRequestReady() && client->getRequestStatus() == New_Status){
             HttpStatusCode status;
             status = client->getServer()->process(client, request, response);
             client->setRequestStatus(status);
         }
-        }
-      } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
-        Client *client = connectedClients[currentFd];
-        std::cout << client->getKind() << ",   " << client->getRequestStatus() << std::endl;
-        if(client->getKind() == "CLIENT") {
         if(client->getCgiClient() != NULL) {
+        std::cout << client->getCgiClient()->getRequestStatus() << std::endl;
         if (client->getCgiClient()->getRequestStatus() == Ready)
           client->setRequestStatus(Ready);
         }
@@ -174,13 +181,6 @@ void Controller::handleConnections(void) {
           sendToClient(currentFd);
         }
         }
-        // if (client->getKind() == "CGI") {
-        //   std::cout << "TECNICAMENTE EU ACABEI DE LER MEU FD INTEIRO" << std::endl;
-        //   std::cout<< client->getBuffer() << std::endl;
-        //   std::cout << "fim da resposta CGI" << std::endl;
-        //   client->setRequestStatus(Ready);
-        //   // sendCgiToClient(currentFd);
-        // }
       }
     }
     // checkTimeOut();
@@ -301,6 +301,9 @@ void Controller::addCGItoEpoll(int fd, Server* serv, int port, HttpRequest* req,
     close(fd);
     return;
   }
+
+  // IDENTIFICAR SE EU PRECISO DE REQUEST E RESPONSE AQUI
+  // ESSAS BUDEGA TAO ME FUDENDO DE ALGUMA FORMA.
   Client *newClient = new Client(fd, serv, port, 0, "CGI", req, res);
   newClient->setRequestStatus(CGI);
   client->setCgiClient(newClient);
@@ -339,6 +342,14 @@ void Controller::addNewConnection(int socketFD, std::string kind) {
 void Controller::removeFromLine(int currentFd) {
   epoll_ctl(epollfd, EPOLL_CTL_DEL, currentFd, NULL);
   close(currentFd);
+}
+
+void Controller::removeFromConnectedCLients(int currentFd) {
+    if (connectedClients[currentFd] != NULL) {
+    delete connectedClients[currentFd];
+  }
+
+  connectedClients.erase(currentFd);
 }
 
 bool  Controller::closeConnection(int currentFd) {
@@ -386,6 +397,10 @@ std::string Controller::readFromPipe(int currentFd) {
         else if (strlen > 0)
         {
            toret.append(buf);
+        }
+        else{
+            std::cout << "pipe read error!" << std::endl;
+            break;
         }
     }
     std::cout << "pipe read complete!" << toret <<  std::endl;
@@ -437,6 +452,9 @@ void Controller::sendToClient(int currentFd) {
                    response->getHeaders().size());
     socket->sendData(currentFd, response->getMsgBody(), \
                    response->getContentLength());
+    // closeConnection(client->getCgiClient()->getConnectionFd()); //porque isso aqui esta fazendo o codigo dar segfault ?
+    // client->getCgiClient()->reset();
+    removeFromLine(client->getCgiClient()->getConnectionFd());
     client->reset();
     closeConnection(currentFd);
   }

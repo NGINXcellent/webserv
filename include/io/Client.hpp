@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/19 17:56:00 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/02 09:20:18 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/04 08:40:28 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ class Client {
   std::string		buffer;
   bool			isReady;
   void setBuffer(std::string toset);
+  int getConnectionFd(void);
 
  private:
   int			connectionFd;

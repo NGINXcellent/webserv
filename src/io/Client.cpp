@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/04 07:59:56 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/04 20:57:04 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,12 +31,15 @@ Client::Client(int conFd, Server *destServer, int serverPort, time_t conStart, s
                connectionTimeout(conStart + 60), request(request), response(response), kind(kind) {
   this->buffer = "";
   isReady = false;
+  cgiClient = NULL;
+  requestStatus = New_Status;
 }
 
 
 Client::~Client(void) {
   delete request;
   delete response;
+  delete cgiClient;
 }
 
 std::string& Client::getBuffer(void) {
@@ -61,8 +64,13 @@ int Client::getPort(void) {
 
 void Client::reset() {
   buffer.clear();
-  delete request;
-  delete response;
+    if (request != NULL) {
+        request = NULL;
+    }
+    if (response != NULL) {
+        response = NULL;
+    }
+  // delete cgiClient;
   request = new HttpRequest();
   response = new HttpResponse();
   isReady = false;
@@ -98,4 +106,8 @@ void Client::setKind(std::string kind) {
 
 void Client::setBuffer(std::string toset) {
   this->buffer = toset;
+}
+
+int Client::getConnectionFd(void) {
+  return (this->connectionFd);
 }
