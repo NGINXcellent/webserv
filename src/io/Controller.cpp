@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 10:23:34 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 11:14:59 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -434,6 +434,7 @@ void Controller::sendToClient(int currentFd) {
   // HttpStatusCode status;
 
   client->getBuffer() += '\0';
+  // Preparacao para enviar para o cliente
   if(client->getCgiClient() != NULL) {
   if (!client->getCgiClient()->getBuffer().empty()){
     // std::string cgiOutput = client->getCgiClient()->getBuffer();
@@ -448,6 +449,7 @@ void Controller::sendToClient(int currentFd) {
     response->setMsgBody(bodyCopy);
     response->setContentLength(strlen(bodyCopy));
     response->setContentType("text/html");
+    // fim da preparacao
     socket->sendData(currentFd, response->getHeaders().c_str(), \
                    response->getHeaders().size());
     socket->sendData(currentFd, response->getMsgBody(), \

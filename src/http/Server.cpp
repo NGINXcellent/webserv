@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 11:04:45 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/05 11:20:15 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,7 @@ HttpStatusCode Server::getCGI(Client* client, HttpRequest *request) {
     std::stringstream ss(request->getPort());
     int porta;
     ss >> porta;
+  //Aqui eu adiciono o FD do CGI no epoll, criando um novo client.
     controllerPtr->addCGItoEpoll(pipefd[0], porta, client);
   pid_t childPid = fork();
 
@@ -259,9 +260,11 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     // char **arg = 0;
     char* argv[] = {const_cast<char*>("php-cgi"), const_cast<char*>("/usr/bin/php-cgi"), NULL};
     char **env = createCGIEnv(request);
+  // preparaçao para criar o client
   std::stringstream ss(request->getPort());
     int porta;
     ss >> porta;
+  //Aqui eu adiciono o FD do CGI no epoll, criando um novo client.
     controllerPtr->addCGItoEpoll(pipe_to_parent[0], porta, client);
   pid_t childPid = fork();
 
