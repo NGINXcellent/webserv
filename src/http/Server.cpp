@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 11:20:15 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/06 10:28:50 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -266,6 +266,7 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     ss >> porta;
   //Aqui eu adiciono o FD do CGI no epoll, criando um novo client.
     controllerPtr->addCGItoEpoll(pipe_to_parent[0], porta, client);
+    std::cout << "Content-Type" << client->getRequest()->getContentType() << std::endl;
   pid_t childPid = fork();
 
   if (childPid == -1) {
@@ -292,8 +293,13 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     close(pipe_to_parent[1]);
     write(pipe_to_child[1], towrite.c_str(), towrite.size() + 100);
     close(pipe_to_child[1]);
+    sleep(1);
     // addDescriptorToEpoll(pipe_to_parent[0]);
-
+    int status;
+    waitpid(childPid, &status, WNOHANG);
+    if(status != 0) {
+      std::cout << "CGI ERROR" << std::endl;
+    }
     std::string cgiOutput;
     int i;
     for (i = 0 ; env[i] != 0; i++)
@@ -302,6 +308,7 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     delete[] env;
     return(CGI);
     (void) response;
+    // ESTA FUINCIONANDO COM NOMAXIMO 64KB
     // controllerPtr->addCGItoEpoll(pipe_to_parent[0], request, response);
     // // close(pipe_to_parent[0]);
     // // std::cout << cgiOutput << std::endl;

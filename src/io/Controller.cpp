@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 11:14:59 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/06 10:29:05 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,7 +145,7 @@ void Controller::handleConnections(void) {
           client->setRequestStatus(Ready);
           // client->reset();
           // closeConnection(currentFd);
-          // removeFromLine(currentFd);
+          removeFromLine(currentFd);
         }
         if (client->getKind() == "CLIENT") {
         readFromClient(currentFd);
