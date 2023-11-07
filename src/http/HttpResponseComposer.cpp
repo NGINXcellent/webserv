@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/05 21:21:24 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/06 09:46:34 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/01 11:23:27 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 #include "../../include/http/MimeType.hpp"
 #include "../../include/io/FileReader.hpp"
 
-void HttpResponseComposer::buildErrorResponse(HttpResponse *response, \
+HttpStatusCode HttpResponseComposer::buildErrorResponse(HttpResponse *response, \
                                        int error_code, \
                                        std::map<int, std::string> error_pages, \
                                        int protoMainVersion, \
@@ -34,8 +34,9 @@ void HttpResponseComposer::buildErrorResponse(HttpResponse *response, \
   response->setProtocol("HTTP", protoMainVersion, protoSubVersion);
   response->setStatusCode(error_code);
 
+// ready porque conseguiu pegar a pagina
   if (HttpResponseComposer::getCustomPage(response, error_code, error_pages))
-    return;
+    return Ready;
 
   std::string content = "<html><head><title>";
   std::stringstream ss;
@@ -57,6 +58,8 @@ void HttpResponseComposer::buildErrorResponse(HttpResponse *response, \
   response->setContentType("text/html");
   response->setMsgBody(responseContent);
   response->setContentLength(content.size());
+  //Retornei Ready pois estou testando o CGI, aqui pode ter outro retorno depois.
+  return(Ready);
 }
 
 bool HttpResponseComposer::getCustomPage(HttpResponse *response, \
