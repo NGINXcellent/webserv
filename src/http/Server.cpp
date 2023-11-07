@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/06 23:09:55 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/07 08:19:10 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,12 +235,6 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     perror("pipe");
     exit(EXIT_FAILURE);
   }
-
-    int file_fd = open("output", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    if (file_fd == -1) {
-        perror("open");
-        exit(EXIT_FAILURE);
-    }
   // setNonBlocking(pipe_to_child[0]);
   // setNonBlocking(pipe_to_child[1]);
   // setNonBlocking(pipe_to_parent[0]);
@@ -254,14 +248,6 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     //     _exit(1);
     // }
 
-    // TENTANDO ESCREVER EM UM ARQUIVO E DEPOIS PASSAR PAR AO FD DO PROCESSO FILHOS
-
-
-
-
-
-    
-
     std::string towrite = request->getBodyNotParsed();
     // std::cout << "towrite data" << towrite << std::endl;
     // std::cout << "towrite size" << towrite.size() << std::endl;
@@ -269,15 +255,7 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     // quando aumentamos o tamanho do  pipe, conseguimos escrever mais informacoes nele e lidar com arquivos maiores.
     // fcntl(pipe_to_child[1], F_SETPIPE_SZ, towrite.size());
     // write(pipe_to_child[1], towrite.c_str(), towrite.size());
-    write(file_fd, towrite.c_str(), towrite.size());
-    int bytesRead;
-    std::string content;
-    char buffer[1024];
-    while ((bytesRead = read(file_fd, buffer, sizeof(buffer))) > 0) {
-        content.append(buffer, bytesRead);
-    }
-    std::cout << content << std::endl;
-    dup2(file_fd, pipe_to_child[1]);
+    write(pipe_to_child[1], towrite.c_str(), towrite.size());
     // char **arg = 0;
     char* argv[] = {const_cast<char*>("php-cgi"),
                     const_cast<char*>("/usr/bin/php-cgi"),
