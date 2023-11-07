@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/06 10:29:05 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/06 20:19:06 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,12 +123,9 @@ void Controller::handleConnections(void) {
       continue;
     }
     for (int i = 0; i < numEvents; ++i) {
-      std::cout << "O Numero de eventos na fila é:" << numEvents << std::endl;
       int currentFd = events[i].data.fd;    // this client fd
       int currentEvent = events[i].events;  // this client event state
       Client *client = connectedClients[currentFd];
-      if (client != NULL)
-        std::cout << "O client é do tipo: " << client->getKind() << std::endl;
       if (isNewConnection(currentFd) && client == NULL ) {
         std::cout << "new conection" << std::endl;
         addNewConnection(currentFd, "CLIENT");  // if new connection found, add it.
@@ -141,6 +138,8 @@ void Controller::handleConnections(void) {
         if (client->getKind() == "CGI") {
           std::cout << "OLA EU SOU UM CGI E PASSEI POR AQUI" << std::endl;
           client->setBuffer(readFromPipe(currentFd));
+          // std::cout << client->getBuffer()<< std::endl;
+          // std::cout << "EU LI UMA QUANTIDADE DE:  " << client->getBuffer().size() << std::endl;
           // readFromClient(currentFd);
           client->setRequestStatus(Ready);
           // client->reset();
@@ -160,9 +159,6 @@ void Controller::handleConnections(void) {
         Client *client = connectedClients[currentFd];
         HttpRequest *request = client->getRequest();
         HttpResponse *response = client->getResponse();
-        std::cout << client->getKind() << ",   " << client->getRequestStatus() << std::endl;
-        if (client->getCgiClient() == NULL)
-          std::cout << "O CGI CLIENT É NULL" << std::endl;
         if(client->getKind() == "CLIENT") {
 
         if (request->isRequestReady() && client->getRequestStatus() == New_Status){
@@ -171,7 +167,6 @@ void Controller::handleConnections(void) {
             client->setRequestStatus(status);
         }
         if(client->getCgiClient() != NULL) {
-        std::cout << client->getCgiClient()->getRequestStatus() << std::endl;
         if (client->getCgiClient()->getRequestStatus() == Ready)
           client->setRequestStatus(Ready);
         }
@@ -403,7 +398,7 @@ std::string Controller::readFromPipe(int currentFd) {
             break;
         }
     }
-    std::cout << "pipe read complete!" << toret <<  std::endl;
+    // std::cout << "pipe read complete!" << toret <<  std::endl;
     return toret;
 }
 

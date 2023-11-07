@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/06 10:28:50 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/06 23:09:55 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <string>
+#include <poll.h>
 
 #include "../../include/http/HttpTime.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
@@ -187,7 +188,6 @@ char** Server::createCGIEnv(HttpRequest *request)
     std::stringstream ss;
     std::string tmp2;
     // std::string = getcwd(NULL, 0);
-    // env_tmp.insert(std::pair<std::string, std::string>("AUTH_TYPE", "null"));
     env_tmp.insert(std::pair<std::string, std::string>("PATH_INFO", "/"));
     env_tmp.insert(std::pair<std::string, std::string>("PATH_TRANSLATED", request->getAbsolutePath()));
     env_tmp.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
@@ -201,18 +201,11 @@ char** Server::createCGIEnv(HttpRequest *request)
     env_tmp.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ss.str()));
     }
     env_tmp.insert(std::pair<std::string, std::string>("QUERY_STRING", request->getQueryString()));
-    // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_IDENT", "null"));
-    // env_tmp.insert(std::pair<std::string, std::string>("DOCUMENT_ROOT", request->getAbsolutePath()));
-    // env_tmp.insert(std::pair<std::string, std::string>("REMOTE_USER", "null"));
-    // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", request->getFileName()));
-    // env_tmp.insert(std::pair<std::string, std::string>("SCRIPT_PATH", request->getFileName()));
-    // env_tmp.insert(std::pair<std::string, std::string>("REQUEST_URI", request->getLocationWithoutIndex()));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_NAME", request->getServerName()));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_PORT", request->getPort()));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", "HTTP/1.1"));
     env_tmp.insert(std::pair<std::string, std::string>("SERVER_SOFTWARE", "nginxcelent"));
     env_tmp.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "200"));
-    // env_tmp.insert(std::pair<std::string, std::string>("Protocol-Specific Meta-Variables", "null"));
 
     env = new char*[env_tmp.size() + 1];
     std::map<std::string, std::string>::iterator it;
@@ -235,7 +228,6 @@ char** Server::createCGIEnv(HttpRequest *request)
 // CGI DO POST LETSGOOOOOOOOOOOOOOOO
 
 HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpResponse *response) {
-  // Cria um pipe para capturar a saída do processo CGI
   std::string cgiPath = request->getLocationWithoutIndex();
   int pipe_to_child[2];
   int pipe_to_parent[2];
@@ -243,23 +235,53 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     perror("pipe");
     exit(EXIT_FAILURE);
   }
+
+    int file_fd = open("output", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (file_fd == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
   // setNonBlocking(pipe_to_child[0]);
   // setNonBlocking(pipe_to_child[1]);
   // setNonBlocking(pipe_to_parent[0]);
   // setNonBlocking(pipe_to_parent[1]);
-    int flags = fcntl(pipe_to_child[1], F_GETFL);
-    flags |= O_NONBLOCK;
-    if (fcntl(pipe_to_child[1], F_SETFL, flags) < 0)
-    {
-        std::cout << "add connection fcntl() error" << std::endl;
-        close(pipe_to_child[1]);
-        _exit(1);
-    }
+    // int flags = fcntl(pipe_to_child[1], F_GETFL);
+    // flags |= O_NONBLOCK;
+    // if (fcntl(pipe_to_child[1], F_SETFL, flags) < 0)
+    // {
+    //     std::cout << "add connection fcntl() error" << std::endl;
+    //     close(pipe_to_child[1]);
+    //     _exit(1);
+    // }
+
+    // TENTANDO ESCREVER EM UM ARQUIVO E DEPOIS PASSAR PAR AO FD DO PROCESSO FILHOS
+
+
+
+
+
+    
 
     std::string towrite = request->getBodyNotParsed();
+    // std::cout << "towrite data" << towrite << std::endl;
+    // std::cout << "towrite size" << towrite.size() << std::endl;
+    // dentro do pipe, no maximo 65536
+    // quando aumentamos o tamanho do  pipe, conseguimos escrever mais informacoes nele e lidar com arquivos maiores.
+    // fcntl(pipe_to_child[1], F_SETPIPE_SZ, towrite.size());
+    // write(pipe_to_child[1], towrite.c_str(), towrite.size());
+    write(file_fd, towrite.c_str(), towrite.size());
+    int bytesRead;
+    std::string content;
+    char buffer[1024];
+    while ((bytesRead = read(file_fd, buffer, sizeof(buffer))) > 0) {
+        content.append(buffer, bytesRead);
+    }
+    std::cout << content << std::endl;
+    dup2(file_fd, pipe_to_child[1]);
     // char **arg = 0;
-    char* argv[] = {const_cast<char*>("php-cgi"), const_cast<char*>("/usr/bin/php-cgi"), NULL};
-    char **env = createCGIEnv(request);
+    char* argv[] = {const_cast<char*>("php-cgi"),
+                    const_cast<char*>("/usr/bin/php-cgi"),
+                      NULL};
   // preparaçao para criar o client
   std::stringstream ss(request->getPort());
     int porta;
@@ -282,6 +304,7 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     close(pipe_to_child[1]);
     close(pipe_to_parent[0]);
 
+    char **env = createCGIEnv(request);
     // Substitui o processo atual pelo programa CGI
     execve("/usr/bin/php-cgi", argv, env);
     perror("execve");
@@ -291,21 +314,14 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     // int status;
     close(pipe_to_child[0]);
     close(pipe_to_parent[1]);
-    write(pipe_to_child[1], towrite.c_str(), towrite.size() + 100);
     close(pipe_to_child[1]);
-    sleep(1);
+    // sleep(1);
     // addDescriptorToEpoll(pipe_to_parent[0]);
     int status;
-    waitpid(childPid, &status, WNOHANG);
+    waitpid(childPid, &status, 0);
     if(status != 0) {
       std::cout << "CGI ERROR" << std::endl;
     }
-    std::string cgiOutput;
-    int i;
-    for (i = 0 ; env[i] != 0; i++)
-        delete[] env[i];
-    delete[] env[i];
-    delete[] env;
     return(CGI);
     (void) response;
     // ESTA FUINCIONANDO COM NOMAXIMO 64KB
