@@ -6,33 +6,34 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 08:11:00 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 16:45:15 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/http/Server.hpp"
 
-#include <iostream> // cout
-#include <fstream>
-#include <sstream>  // stringstream
-#include <algorithm>
+#include <fcntl.h>
+#include <poll.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <fcntl.h>
-#include <string>
-#include <poll.h>
 
-#include "../../include/http/HttpTime.hpp"
+#include <algorithm>
+#include <fstream>
+#include <iostream>  // cout
+#include <sstream>   // stringstream
+#include <string>
+
 #include "../../include/http/HttpRequestFactory.hpp"
 #include "../../include/http/HttpResponseComposer.hpp"
-#include "../../include/http/MimeType.hpp"
-#include "../../include/io/TcpServerSocket.hpp"
-#include "../../include/io/FileSystem.hpp"
-#include "../../include/io/FileReader.hpp"
-#include "../../include/io/FileWriter.hpp"
 #include "../../include/http/HttpStatus.hpp"
+#include "../../include/http/HttpTime.hpp"
+#include "../../include/http/MimeType.hpp"
+#include "../../include/io/FileReader.hpp"
+#include "../../include/io/FileSystem.hpp"
+#include "../../include/io/FileWriter.hpp"
+#include "../../include/io/TcpServerSocket.hpp"
 
-Server::Server(const struct s_serverConfig& config) {
+Server::Server(const struct s_serverConfig &config) {
   port = strtol(config.port.c_str(), NULL, 0);
   host = config.host;
   server_name = config.server_name;
@@ -41,96 +42,61 @@ Server::Server(const struct s_serverConfig& config) {
   locations = config.location;
 }
 
-Server::~Server(void) { }
+Server::~Server(void) {}
 
-void Server::setControllerPtr(Controller* controllerPtr) {
+void Server::setControllerPtr(Controller *controllerPtr) {
   this->controllerPtr = controllerPtr;
 }
 
 void setNonBlocking(int fd) {
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (flags == -1) {
-        perror("fcntl");
-        exit(EXIT_FAILURE);
-    }
-    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-        perror("fcntl");
-        exit(EXIT_FAILURE);
-    }
+  int flags = fcntl(fd, F_GETFL, 0);
+  if (flags == -1) {
+    perror("fcntl");
+    exit(EXIT_FAILURE);
+  }
+  if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+    perror("fcntl");
+    exit(EXIT_FAILURE);
+  }
 }
 
-HttpStatusCode Server::getCGI(Client* client, HttpRequest *request) {
-  // Cria um pipe para capturar a saída do processo CGI
+HttpStatusCode Server::getCGI(Client *client, HttpRequest *request) {
   int pipefd[2];
   if (pipe(pipefd) == -1) {
     perror("pipe");
     exit(EXIT_FAILURE);
   }
-  setNonBlocking(pipefd[0]);
-  setNonBlocking(pipefd[1]);
-
-  // Cria um novo processo
-
-    char *argv[] = {const_cast<char *>("php-cgi"),
-                    const_cast<char *>("/usr/bin/php-cgi"), NULL};
-    char **env = createCGIEnv(request);
-    std::stringstream ss(request->getPort());
-    int porta;
-    ss >> porta;
-  //Aqui eu adiciono o FD do CGI no epoll, criando um novo client.
-    controllerPtr->addCGItoEpoll(pipefd[0], porta, client);
+  std::stringstream ss(request->getPort());
+  int porta;
+  ss >> porta;
+  controllerPtr->addCGItoEpoll(pipefd[0], porta, client);
   pid_t childPid = fork();
-
   if (childPid == -1) {
-    // Erro ao criar o processo filho
     perror("fork");
     exit(EXIT_FAILURE);
   }
   if (childPid == 0) {
-    // Este é o código executado no processo filho
-
-    // Configura variáveis de ambiente para passar a query string para o CGI
-
-    // Fecha a extremidade de leitura do pipe
     close(pipefd[0]);
-
-    // Redireciona a saída padrão (stdout) para o pipe
     dup2(pipefd[1], STDOUT_FILENO);
-
+    char *argv[] = {const_cast<char *>("php-cgi"),
+                    const_cast<char *>("/usr/bin/php-cgi"), NULL};
+    char **env = createCGIEnv(request);
     close(pipefd[1]);
-
-    // Substitui o processo atual pelo programa CGI
     execve("/usr/bin/php-cgi", argv, env);
     perror("execve");
     exit(EXIT_FAILURE);
   } else {
-    // Fecha a extremidade de escrita do pipe
     close(pipefd[1]);
-    return(CGI);
-    // std::string cgiOutput;
-    // close(pipefd[0]);
-
-    // // std::cout << cgiOutput << std::endl;
-    // if (cgiOutput.empty()) {
-    //   return (No_Content);
-    // }
-    // const char *bodyData = cgiOutput.c_str();  // Converter para const char*
-    // char *bodyCopy = new char[strlen(bodyData) + 1];
-    // strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
-    // response->setMsgBody(bodyCopy);
-    // response->setContentLength(strlen(bodyCopy));
-    // response->setContentType("text/html");
+    return (CGI);
   }
   return (Ready);
 }
 
-HttpStatusCode Server::resolve(Client* client, HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::resolve(Client *client, HttpRequest *request,
+                               HttpResponse *response) {
   std::string uTimestamp = request->getUnmodifiedSinceTimestamp();
-  //  DEBUG
-  // std::cout << request->getLocationWithoutIndex() << std::endl;
-  if (!uTimestamp.empty() && \
+  if (!uTimestamp.empty() &&
       HttpTime::isModifiedSince(uTimestamp, request->getResource())) {
-    // shim
     return (Precondition_Failed);
   }
 
@@ -157,77 +123,82 @@ HttpStatusCode Server::resolve(Client* client, HttpRequest *request, HttpRespons
   return (opStatus);
 }
 
-HttpStatusCode Server::process(Client* client, HttpRequest *req, HttpResponse *res) {
+HttpStatusCode Server::process(Client *client, HttpRequest *req,
+                               HttpResponse *res) {
   std::string buffer = client->getBuffer();
   HttpRequestFactory::setupRequest(req, buffer, locations);
   HttpStatusCode status = HttpRequestFactory::check(req, server_name);
 
   if (status == Ready) {
     res->setProtocol("HTTP", req->getProtocolMainVersion(),
-                                  req->getProtocolSubVersion());
+                     req->getProtocolSubVersion());
     status = resolve(client, req, res);
   }
   if (status == CGI) {
     return status;
   }
   if (status != Ready) {
-    HttpResponseComposer::buildErrorResponse(res, status, error_pages, \
-                                          req->getProtocolMainVersion(), \
-                                          req->getProtocolSubVersion());
+    HttpResponseComposer::buildErrorResponse(res, status, error_pages,
+                                             req->getProtocolMainVersion(),
+                                             req->getProtocolSubVersion());
   }
   return Ready;
 }
 
-
-char** Server::createCGIEnv(HttpRequest *request)
-{
-    char** env;
-    char* buf;
-    int i = 0;
-    std::map<std::string, std::string> env_tmp;
-    std::stringstream ss;
-    std::string tmp2;
-    // std::string = getcwd(NULL, 0);
-    env_tmp.insert(std::pair<std::string, std::string>("PATH_INFO", "/"));
-    env_tmp.insert(std::pair<std::string, std::string>("PATH_TRANSLATED", request->getAbsolutePath()));
-    env_tmp.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
-    env_tmp.insert(std::pair<std::string, std::string>("REQUEST_METHOD", request->getMethod()));
-    env_tmp.insert(std::pair<std::string, std::string>("CONTENT_TYPE", request->getContentType()));
-    if(request->getMethod() == "GET") {
-      env_tmp.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", "0"));
-    }
-    if (request->getMethod() == "POST") {
+char **Server::createCGIEnv(HttpRequest *request) {
+  char **env;
+  char *buf;
+  int i = 0;
+  std::map<std::string, std::string> env_tmp;
+  std::stringstream ss;
+  std::string tmp2;
+  env_tmp.insert(std::pair<std::string, std::string>("PATH_INFO", "/"));
+  env_tmp.insert(std::pair<std::string, std::string>(
+      "PATH_TRANSLATED", request->getAbsolutePath()));
+  env_tmp.insert(
+      std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
+  env_tmp.insert(std::pair<std::string, std::string>("REQUEST_METHOD",
+                                                     request->getMethod()));
+  env_tmp.insert(std::pair<std::string, std::string>(
+      "CONTENT_TYPE", request->getContentType()));
+  if (request->getMethod() == "GET") {
+    env_tmp.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", "0"));
+  }
+  if (request->getMethod() == "POST") {
     ss << request->getBodyNotParsed().size() - 1;
-    env_tmp.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ss.str()));
-    }
-    env_tmp.insert(std::pair<std::string, std::string>("QUERY_STRING", request->getQueryString()));
-    env_tmp.insert(std::pair<std::string, std::string>("SERVER_NAME", request->getServerName()));
-    env_tmp.insert(std::pair<std::string, std::string>("SERVER_PORT", request->getPort()));
-    env_tmp.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", "HTTP/1.1"));
-    env_tmp.insert(std::pair<std::string, std::string>("SERVER_SOFTWARE", "nginxcelent"));
-    env_tmp.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "200"));
+    env_tmp.insert(
+        std::pair<std::string, std::string>("CONTENT_LENGTH", ss.str()));
+  }
+  env_tmp.insert(std::pair<std::string, std::string>(
+      "QUERY_STRING", request->getQueryString()));
+  env_tmp.insert(std::pair<std::string, std::string>("SERVER_NAME",
+                                                     request->getServerName()));
+  env_tmp.insert(
+      std::pair<std::string, std::string>("SERVER_PORT", request->getPort()));
+  env_tmp.insert(
+      std::pair<std::string, std::string>("SERVER_PROTOCOL", "HTTP/1.1"));
+  env_tmp.insert(
+      std::pair<std::string, std::string>("SERVER_SOFTWARE", "nginxcelent"));
+  env_tmp.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "200"));
 
-    env = new char*[env_tmp.size() + 1];
-    std::map<std::string, std::string>::iterator it;
-    std::map<std::string, std::string>::iterator its;
-    std::map<std::string, std::string>::iterator ite;
-    its = env_tmp.begin();
-    ite = env_tmp.end();
-    for (it = its; it != ite; it++)
-    {
-        tmp2 = it->first + "=" + it->second;
-        buf = new char[tmp2.size() + 1];
-        strncpy(buf, tmp2.c_str(), tmp2.size() + 1);
-        env[i] = buf;
-        i++;
-    }
-    env[i] = NULL;
-    return env;
+  env = new char *[env_tmp.size() + 1];
+  std::map<std::string, std::string>::iterator it;
+  std::map<std::string, std::string>::iterator its;
+  std::map<std::string, std::string>::iterator ite;
+  its = env_tmp.begin();
+  ite = env_tmp.end();
+  for (it = its; it != ite; it++) {
+    tmp2 = it->first + "=" + it->second;
+    buf = new char[tmp2.size() + 1];
+    strncpy(buf, tmp2.c_str(), tmp2.size() + 1);
+    env[i] = buf;
+    i++;
+  }
+  env[i] = NULL;
+  return env;
 }
 
-// CGI DO POST LETSGOOOOOOOOOOOOOOOO
-
-HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::postCGI(Client *client, HttpRequest *request) {
   std::string cgiPath = request->getLocationWithoutIndex();
   int pipe_to_child[2];
   int pipe_to_parent[2];
@@ -235,91 +206,45 @@ HttpStatusCode Server::postCGI(Client* client, HttpRequest *request, HttpRespons
     perror("pipe");
     exit(EXIT_FAILURE);
   }
-  // setNonBlocking(pipe_to_child[0]);
-  // setNonBlocking(pipe_to_child[1]);
-  // setNonBlocking(pipe_to_parent[0]);
-  // setNonBlocking(pipe_to_parent[1]);
-    // int flags = fcntl(pipe_to_child[1], F_GETFL);
-    // flags |= O_NONBLOCK;
-    // if (fcntl(pipe_to_child[1], F_SETFL, flags) < 0)
-    // {
-    //     std::cout << "add connection fcntl() error" << std::endl;
-    //     close(pipe_to_child[1]);
-    //     _exit(1);
-    // }
-
     std::string towrite = request->getBodyNotParsed();
-    // std::cout << "towrite data" << towrite << std::endl;
-    // std::cout << "towrite size" << towrite.size() << std::endl;
-    // dentro do pipe, no maximo 65536
-    // quando aumentamos o tamanho do  pipe, conseguimos escrever mais informacoes nele e lidar com arquivos maiores.
-    // fcntl(pipe_to_child[1], F_SETPIPE_SZ, towrite.size());
-    // write(pipe_to_child[1], towrite.c_str(), towrite.size());
-    // char **arg = 0;
-    char* argv[] = {const_cast<char*>("php-cgi"),
-                    const_cast<char*>("/usr/bin/php-cgi"),
-                      NULL};
-  // preparaçao para criar o client
   std::stringstream ss(request->getPort());
-    int porta;
-    ss >> porta;
-  //Aqui eu adiciono o FD do CGI no epoll, criando um novo client.
-    controllerPtr->addCGItoEpoll(pipe_to_parent[0], porta, client);
-    std::cout << "Content-Type" << client->getRequest()->getContentType() << std::endl;
+  int porta;
+  ss >> porta;
+  controllerPtr->addCGItoEpoll(pipe_to_parent[0], porta, client);
   pid_t childPid = fork();
 
   if (childPid == -1) {
-    // Erro ao criar o processo filho
     perror("fork");
     exit(EXIT_FAILURE);
   }
   if (childPid == 0) {
-    // Este é o código executado no processo filho
-    // Fecha a extremidade de leitura do pipe
     dup2(pipe_to_child[0], STDIN_FILENO);
     dup2(pipe_to_parent[1], STDOUT_FILENO);
     close(pipe_to_child[1]);
     close(pipe_to_parent[0]);
 
     char **env = createCGIEnv(request);
-    // Substitui o processo atual pelo programa CGI
-    execve("/usr/bin/php-cgi", argv, env);
+    char *argv[] = {const_cast<char *>("php-cgi"),
+                  const_cast<char *>("/usr/bin/php-cgi"), NULL};
+    execve(request->getCGIPath().c_str(), argv, env);
     perror("execve");
     exit(EXIT_FAILURE);
   } else {
-    // Fecha a extremidade de escrita do pipe
-    // int status;
     close(pipe_to_child[0]);
     close(pipe_to_parent[1]);
     write(pipe_to_child[1], towrite.c_str(), towrite.size());
     close(pipe_to_child[1]);
-    // sleep(1);
-    // addDescriptorToEpoll(pipe_to_parent[0]);
     int status;
-    waitpid(childPid, &status, 0);
-    if(status != 0) {
-      std::cout << "CGI ERROR" << std::endl;
-    }
-    return(CGI);
-    (void) response;
-    // ESTA FUINCIONANDO COM NOMAXIMO 64KB
-    // controllerPtr->addCGItoEpoll(pipe_to_parent[0], request, response);
-    // // close(pipe_to_parent[0]);
-    // // std::cout << cgiOutput << std::endl;
-    // const char *bodyData = cgiOutput.c_str();  // Converter para const char*
-    // char *bodyCopy = new char[strlen(bodyData) + 1];
-    // strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
+    waitpid(childPid, &status, WNOHANG);
   }
-  return (Ready);
+  return (CGI);
 }
 
-HttpStatusCode Server::post(Client* client, HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::post(Client *client, HttpRequest *request,
+                            HttpResponse *response) {
   HttpStatusCode opStatus = Ready;
   response->setLastModifiedTime(
       HttpTime::getLastModifiedTime(request->getResource()));
-
-  // BODY SIZE CHECK
-  //  MESMA LOGICA DE CHECAGEM COM STATUS CODE EM REQUEST, VAI FICAR ASSIM ?
   if (request->getRedirectionCode() != 0) {
     response->setStatusCode(request->getRedirectionCode());
     response->setLocation(request->getRedirectionPath());
@@ -331,54 +256,49 @@ HttpStatusCode Server::post(Client* client, HttpRequest *request, HttpResponse *
       return (Payload_Too_Large);
     }
   }
-  // END BODY SIZE CHECK ---
 
   PostType pType = request->getPostType();
-
-  // WE NEED TO CHANGE THIS TO A SWITCH AND ENCAPSULATE THE LOGIC
 
   if (pType == None) {
     throw std::runtime_error("Wrong POST REQUEST, NONE");
   }
 
   if (request->getCGI()) {
-  std::string location = request->getLocationWithoutIndex();
-  std::string ext = request->getCGIExtension();
-  std::string checkExt = location.substr(location.size() - ext.size());
-  if(checkExt == ext) {
-    opStatus = postCGI(client, request, response);
-    return opStatus;
-  }
-  }
-  else {
-  if (pType == Chunked || pType == UrlEncoded) {
     std::string location = request->getLocationWithoutIndex();
-    if (FileSystem::check(location, F_OK) != 0) {
-      response->setStatusCode(No_Content);
-    } else {
-      response->setStatusCode(Created);
+    std::string ext = request->getCGIExtension();
+    std::string checkExt = location.substr(location.size() - ext.size());
+    if (checkExt == ext) {
+      opStatus = postCGI(client, request);
+      return opStatus;
     }
-
-    opStatus = FileWriter::writeToFile(location, request->getRequestBody());
-  } else if (pType == Multipart) {
-    MultiPartMap multiParts = request->getMultipartMap();
-    MultiPartMap::iterator it = multiParts.begin();
-    MultiPartMap::iterator ite = multiParts.end();
-
-    for (; it != ite; it++) {
+  } else {
+    if (pType == Chunked || pType == UrlEncoded) {
       std::string location = request->getLocationWithoutIndex();
-      std::string filename = location + '/' +  it->first + "_fromClient";
-      std::cout << filename << std::endl;
-
-      if(FileSystem::check(filename, F_OK) != Ready) {
+      if (FileSystem::check(location, F_OK) != 0) {
+        response->setStatusCode(No_Content);
+      } else {
         response->setStatusCode(Created);
       }
-      else {
-        response->setStatusCode(No_Content);
-      }
 
-      opStatus = FileWriter::writeToFile(filename, it->second);
-    }
+      opStatus = FileWriter::writeToFile(location, request->getRequestBody());
+    } else if (pType == Multipart) {
+      MultiPartMap multiParts = request->getMultipartMap();
+      MultiPartMap::iterator it = multiParts.begin();
+      MultiPartMap::iterator ite = multiParts.end();
+
+      for (; it != ite; it++) {
+        std::string location = request->getLocationWithoutIndex();
+        std::string filename = location + '/' + it->first + "_fromClient";
+        std::cout << filename << std::endl;
+
+        if (FileSystem::check(filename, F_OK) != Ready) {
+          response->setStatusCode(Created);
+        } else {
+          response->setStatusCode(No_Content);
+        }
+
+        opStatus = FileWriter::writeToFile(filename, it->second);
+      }
     }
   }
 
@@ -390,7 +310,8 @@ HttpStatusCode Server::post(Client* client, HttpRequest *request, HttpResponse *
   return (Ready);
 }
 
-HttpStatusCode Server::get(Client* client, HttpRequest *request, HttpResponse *response) {
+HttpStatusCode Server::get(Client *client, HttpRequest *request,
+                           HttpResponse *response) {
   if (request->getRedirectionCode() != 0) {
     response->setStatusCode(request->getRedirectionCode());
   }
@@ -402,14 +323,12 @@ HttpStatusCode Server::get(Client* client, HttpRequest *request, HttpResponse *r
     opStatus = FileSystem::check(fullpath, R_OK | X_OK);
 
     if (opStatus != 0 || !request->isDirListActive()) {
-      // return (Forbidden);
-      // LOOKS LIKE 42 TESTER HERE WANTS NOT FOUND
       return (Not_Found);
     }
 
-    if (FileSystem::check(request->getIndexPath(), F_OK) == 0 && \
+    if (FileSystem::check(request->getIndexPath(), F_OK) == 0 &&
         request->isDirListActive()) {
-      std::map<std::string, struct file_info*> entries;
+      std::map<std::string, struct file_info *> entries;
       opStatus = FileReader::getDirContent(fullpath.c_str(), entries);
 
       if (opStatus != Ready) {
@@ -417,8 +336,8 @@ HttpStatusCode Server::get(Client* client, HttpRequest *request, HttpResponse *r
       }
 
       HttpResponseComposer::buildDirListResponse(request, response, entries);
-      return (Ready); // or opStatus Code
-    } else { // possivelmente nao precisamos desse else
+      return (Ready);
+    } else {
       fullpath = request->getIndexPath();
     }
   }
@@ -435,20 +354,19 @@ HttpStatusCode Server::get(Client* client, HttpRequest *request, HttpResponse *r
     response->setStatusCode(Not_Modified);
     return (Ready);
   }
-  // std::cout << request->getQueryString() << std::endl;
   if (request->getCGI()) {
-  std::string location = request->getLocationWithoutIndex();
-  std::string ext = request->getCGIExtension();
-  std::string checkExt = location.substr(location.size() - ext.size());
-    if(checkExt == request->getCGIExtension()){
+    std::string location = request->getLocationWithoutIndex();
+    std::string ext = request->getCGIExtension();
+    std::string checkExt = location.substr(location.size() - ext.size());
+    if (checkExt == request->getCGIExtension()) {
       opStatus = getCGI(client, request);
-    return opStatus;
-  }
+      return opStatus;
+    }
   }
   char *resourceData;
   long long resourceSize;
-  opStatus = FileReader::getContent(fullpath.c_str(), \
-                                    &resourceData, &resourceSize);
+  opStatus =
+      FileReader::getContent(fullpath.c_str(), &resourceData, &resourceSize);
 
   if (opStatus != 0) {
     return (opStatus);
@@ -494,14 +412,8 @@ HttpStatusCode Server::del(HttpRequest *request, HttpResponse *response) {
   return (Ready);
 }
 
-int   Server::getPort(void) {
-  return (port);
-}
+int Server::getPort(void) { return (port); }
 
-std::string Server::getHost(void) {
-  return (host);
-}
+std::string Server::getHost(void) { return (host); }
 
-std::string Server::getServerName(void) {
-  return (server_name);
-}
+std::string Server::getServerName(void) { return (server_name); }

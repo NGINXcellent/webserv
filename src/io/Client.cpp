@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 10:47:08 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 16:19:09 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 
 Client::Client(int conFd, Server *destServer, int serverPort, time_t conStart, std::string kind) :
                connectionFd(conFd), port(serverPort), server(destServer), \
-               connectionTimeout(conStart + 60), kind(kind) {
+               connectionTimeout(conStart + 10), kind(kind) {
   request = new HttpRequest();
   response = new HttpResponse();
   this->buffer = "";
