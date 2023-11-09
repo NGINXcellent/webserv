@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 19:19:10 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 20:44:48 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,8 +146,6 @@ void Controller::handleConnections(void) {
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         Client *client = connectedClients[currentFd];
         if (client->getKind() == "CGI") {
-          Logger::msg << "OLA EU SOU UM CGI E PASSEI POR AQUI";
-          Logger::print(Debug);
           client->setBuffer(readFromPipe(currentFd));
           client->setRequestStatus(Ready);
           removeFromLine(currentFd);
@@ -394,38 +392,32 @@ bool Controller::isNewConnection(int currentFD) {
 
 // ta lendo tudo de uma vez mesmo doidao ! é teste essa budega
 std::string Controller::readFromPipe(int currentFd) {
-    // connectedClients[currentFd]->getBuffer().clear();
-    std::string toret;
-    int tmp = 4096;
-    char buf[tmp];
-    int strlen;
+  // connectedClients[currentFd]->getBuffer().clear();
+  std::string toret;
+  int tmp = 4096;
+  char buf[tmp];
+  int strlen;
 
-    while (42) {
-        strlen = read(currentFd, buf, tmp);
-        // sleep(10);
-        buf[strlen] = 0;
-        if (strlen == 0)
-        {
-          // std::cout << "pipe has been empty!" << std::endl;
-          Logger::msg << "Pipe has been empty!";
-          Logger::print(Debug);
-          break;
-        }
-        else if (strlen > 0)
-        {
-           toret.append(buf);
-        }
-        else{
-          // std::cout << "pipe read error!" << std::endl;
-          Logger::msg << "Pipe read error!";
-          Logger::print(Debug);
-          break;
-        }
+  while (42) {
+    strlen = read(currentFd, buf, tmp);
+    // sleep(10);
+    buf[strlen] = 0;
+    if (strlen == 0) {
+      // std::cout << "pipe has been empty!" << std::endl;
+      Logger::msg << "Pipe has been empty!";
+      Logger::print(Debug);
+      break;
+    } else if (strlen > 0) {
+      toret.append(buf);
+    } else {
+      // std::cout << "pipe read error!" << std::endl;
+      Logger::msg << "Pipe read error!";
+      Logger::print(Debug);
+      break;
     }
   }
   return toret;
 }
-
 
 int Controller::readFromClient(int currentFd) {
   int bytesRead = read(currentFd, buffer, 4096);
