@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 10:59:45 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 19:28:05 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ class Server {
   Server(const struct s_serverConfig& config);
   ~Server(void);
 
-  HttpStatusCode            process(Client* client, HttpRequest *req, HttpResponse *res);
+  HttpStatusCode  process(Client* client, HttpRequest *req, HttpResponse *res);
   HttpStatusCode  resolve(Client* client, HttpRequest *request, HttpResponse *response);
   HttpStatusCode  get(Client* client, HttpRequest *request, HttpResponse *response);
   HttpStatusCode  post(Client* client, HttpRequest *request, HttpResponse *response);
@@ -45,7 +45,7 @@ class Server {
   std::string     getServerName(void);
   HttpStatusCode  getCGI(Client* client, HttpRequest *request);
   void addDescriptorToEpoll(int fd);
-  HttpStatusCode postCGI(Client* client, HttpRequest *request, HttpResponse *response);
+  HttpStatusCode postCGI(Client* client, HttpRequest *request);
   char** createCGIEnv(HttpRequest *request);
   void setEpollfd(int epollfd);
   void setControllerPtr(Controller* controllerPtr);
