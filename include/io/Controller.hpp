@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/05 06:17:18 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 16:00:17 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ class Controller {
   // event handlers
   bool  isNewConnection(int connectionFd);
   void  addNewConnection(int connectionFd, std::string kind);
-  void  readFromClient(int connectionFd);
+  int	readFromClient(int connectionFd);
   void  sendToClient(int connectionFd);
   void  sendCgiToClient(int connectionFd);
   bool  closeConnection(int connectionFd);

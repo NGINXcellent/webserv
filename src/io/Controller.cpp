@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 14:43:51 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/09 16:28:22 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,14 +157,21 @@ void Controller::handleConnections(void) {
           // closeConnection(currentFd);
           removeFromLine(currentFd);
         }
+
         if (client->getKind() == "CLIENT") {
-        readFromClient(currentFd);
-        HttpRequest *request = client->getRequest();
-        // HttpResponse *response = client->getResponse();
-        std::string &clientBuffer = client->getBuffer();
-        // DEBUG CLIENT BUFFER
-        // std::cout << clientBuffer << std::endl;
-        request->setRequestReady(isHTTPRequestComplete(request, clientBuffer));
+          if (readFromClient(currentFd) < 0) {
+            Logger::msg << " error reading from client: " << errno;
+            Logger::msg << " on port: " << client->getPort() <<". disconnecting";
+            Logger::print(Error);
+            closeConnection(currentFd);
+          } else {
+            HttpRequest *request = client->getRequest();
+            // HttpResponse *response = client->getResponse();
+            std::string &clientBuffer = client->getBuffer();
+            // DEBUG CLIENT BUFFER
+            // std::cout << clientBuffer << std::endl;
+            request->setRequestReady(isHTTPRequestComplete(request, clientBuffer));
+          }
         }
       } else if ((currentEvent & EPOLLOUT) == EPOLLOUT) {
         Client *client = connectedClients[currentFd];
@@ -400,8 +407,8 @@ std::string Controller::readFromPipe(int currentFd) {
     int tmp = 4096;
     char buf[tmp];
     int strlen;
-    while (42)
-    {
+
+    while (42) {
         strlen = read(currentFd, buf, tmp);
         // sleep(10);
         buf[strlen] = 0;
@@ -428,11 +435,12 @@ std::string Controller::readFromPipe(int currentFd) {
 }
 
 
-void Controller::readFromClient(int currentFd) {
+int Controller::readFromClient(int currentFd) {
   int bytesRead = read(currentFd, buffer, 4096);
 
-  if (bytesRead < 0) {
+  /*if (bytesRead < 0) {
     std::cout << " bytesread -1, will break" << errno << std::endl;
+    return (bytes
   } else if (bytesRead == 0) {
     std::cout << " bytesread 0, will close" << std::endl;
   } else if (bytesRead > 0) {
@@ -441,7 +449,16 @@ void Controller::readFromClient(int currentFd) {
     if(connectedClients[currentFd] != NULL) {
       connectedClients[currentFd]->buffer.append(buffer, bytesRead);
     }
+  }*/
+  if (bytesRead == 0) {
+    Logger::msg << "Read 0 bytes!";
+    Logger::print(Debug);
   }
+  if (bytesRead > 0 && connectedClients[currentFd] != NULL) {
+      connectedClients[currentFd]->buffer.append(buffer, bytesRead);
+  }
+
+  return (bytesRead);
 }
 
 void Controller::sendToClient(int currentFd) {

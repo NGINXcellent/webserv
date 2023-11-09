@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 13:11:56 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 14:18:13 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/09 15:46:58 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,31 +17,34 @@
 std::stringstream Logger::msg; //= std::stringstream();
 
 void Logger::logMessage(const std::string &msg, LogLevel level) {
-  std::string logMsg = "";
-  int fd = 0;
+  std::string levelStr = "";
+  std::string colorCode;
+  int fd = 1;
 
   switch(level) {
     case Info:
-      logMsg += "[INFO]:\t";
+      levelStr = "[INFO]:\t";
+      colorCode = "\033[32m";
       break;
     case Warning:
-      logMsg += "[WARNING]:\t";
-      fd = 1;
+      levelStr = "[WARNING]:\t";
+      colorCode = "\033[33m";
+      fd = 2;
       break;
     case Error:
-      logMsg += "[ERROR]:\t";
-      fd = 1;
+      levelStr = "[ERROR]:\t";
+      colorCode = "\033[31m";
+      fd = 2;
       break;
     case Debug:
-      logMsg += "[DEBUG]:\t";
+      levelStr = "[DEBUG]:\t";
+      colorCode = "\033[36m";
   }
 
-  logMsg += msg;
-
-  if (fd != 0)
-    std::cerr << logMsg << std::endl;
+  if (fd != 1)
+    std::cerr << colorCode << levelStr << msg << "\033[0m" << std::endl;
   else
-    std::cout << logMsg << std::endl;
+    std::cout << colorCode << levelStr << msg << "\033[0m" << std::endl;
 
   Logger::msg.str("");
 }
