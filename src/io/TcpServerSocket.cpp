@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/11/09 14:52:47 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/09 16:30:57 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,8 +66,8 @@ int TCPServerSocket::receiveData(int connection, char *buffer, int bufferSize) {
 }
 
 // send data to conection fd
-void TCPServerSocket::sendData(int connection, const char *data, int dataSize) {
-  send(connection, data, dataSize, 0);
+int TCPServerSocket::sendData(int connection, const char *data, int dataSize) {
+  return send(connection, data, dataSize, 0);
 }
 
 // close conection fd

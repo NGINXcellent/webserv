@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 16:28:22 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/09 16:36:07 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -473,41 +473,44 @@ void Controller::sendToClient(int currentFd) {
   client->getBuffer() += '\0';
   // Preparacao para enviar para o cliente
   if(client->getCgiClient() != NULL) {
-  if (!client->getCgiClient()->getBuffer().empty()){
-    // std::string cgiOutput = client->getCgiClient()->getBuffer();
+    if (!client->getCgiClient()->getBuffer().empty()){
+      // std::string cgiOutput = client->getCgiClient()->getBuffer();
 
-    // std::cout << cgiOutput << std::endl;
-    // if (cgiOutput.empty()) {
-    //   return (No_Content);
-    client->getCgiClient()->getBuffer() += '\0';
-    const char *bodyData = client->getCgiClient()->getBuffer().c_str();  // Converter para const char*
-    char *bodyCopy = new char[strlen(bodyData) + 1];
-    strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
-    response->setMsgBody(bodyCopy);
-    response->setContentLength(strlen(bodyCopy));
-    response->setContentType("text/html");
-    // fim da preparacao
-    socket->sendData(currentFd, response->getHeaders().c_str(), \
-                   response->getHeaders().size());
-    socket->sendData(currentFd, response->getMsgBody(), \
-                   response->getContentLength());
-    closeConnection(client->getCgiClient()->getConnectionFd()); //porque isso aqui esta fazendo o codigo dar segfault ?
-    // client->getCgiClient()->reset();
-    // removeFromLine(client->getCgiClient()->getConnectionFd());
+      // std::cout << cgiOutput << std::endl;
+      // if (cgiOutput.empty()) {
+      //   return (No_Content);
+      client->getCgiClient()->getBuffer() += '\0';
+      const char *bodyData = client->getCgiClient()->getBuffer().c_str();  // Converter para const char*
+      char *bodyCopy = new char[strlen(bodyData) + 1];
+      strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
+      response->setMsgBody(bodyCopy);
+      response->setContentLength(strlen(bodyCopy));
+      response->setContentType("text/html");
+      // fim da preparacao
+      socket->sendData(currentFd, response->getHeaders().c_str(), \
+                     response->getHeaders().size());
+      socket->sendData(currentFd, response->getMsgBody(), \
+                     response->getContentLength());
+      closeConnection(client->getCgiClient()->getConnectionFd()); //porque isso aqui esta fazendo o codigo dar segfault ?
+      // client->getCgiClient()->reset();
+      // removeFromLine(client->getCgiClient()->getConnectionFd());
+      client->reset();
+      closeConnection(currentFd);
+    }
+  } else {
+  // server->process(client->getBuffer(), request, response);
+    int sendStatus = socket->sendData(currentFd, response->getHeaders().c_str(), \
+                     response->getHeaders().size());
+    int sendStatus_1 = socket->sendData(currentFd, response->getMsgBody(), \
+                     response->getContentLength());
+
+    if (sendStatus < 0 || sendStatus_1 < 0) {
+      Logger::msg << " error while sending data to client: " << currentFd;
+      Logger::msg << " on port " << client->getPort() << ". disconneting";
+    }
+
     client->reset();
     closeConnection(currentFd);
-  }
-  }
-  else {
-  // server->process(client->getBuffer(), request, response);
-  socket->sendData(currentFd, response->getHeaders().c_str(), \
-                   response->getHeaders().size());
-  socket->sendData(currentFd, response->getMsgBody(), \
-                   response->getContentLength());
-  // DEBUG
-  // std::cout << response->getHeaders() << std::endl;
-  client->reset();
-  closeConnection(currentFd);
   }
 }
 
