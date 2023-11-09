@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/06 20:19:06 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 14:43:51 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 
 #include "../../include/io/TcpServerSocket.hpp"
 #include "../../include/http/HttpRequestFactory.hpp"
+#include "../../include/utils/Logger.hpp"
 #include "../../include/http/Server.hpp"
 
 Controller::Controller(const InputHandler &input) {
@@ -68,7 +69,8 @@ void Controller::endServer() {
 
 void Controller::signalHandler(int signal) {
   if (signal == SIGINT) {
-    std::cout << "\nServer is stopping gracefully, goodbye !" << std::endl;
+    Logger::msg << "\nServer is stopping gracefully, goodbye !";
+    Logger::print(Info);
     endServer();
   }
 }
@@ -79,11 +81,11 @@ void Controller::init(void) {
   struct epoll_event ev;
   epollfd = epoll_create(1);
   if (epollfd == -1) {
-    std::cerr << "Failed to create epoll. errno: " << errno << std::endl;
-      exit(EXIT_FAILURE);
+    Logger::msg << "Failed to create epoll. errno: " << errno;
+    Logger::print(Error);
+    exit(EXIT_FAILURE);
   }
   
-
   // start sockets
   std::map<int, Server*>::iterator it = serverPool.begin();
   std::map<int, Server*>::iterator ite = serverPool.end();
@@ -94,14 +96,17 @@ void Controller::init(void) {
     TCPServerSocket *socket = new TCPServerSocket(port);
     socket->bindAndListen();
     socketPool.insert(std::make_pair(port, socket));
-    std::cout << "[LOG]\tlistening on port: " << socket->getPort() << std::endl;
+    Logger::msg << "listening on port: " << socket->getPort();
+    Logger::print(Info);
 
     // Bind sockfd on epoll event
     initEpollEvent(&ev, EPOLLIN | EPOLLOUT, socket->getFD());
 
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket->getFD(), &ev) == -1) {
-      std::cerr << "Failed to add sockfd to epoll. errno: ";
-      std::cout << errno << std::endl;
+      // std::cerr << "Failed to add sockfd to epoll. errno: ";
+      // std::cout << errno << std::endl;
+      Logger::msg << "Failed to add sockfd to epoll. errno: " << errno;
+      Logger::print(Error);
       exit(EXIT_FAILURE);
     } else {
       events.push_back(ev);
@@ -119,7 +124,9 @@ void Controller::handleConnections(void) {
     int numEvents = epoll_wait(epollfd, events.data(), events.size(), -1);
 
     if (numEvents == -1) {
-      std::cerr << "epoll_wait error. errno: " << errno << std::endl;
+      Logger::msg << "epoll_wait error. errno: " << errno;
+      Logger::print(Error);
+      //std::cerr << "epoll_wait error. errno: " << errno << std::endl;
       continue;
     }
     for (int i = 0; i < numEvents; ++i) {
@@ -127,16 +134,20 @@ void Controller::handleConnections(void) {
       int currentEvent = events[i].events;  // this client event state
       Client *client = connectedClients[currentFd];
       if (isNewConnection(currentFd) && client == NULL ) {
-        std::cout << "new conection" << std::endl;
+        //std::cout << "new conection" << std::endl;
+        Logger::msg << "new connection";
+        Logger::print(Info);
         addNewConnection(currentFd, "CLIENT");  // if new connection found, add it.
       } else if ((currentEvent & EPOLLRDHUP) == EPOLLRDHUP) {
-        std::cout << "Connection with FD -> " << currentFd;
-        std::cout << " is closed by client" << std::endl;
+        Logger::msg << "Connection with FD -> " << currentFd;
+        Logger::msg << " is closed by client";
+        Logger::print(Info);
         closeConnection(currentFd);
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         Client *client = connectedClients[currentFd];
         if (client->getKind() == "CGI") {
-          std::cout << "OLA EU SOU UM CGI E PASSEI POR AQUI" << std::endl;
+          Logger::msg << "OLA EU SOU UM CGI E PASSEI POR AQUI";
+          Logger::print(Debug);
           client->setBuffer(readFromPipe(currentFd));
           // std::cout << client->getBuffer()<< std::endl;
           // std::cout << "EU LI UMA QUANTIDADE DE:  " << client->getBuffer().size() << std::endl;
@@ -159,6 +170,7 @@ void Controller::handleConnections(void) {
         Client *client = connectedClients[currentFd];
         HttpRequest *request = client->getRequest();
         HttpResponse *response = client->getResponse();
+
         if(client->getKind() == "CLIENT") {
 
         if (request->isRequestReady() && client->getRequestStatus() == New_Status){
@@ -221,43 +233,43 @@ bool Controller::isHTTPRequestComplete(HttpRequest *request, std::string &reques
   }
 
   if (!request->isHeaderReady()) {
-  if (request->getHost().empty())
-    HttpRequestFactory::setupHeader(request, requestMsg);
-  // we need to make sure that header is ready before enter POST check.
-  // i`m assuming that the header is always ready after first interaction.
-  // whe should change this.
-  if(request->getMethod() != "POST")
-    request->setHeaderReady(true);
+    if (request->getHost().empty())
+      HttpRequestFactory::setupHeader(request, requestMsg);
+    // we need to make sure that header is ready before enter POST check.
+    // i`m assuming that the header is always ready after first interaction.
+    // whe should change this.
+    if(request->getMethod() != "POST")
+      request->setHeaderReady(true);
 
-  if (request->getMethod() == "POST") {
-    // this is important, idk why but it is.
-    size_t contentPos = requestMsg.find("\r\n\r\n") + 4;
-    //  DEBUG
-    // std::cout << contentPos << std::endl;
-    std::string body = requestMsg.substr(contentPos);
-    if (body == "") {
-      return request->isHeaderReady();
+    if (request->getMethod() == "POST") {
+      // this is important, idk why but it is.
+      size_t contentPos = requestMsg.find("\r\n\r\n") + 4;
+      //  DEBUG
+      // std::cout << contentPos << std::endl;
+      std::string body = requestMsg.substr(contentPos);
+      if (body == "") {
+        return request->isHeaderReady();
+      }
+
+      PostType pType = request->getPostType();
+      size_t cLenght = request->getContentLength();
+      switch(pType) {
+        case None:
+          return false;
+
+        case Chunked:
+          request->setHeaderReady(isUrlEncodedBodyComplete(body, cLenght));
+          return request->isHeaderReady();
+
+        case Multipart:
+          request->setHeaderReady(isUrlEncodedBodyComplete(body, cLenght));
+          return request->isHeaderReady();
+
+        case UrlEncoded:
+          request->setHeaderReady(isUrlEncodedBodyComplete(body, cLenght));
+          return request->isHeaderReady();
+      }
     }
-
-    PostType pType = request->getPostType();
-    size_t cLenght = request->getContentLength();
-    switch(pType) {
-      case None:
-        return false;
-
-      case Chunked:
-        request->setHeaderReady(isUrlEncodedBodyComplete(body, cLenght));
-        return request->isHeaderReady();
-
-      case Multipart:
-        request->setHeaderReady(isUrlEncodedBodyComplete(body, cLenght));
-        return request->isHeaderReady();
-
-      case UrlEncoded:
-        request->setHeaderReady(isUrlEncodedBodyComplete(body, cLenght));
-        return request->isHeaderReady();
-    }
-  }
   }
 
   return request->isHeaderReady();
@@ -275,15 +287,18 @@ void Controller::checkTimeOut() {
     Client *client = it->second;
 
     if (client != NULL && currentTime > client->getTimeout()) {
-      std::cout << "client dead" << std::endl;
+      // std::cout << "client dead" << std::endl;
       clientsToDelete.push_back(connectionFd);
     }
   }
 
   for (size_t i = 0; i < clientsToDelete.size(); i++) {
     closeConnection(clientsToDelete[i]);
-    std::cout << "Connection with FD -> " << clientsToDelete[i];
-    std::cout << " close due to timeout" << std::endl;
+    //std::cout << "Connection with FD -> " << clientsToDelete[i];
+    //std::cout << " close due to timeout" << std::endl;
+    Logger::msg << "Connection with FD -> " << clientsToDelete[i];
+    Logger::msg << " close due to timeout";
+    Logger::print(Info);
   }
 }
 
@@ -291,8 +306,10 @@ void Controller::addCGItoEpoll(int fd, int port, Client* client) {
   struct epoll_event ev;
   initEpollEvent(&ev, EPOLLIN, fd);
   if (epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &ev) == -1) {
-    std::cerr << "Failed to add new connection to epoll. errno: ";
-    std::cerr << errno << std::endl;
+    // std::cerr << "Failed to add new connection to epoll. errno: ";
+    // std::cerr << errno << std::endl;
+    Logger::msg << "Failed to add new connection to epoll. errno: " << errno;
+    Logger::print(Error);
     close(fd);
     return;
   }
@@ -313,7 +330,9 @@ void Controller::addNewConnection(int socketFD, std::string kind) {
   int newConnection = accept(socketFD, (struct sockaddr *)&clientToAdd, &len);
 
   if (newConnection < 0) {
-    std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
+    //std::cerr << "Failed to grab new connection. errno: " << errno << std::endl;
+    Logger::msg << "Failed to grab new connection. errno: " << errno;
+    Logger::print(Error);
     return;
   }
 
@@ -323,8 +342,10 @@ void Controller::addNewConnection(int socketFD, std::string kind) {
   time_t currentTime = time(NULL);
 
   if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, &ev) == -1) {
-    std::cerr << "Failed to add new connection to epoll. errno: ";
-    std::cerr << errno << std::endl;
+    //std::cerr << "Failed to add new connection to epoll. errno: ";
+    // std::cerr << errno << std::endl;
+    Logger::msg << "Failed to add new connection to epoll. errno: " << errno;
+    Logger::print(Error);
     close(newConnection);
     return;
   }
@@ -386,16 +407,20 @@ std::string Controller::readFromPipe(int currentFd) {
         buf[strlen] = 0;
         if (strlen == 0)
         {
-            std::cout << "pipe has been empty!" << std::endl;
-            break;
+          // std::cout << "pipe has been empty!" << std::endl;
+          Logger::msg << "Pipe has been empty!";
+          Logger::print(Debug);
+          break;
         }
         else if (strlen > 0)
         {
            toret.append(buf);
         }
         else{
-            std::cout << "pipe read error!" << std::endl;
-            break;
+          // std::cout << "pipe read error!" << std::endl;
+          Logger::msg << "Pipe read error!";
+          Logger::print(Debug);
+          break;
         }
     }
     // std::cout << "pipe read complete!" << toret <<  std::endl;
@@ -490,7 +515,9 @@ int Controller::getSocketPort(int socketFd) {
   socklen_t sockAddrLen = sizeof(address);
 
   if (getsockname(socketFd, (struct sockaddr *)&address, &sockAddrLen) < 0) {
-    std::cout << "Error trying to get socket name" << std::endl;
+    //std::cout << "Error trying to get socket name" << std::endl;
+    Logger::msg << "Error trying to get socket name";
+    Logger::print(Error);
     return (-1);
   }
 

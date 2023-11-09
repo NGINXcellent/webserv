@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/09/03 21:42:34 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/09 14:52:47 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <iostream>
 
 #include "../../include/http/Server.hpp"
+#include "../../include/utils/Logger.hpp"
 
 // Constructor Server Socket
 TCPServerSocket::TCPServerSocket(unsigned int hPort) : sockfd(-1), \
@@ -38,20 +39,23 @@ int TCPServerSocket::bindAndListen() {
 
   if (sockfd == -1) {
     std::cerr << "Failed to create socket. errno: " << errno << std::endl;
+    Logger::msg << "Failed to create socket. errno: ";
+    Logger::print(Error);
     exit(EXIT_FAILURE);
   }
 
   if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
-    std::cerr << "Failed to bind to port " << hostPort;
-    std::cerr << ". errno: " << errno << std::endl;
+    Logger::msg << "Failed to bind to port " << hostPort << ". errno: " << errno;
+    Logger::print(Error);
     exit(EXIT_FAILURE);
   }
 
   // Colocar o socket em modo de escuta
   if (listen(sockfd, 10) < 0) {
-    std::cerr << "Failed to listen on socket. errno: " << errno << std::endl;
+    Logger::msg << "Failed to listen on socket. errno: " << errno;
+    Logger::print(Error);
     exit(EXIT_FAILURE);
-  }
+   }
 
   return sockfd;
 }

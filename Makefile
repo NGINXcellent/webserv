@@ -6,7 +6,7 @@
 #    By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/24 12:52:25 by lfarias-          #+#    #+#              #
-#    Updated: 2023/09/08 09:24:03 by dvargas          ###   ########.fr        #
+#    Updated: 2023/11/09 13:20:52 by lfarias-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,6 +34,10 @@ IO = $(addprefix io/,    \
 	FileWriter.cpp  \
 )
 
+UTILS = $(addprefix utils/,    \
+	Logger.cpp 	 \
+)
+
 HTTP  = $(addprefix http/,  \
 	HttpRequest.cpp 	    \
 	HttpResponse.cpp 		\
@@ -49,6 +53,7 @@ HTTP  = $(addprefix http/,  \
 SRC	= $(addprefix src/, \
 	$(CONFIG) 					 \
 	$(HTTP)						 \
+	$(UTILS)						 \
 	$(IO)					 \
 	main.cpp)
 
