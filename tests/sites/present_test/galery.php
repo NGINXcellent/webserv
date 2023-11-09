@@ -35,7 +35,7 @@
                     $div .= '<img src="' . "./bin-img" . '/' . $file . '" alt="' . $file . '">';
 
                     // Adiciona o formulário de exclusão
-                    $div .= '<form action="delete-image.php" method="post">';
+                    $div .= '<form action="delete-image.php" method="post" enctype="multipart/form-data">';
                     $div .= '<input type="hidden" name="_method" value="DELETE">';
                     $div .= '<input type="hidden" name="image" value="' . $file . '">';
                     $div .= '<button type="submit" class="styled-button styled-button-galery">Excluir</button>';
