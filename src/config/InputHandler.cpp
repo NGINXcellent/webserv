@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 01:09:15 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 03:34:39 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -278,7 +278,7 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
 }
 
 void InputHandler::serverNameAdd(std::ifstream &fileStream, \
-                                std::string &string) {
+                                std::vector<std::string> &servers) {
   std::string word;
   fileStream >> word;
 
@@ -298,7 +298,8 @@ void InputHandler::serverNameAdd(std::ifstream &fileStream, \
       break;
     }
   }
-  string = word;
+
+  servers.push_back(word);
 }
 
 void InputHandler::newServerCheck(std::ifstream &fileStream, \
@@ -327,9 +328,11 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, \
       addToString(fileStream, server.host);
 
     } else if (word == "server_name") {
-      if (!server.server_name.empty())
+      serverNameAdd(fileStream, server.server_names);
+
+      /*if (!server.server_name.empty()) {
         throw std::runtime_error("duplicate server_name");
-      serverNameAdd(fileStream, server.server_name);
+      }*/
 
     } else if (word == "error_page") {
       addToMap(fileStream, server.error_page);
@@ -419,17 +422,22 @@ void InputHandler::printLocations(const std::vector<s_locationConfig> &location)
 void InputHandler::printServers() {
   for (size_t i = 0; i <= (*serverVector).size() - 1; i++) {
     s_serverConfig toprint = (*serverVector)[i];
-    std::cout << "Server number:" << i << std::endl;
+      std::cout << "Server number:" << i << std::endl;
     
     for (size_t i = 0; i < toprint.ports.size(); i++) {
       std::cout << "port: " << toprint.ports[i] << std::endl;
     }
 
     std::cout << "host: " << toprint.host << std::endl;
-    std::cout << "server_name: " << toprint.server_name << std::endl;
+
+    for(size_t j = 0; j < toprint.server_names.size(); j++) {
+      std::cout << "server_name: " << toprint.server_names[j] << std::endl;
+    }
+
     if(toprint.srv_max_body_size != SIZE_T_MAX){
       std::cout << "    loc_max_body_size: " << toprint.srv_max_body_size << std::endl;
     }
+
     printMap(toprint.error_page);
 
     if (!toprint.location.empty())

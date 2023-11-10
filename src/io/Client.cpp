@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 00:21:49 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 03:34:17 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,10 +116,13 @@ int Client::getConnectionFd(void) {
 void Client::chooseServer(const std::string& server_name) {
   for (std::multimap<int, Server*>::iterator it = servers.first; it != servers.second; ++it) {
     Server *current_server = it->second; 
-    
-    if (current_server->getServerName() == server_name) {
-      this->server = current_server;
-      break;
+    std::vector<std::string> &server_names = current_server->getServerNames(); 
+
+    for (size_t i = 0; i < server_names.size(); i++) {
+      if (server_names[i] == server_name) {
+        this->server = current_server;
+        break;
+      }
     }
   }
 }

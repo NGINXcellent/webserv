@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 20:18:44 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 03:28:43 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,8 @@ Server::Server(const struct s_serverConfig& config) {
   }
   
   host = config.host;
-  server_name = config.server_name;
+  //server_name = config.server_name;
+  server_names = config.server_names;
   srv_max_body_size = config.srv_max_body_size;
   error_pages = config.error_page;
   locations = config.location;
@@ -419,8 +420,8 @@ int Server::getPort(void) { return (port); }
 
 std::string Server::getHost(void) { return (host); }
 
-std::string Server::getServerName(void) {
-  return (server_name);
+std::vector<std::string> &Server::getServerNames(void) {
+  return (server_names);
 }
 
 std::vector<size_t> Server::getPorts(void) {

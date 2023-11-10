@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:03:58 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 19:48:19 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 03:17:58 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ struct s_serverConfig {
   int                           socketfd;
   std::string                   port;
   std::vector<std::string>      ports;
+  std::vector<std::string>      server_names;
   std::string                   host;
   std::string                   server_name;  // server_name is unique
   size_t                        srv_max_body_size;
@@ -49,7 +50,7 @@ struct s_serverConfig {
 
 class InputHandler {
  private:
-  void serverNameAdd(std::ifstream &fileStream, std::string &string);
+  void serverNameAdd(std::ifstream &fileStream, std::vector<std::string> &servers);
   void printMap(std::map<int, std::string> mapi);
   bool isAMethod(const std::string &word);
   void addLocation(std::ifstream &fileStream, s_locationConfig &newLocation);
