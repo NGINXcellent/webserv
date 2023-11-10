@@ -134,7 +134,7 @@ void Controller::init(void) {
 void Controller::handleConnections(void) {
   // create just one pool of events, its like a line, if is a new conection, add
   // to poll, if not, handle the client conection.
-  //struct epoll_event events[100];
+  // struct epoll_event events[100];
   while (true) {
     int numEvents = epoll_wait(epollfd, events.data(), events.size(), -1);
 
@@ -161,15 +161,8 @@ void Controller::handleConnections(void) {
       } else if ((currentEvent & EPOLLIN) == EPOLLIN) {
         Client *client = connectedClients[currentFd];
         if (client->getKind() == "CGI") {
-          Logger::msg << "OLA EU SOU UM CGI E PASSEI POR AQUI";
-          Logger::print(Debug);
           client->setBuffer(readFromPipe(currentFd));
-          // std::cout << client->getBuffer()<< std::endl;
-          // std::cout << "EU LI UMA QUANTIDADE DE:  " << client->getBuffer().size() << std::endl;
-          // readFromClient(currentFd);
           client->setRequestStatus(Ready);
-          // client->reset();
-          // closeConnection(currentFd);
           removeFromLine(currentFd);
         }
 
@@ -181,7 +174,6 @@ void Controller::handleConnections(void) {
             closeConnection(currentFd);
           } else {
             HttpRequest *request = client->getRequest();
-            // HttpResponse *response = client->getResponse();
             std::string &clientBuffer = client->getBuffer();
             // DEBUG CLIENT BUFFER
             // std::cout << clientBuffer << std::endl;
@@ -217,7 +209,7 @@ void Controller::handleConnections(void) {
         }
       }
     }
-    // checkTimeOut();
+    checkTimeOut();
   }
 }
 
@@ -421,41 +413,34 @@ bool Controller::isNewConnection(int currentFD) {
   return (false);
 }
 
-
 // ta lendo tudo de uma vez mesmo doidao ! é teste essa budega
 std::string Controller::readFromPipe(int currentFd) {
-    // connectedClients[currentFd]->getBuffer().clear();
-    std::string toret;
-    int tmp = 4096;
-    char buf[tmp];
-    int strlen;
+  // connectedClients[currentFd]->getBuffer().clear();
+  std::string toret;
+  int tmp = 4096;
+  char buf[tmp];
+  int strlen;
 
-    while (42) {
-        strlen = read(currentFd, buf, tmp);
-        // sleep(10);
-        buf[strlen] = 0;
-        if (strlen == 0)
-        {
-          // std::cout << "pipe has been empty!" << std::endl;
-          Logger::msg << "Pipe has been empty!";
-          Logger::print(Debug);
-          break;
-        }
-        else if (strlen > 0)
-        {
-           toret.append(buf);
-        }
-        else{
-          // std::cout << "pipe read error!" << std::endl;
-          Logger::msg << "Pipe read error!";
-          Logger::print(Debug);
-          break;
-        }
+  while (42) {
+    strlen = read(currentFd, buf, tmp);
+    // sleep(10);
+    buf[strlen] = 0;
+    if (strlen == 0) {
+      // std::cout << "pipe has been empty!" << std::endl;
+      Logger::msg << "Pipe has been empty!";
+      Logger::print(Debug);
+      break;
+    } else if (strlen > 0) {
+      toret.append(buf);
+    } else {
+      // std::cout << "pipe read error!" << std::endl;
+      Logger::msg << "Pipe read error!";
+      Logger::print(Debug);
+      break;
     }
-    // std::cout << "pipe read complete!" << toret <<  std::endl;
-    return toret;
+  }
+  return toret;
 }
-
 
 int Controller::readFromClient(int currentFd) {
   int bytesRead = read(currentFd, buffer, 4096);
@@ -490,32 +475,24 @@ void Controller::sendToClient(int currentFd) {
   // HttpRequest *request = client->getRequest();
   HttpResponse *response = client->getResponse();
   TCPServerSocket *socket = socketPool[client->getPort()];
-  // HttpStatusCode status;
 
   client->getBuffer() += '\0';
   // Preparacao para enviar para o cliente
-  if(client->getCgiClient() != NULL) {
-    if (!client->getCgiClient()->getBuffer().empty()){
-      // std::string cgiOutput = client->getCgiClient()->getBuffer();
-
-      // std::cout << cgiOutput << std::endl;
-      // if (cgiOutput.empty()) {
-      //   return (No_Content);
+  if (client->getCgiClient() != NULL) {
+    if (!client->getCgiClient()->getBuffer().empty()) {
       client->getCgiClient()->getBuffer() += '\0';
-      const char *bodyData = client->getCgiClient()->getBuffer().c_str();  // Converter para const char*
+      const char *bodyData = client->getCgiClient()->getBuffer().c_str();
       char *bodyCopy = new char[strlen(bodyData) + 1];
       strncpy(bodyCopy, bodyData, strlen(bodyData) + 1);
       response->setMsgBody(bodyCopy);
       response->setContentLength(strlen(bodyCopy));
       response->setContentType("text/html");
       // fim da preparacao
-      socket->sendData(currentFd, response->getHeaders().c_str(), \
-                     response->getHeaders().size());
-      socket->sendData(currentFd, response->getMsgBody(), \
-                     response->getContentLength());
-      closeConnection(client->getCgiClient()->getConnectionFd()); //porque isso aqui esta fazendo o codigo dar segfault ?
-      // client->getCgiClient()->reset();
-      // removeFromLine(client->getCgiClient()->getConnectionFd());
+      socket->sendData(currentFd, response->getHeaders().c_str(),
+                       response->getHeaders().size());
+      socket->sendData(currentFd, response->getMsgBody(),
+                       response->getContentLength());
+      closeConnection(client->getCgiClient()->getConnectionFd());
       client->reset();
       closeConnection(currentFd);
     }
@@ -530,21 +507,11 @@ void Controller::sendToClient(int currentFd) {
       Logger::msg << " error while sending data to client: " << currentFd;
       Logger::msg << " on port " << client->getPort() << ". disconneting";
     }
-
+ 
     client->reset();
     closeConnection(currentFd);
   }
 }
-
-// void Controller::sendCgiToClient(int currentFd) {
-//   Client *client = connectedClients[currentFd];
-//   // std::cout << client->getBuffer() << std::endl;
-//   // Server *server = client->getServer();
-//   // HttpRequest *request = client->getRequest();
-//   HttpResponse *response = client->getResponse();
-//   TCPServerSocket *socket = socketPool[client->getPort()];
-  
-// }
 
 void Controller::initEpollEvent(struct epoll_event *ev, uint32_t flag, int fd) {
   bzero(ev, sizeof(*ev));

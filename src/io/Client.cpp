@@ -18,6 +18,7 @@
 Client::Client(int conFd, serverList serversL, int serverPort, time_t conStart, std::string kind) :
                connectionFd(conFd), port(serverPort), servers(serversL), \
                connectionTimeout(conStart + 60), kind(kind) {
+
   request = new HttpRequest();
   response = new HttpResponse();
   this->buffer = "";
