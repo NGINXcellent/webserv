@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 16:36:07 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 00:49:51 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,12 @@ Controller::Controller(const InputHandler &input) {
   while (it != end) {
     const struct s_serverConfig &serverConfig = *it;
     Server *newServer = new Server(serverConfig);
-    this->serverPool.insert(std::make_pair(newServer->getPort(), newServer));
+    std::vector<size_t> ports = newServer->getPorts(); 
+
+    for (size_t i = 0; i < ports.size(); i++) {
+      this->serverPool.insert(std::make_pair(ports[i], newServer));
+    }
+
     ++it;
   }
 
@@ -45,8 +50,8 @@ Controller::~Controller(void) {
     closeConnection(clientIt->first);
   }
 
-  std::map<int, Server*>::iterator serverIt = serverPool.begin();
-  std::map<int, Server*>::iterator serverIte = serverPool.end();
+  std::multimap<int, Server*>::iterator serverIt = serverPool.begin();
+  std::multimap<int, Server*>::iterator serverIte = serverPool.end();
 
   for (; serverIt != serverIte; serverIt++) {
     delete serverIt->second;
@@ -80,6 +85,7 @@ void Controller::init(void) {
   std::signal(SIGINT, signalHandler);
   struct epoll_event ev;
   epollfd = epoll_create(1);
+
   if (epollfd == -1) {
     Logger::msg << "Failed to create epoll. errno: " << errno;
     Logger::print(Error);
@@ -91,8 +97,17 @@ void Controller::init(void) {
   std::map<int, Server*>::iterator ite = serverPool.end();
 
   for (; it != ite; ++it) {
+    Logger::msg << "HEY MISTER DJ!";
+    Logger::print(Debug);
     it->second->setControllerPtr(this);
-    int port = it->second->getPort();
+
+    int port = it->first;
+    std::map<int, TCPServerSocket*>::iterator it = socketPool.find(port);
+
+    if (it != socketPool.end()) { // port already binded
+      continue;
+    }
+
     TCPServerSocket *socket = new TCPServerSocket(port);
     socket->bindAndListen();
     socketPool.insert(std::make_pair(port, socket));
@@ -135,7 +150,7 @@ void Controller::handleConnections(void) {
       Client *client = connectedClients[currentFd];
       if (isNewConnection(currentFd) && client == NULL ) {
         //std::cout << "new conection" << std::endl;
-        Logger::msg << "new connection";
+        Logger::msg << "new connection from FD: " << currentFd;
         Logger::print(Info);
         addNewConnection(currentFd, "CLIENT");  // if new connection found, add it.
       } else if ((currentEvent & EPOLLRDHUP) == EPOLLRDHUP) {
@@ -180,20 +195,25 @@ void Controller::handleConnections(void) {
 
         if(client->getKind() == "CLIENT") {
 
-        if (request->isRequestReady() && client->getRequestStatus() == New_Status){
-            HttpStatusCode status;
-            status = client->getServer()->process(client, request, response);
-            client->setRequestStatus(status);
-        }
-        if(client->getCgiClient() != NULL) {
-        if (client->getCgiClient()->getRequestStatus() == Ready)
-          client->setRequestStatus(Ready);
-        }
-        if (client != NULL && client->getRequestStatus() == Ready) {
-          // DEBUG CLIENT BUFFER
-          // std::cout << connectedClients[currentFd]->getBuffer() << std::endl;
-          sendToClient(currentFd);
-        }
+          if (request->isRequestReady() && client->getRequestStatus() == New_Status){
+              client->chooseServer(request->getServerName());
+              HttpStatusCode status;
+              if (client->getServer() != NULL) {
+                status = client->getServer()->process(client, request, response);
+                client->setRequestStatus(status);
+              }
+          }
+
+          if(client->getCgiClient() != NULL) {
+            if (client->getCgiClient()->getRequestStatus() == Ready)
+              client->setRequestStatus(Ready);
+          }
+
+          if (client != NULL && client->getRequestStatus() == Ready) {
+            // DEBUG CLIENT BUFFER
+            // std::cout << connectedClients[currentFd]->getBuffer() << std::endl;
+            sendToClient(currentFd);
+          }
         }
       }
     }
@@ -323,7 +343,8 @@ void Controller::addCGItoEpoll(int fd, int port, Client* client) {
 
   // IDENTIFICAR SE EU PRECISO DE REQUEST E RESPONSE AQUI
   // ESSAS BUDEGA TAO ME FUDENDO DE ALGUMA FORMA.
-  Client *newClient = new Client(fd, NULL, port, 0, "CGI", NULL, NULL);
+  serverList servers;
+  Client *newClient = new Client(fd, servers, port, 0, "CGI", NULL, NULL);
   newClient->setRequestStatus(CGI);
   client->setCgiClient(newClient);
   connectedClients.insert(std::make_pair(fd, newClient));
@@ -345,7 +366,8 @@ void Controller::addNewConnection(int socketFD, std::string kind) {
 
   initEpollEvent(&ev, EPOLLIN | EPOLLRDHUP | EPOLLOUT, newConnection);
   int serverPort = getSocketPort(newConnection);
-  Server *server = serverPool[serverPort];
+  
+  std::pair<std::multimap<int, Server*>::iterator, std::multimap<int, Server*>::iterator> servers = serverPool.equal_range(serverPort);
   time_t currentTime = time(NULL);
 
   if (epoll_ctl(epollfd, EPOLL_CTL_ADD, newConnection, &ev) == -1) {
@@ -357,7 +379,7 @@ void Controller::addNewConnection(int socketFD, std::string kind) {
     return;
   }
 
-  Client *newClient = new Client(newConnection, server, serverPort, currentTime, kind);
+  Client *newClient = new Client(newConnection, servers, serverPort, currentTime, kind);
   connectedClients.insert(std::make_pair(newConnection, newClient));
   events.push_back(ev);
 }
@@ -368,7 +390,7 @@ void Controller::removeFromLine(int currentFd) {
 }
 
 void Controller::removeFromConnectedCLients(int currentFd) {
-    if (connectedClients[currentFd] != NULL) {
+  if (connectedClients[currentFd] != NULL) {
     delete connectedClients[currentFd];
   }
 

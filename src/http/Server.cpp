@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 08:11:00 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 20:18:44 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,10 @@
 #include "../../include/http/HttpStatus.hpp"
 
 Server::Server(const struct s_serverConfig& config) {
-  port = strtol(config.port.c_str(), NULL, 0);
+  for (size_t i = 0; i < config.ports.size(); i++) {
+    ports.push_back(strtol(config.ports[i].c_str(), NULL, 0));
+  }
+  //port = strtol(config.port.c_str(), NULL, 0);
   host = config.host;
   server_name = config.server_name;
   srv_max_body_size = config.srv_max_body_size;
@@ -504,4 +507,8 @@ std::string Server::getHost(void) {
 
 std::string Server::getServerName(void) {
   return (server_name);
+}
+
+std::vector<size_t> Server::getPorts(void) {
+  return (this->ports);
 }

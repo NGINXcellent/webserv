@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/09/15 10:16:14 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 20:01:28 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <exception>
 #include <cstdlib>
 #include <limits>
+#include <algorithm>  // sort
 
 bool  InputHandler::check_args(int argc, const char **argv) {
   if ((argc - 1) == 1 && argv[1] != NULL) {
@@ -31,7 +32,7 @@ bool  InputHandler::check_args(int argc, const char **argv) {
   return ((argc - 1) == 0);
 }
 
-void InputHandler::addPort(std::ifstream &fileStream, std::string &string) {
+void InputHandler::addPort(std::ifstream &fileStream, std::vector<std::string> &string) {
     std::string word;
     fileStream >> word;
 
@@ -47,7 +48,7 @@ void InputHandler::addPort(std::ifstream &fileStream, std::string &string) {
       throw std::runtime_error("no ; at the end of line");
     } else {
       word.resize(word.size() - 1);
-      string = word;
+      string.push_back(word);
     }
 }
 
@@ -312,10 +313,17 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, \
 
   for (fileStream >> word; word != "}" && bracket; fileStream >> word) {
     if (word == "listen") {
-      if (!server.port.empty())
-        throw std::runtime_error("duplicate listen");
-      addPort(fileStream, server.port);
+      if (!server.ports.empty()) {
+        std::sort(server.ports.begin(), server.ports.end());
 
+        for (size_t i = 0; i < server.ports.size() - 1; i++) {
+          if (server.ports[i] == server.ports[i + 1]) {
+            throw std::runtime_error("duplicate listen");
+          }
+        }
+      }
+
+      addPort(fileStream, server.ports);
     } else if (word == "host") {
       if (!server.host.empty())
         throw std::runtime_error("duplicate host");
@@ -415,7 +423,11 @@ void InputHandler::printServers() {
   for (size_t i = 0; i <= (*serverVector).size() - 1; i++) {
     s_serverConfig toprint = (*serverVector)[i];
     std::cout << "Server number:" << i << std::endl;
-    std::cout << "port: " << toprint.port << std::endl;
+    
+    for (size_t i = 0; i < toprint.ports.size(); i++) {
+      std::cout << "port: " << toprint.ports[i] << std::endl;
+    }
+
     std::cout << "host: " << toprint.host << std::endl;
     std::cout << "server_name: " << toprint.server_name << std::endl;
     if(toprint.srv_max_body_size != SIZE_T_MAX){
