@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 02:40:44 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 07:52:23 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ Controller::Controller(const InputHandler &input) {
   while (it != end) {
     const struct s_serverConfig &serverConfig = *it;
     Server *newServer = new Server(serverConfig);
-    std::vector<size_t> ports = newServer->getPorts(); 
+    std::vector<size_t> ports = newServer->getPorts();
 
     for (size_t i = 0; i < ports.size(); i++) {
       this->serverPool.insert(std::make_pair(ports[i], newServer));
@@ -39,7 +39,7 @@ Controller::Controller(const InputHandler &input) {
     ++it;
   }
 
-  events.reserve(100);
+  events.reserve(EPOLL_SIZE);
 }
 
 Controller::~Controller(void) {
@@ -84,7 +84,7 @@ void Controller::init(void) {
   //  Create epollfd
   std::signal(SIGINT, signalHandler);
   struct epoll_event ev;
-  epollfd = epoll_create(1);
+  epollfd = epoll_create(EPOLL_SIZE);
 
   if (epollfd == -1) {
     Logger::msg << "Failed to create epoll. errno: " << errno;
@@ -137,7 +137,7 @@ void Controller::handleConnections(void) {
   // to poll, if not, handle the client conection.
   // struct epoll_event events[100];
   while (true) {
-    int numEvents = epoll_wait(epollfd, events.data(), events.size(), -1);
+    int numEvents = epoll_wait(epollfd, events.data(), EPOLL_SIZE, -1);
 
     if (numEvents == -1) {
       Logger::msg << "epoll_wait error. errno: " << errno;
@@ -150,10 +150,10 @@ void Controller::handleConnections(void) {
       int currentFd = events[i].data.fd;    // this client fd
       int currentEvent = events[i].events;  // this client event state
       Client *client = connectedClients[currentFd];
+      Logger::msg << "FD in Line: " << currentFd;
+      Logger::print(Info);
       if (isNewConnection(currentFd) && client == NULL ) {
         //std::cout << "new conection" << std::endl;
-        Logger::msg << "new connection from FD: " << currentFd;
-        Logger::print(Info);
         addNewConnection(currentFd, "CLIENT");  // if new connection found, add it.
       } else if ((currentEvent & EPOLLRDHUP) == EPOLLRDHUP) {
         Logger::msg << "Connection with FD -> " << currentFd;
@@ -211,7 +211,7 @@ void Controller::handleConnections(void) {
         }
       }
     }
-    checkTimeOut();
+    // checkTimeOut();
   }
 }
 
@@ -338,7 +338,7 @@ void Controller::addCGItoEpoll(int fd, int port, Client* client) {
   // IDENTIFICAR SE EU PRECISO DE REQUEST E RESPONSE AQUI
   // ESSAS BUDEGA TAO ME FUDENDO DE ALGUMA FORMA.
   serverList servers;
-  Client *newClient = new Client(fd, servers, port, 0, "CGI", NULL, NULL);
+  Client *newClient = new Client(fd, servers, port, 100000000, "CGI", NULL, NULL);
   newClient->setRequestStatus(CGI);
   client->setCgiClient(newClient);
   connectedClients.insert(std::make_pair(fd, newClient));
@@ -422,15 +422,13 @@ std::string Controller::readFromPipe(int currentFd) {
   int tmp = 4096;
   char buf[tmp];
   int strlen;
-
   while (42) {
     strlen = read(currentFd, buf, tmp);
     // sleep(10);
     buf[strlen] = 0;
     if (strlen == 0) {
-      // std::cout << "pipe has been empty!" << std::endl;
-      Logger::msg << "Pipe has been empty!";
-      Logger::print(Debug);
+      // Logger::msg << "Pipe has been empty!";
+      // Logger::print(Debug);
       break;
     } else if (strlen > 0) {
       toret.append(buf);

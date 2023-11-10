@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 03:28:43 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 07:12:39 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,10 +83,10 @@ HttpStatusCode Server::getCGI(Client *client, HttpRequest *request) {
     close(pipefd[0]);
     dup2(pipefd[1], STDOUT_FILENO);
     char *argv[] = {const_cast<char *>("php-cgi"),
-                    const_cast<char *>("/usr/bin/php-cgi"), NULL};
+                    const_cast<char *>(request->getCGIPath().c_str()), NULL};
     char **env = createCGIEnv(request);
     close(pipefd[1]);
-    execve("/usr/bin/php-cgi", argv, env);
+    execve(request->getCGIPath().c_str(), argv, env);
     perror("execve");
     exit(EXIT_FAILURE);
   } else {
@@ -229,7 +229,7 @@ HttpStatusCode Server::postCGI(Client *client, HttpRequest *request) {
 
     char **env = createCGIEnv(request);
     char *argv[] = {const_cast<char *>("php-cgi"),
-                  const_cast<char *>("/usr/bin/php-cgi"), NULL};
+                  const_cast<char *>(request->getCGIPath().c_str()), NULL};
     execve(request->getCGIPath().c_str(), argv, env);
     perror("execve");
     exit(EXIT_FAILURE);
