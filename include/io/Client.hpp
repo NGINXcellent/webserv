@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/19 17:56:00 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 22:37:03 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 05:41:42 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,12 +20,12 @@
 #include "../http/HttpRequest.hpp"
 #include "../http/HttpStatus.hpp"
 
-typedef std::pair<std::multimap<int, Server*>::iterator, std::multimap<int, Server*>::iterator> serverList;
+typedef std::pair<std::multimap<int, Server*>::iterator, std::multimap<int, Server*>::iterator> servers_multimap;
 
 class Client {
  public:
-  Client(int conFd, serverList servers, int port, time_t connectionStart, std::string kind);
-  Client(int conFd, serverList servers, int port, time_t connectionStart, std::string kind, HttpRequest* request, HttpResponse* response);
+  Client(int conFd, servers_multimap servers, int port, time_t connectionStart, std::string kind);
+  Client(int conFd, servers_multimap servers, int port, time_t connectionStart, std::string kind, HttpRequest* request, HttpResponse* response);
   ~Client(void);
 
   std::string&		getBuffer(void);
@@ -51,7 +51,7 @@ class Client {
   int			connectionFd;
   int			port;
   Server*		server;
-  serverList		servers;
+  servers_multimap	servers;
   long long		connectionTimeout;
   HttpRequest*		request;
   HttpResponse*		response;

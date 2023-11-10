@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 02:40:44 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 05:46:28 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ Controller::Controller(const InputHandler &input) {
   std::vector<struct s_serverConfig>::iterator it = input.serverVector->begin();
   std::vector<struct s_serverConfig>::iterator end = input.serverVector->end();
 
+  bool is_first = true;
+
   while (it != end) {
     const struct s_serverConfig &serverConfig = *it;
     Server *newServer = new Server(serverConfig);
@@ -36,6 +38,12 @@ Controller::Controller(const InputHandler &input) {
       this->serverPool.insert(std::make_pair(ports[i], newServer));
     }
 
+    if (is_first) {
+      this->defaultServer = newServer;
+      is_first = false;
+    }
+
+    serverList.push_back(newServer);
     ++it;
   }
 
@@ -50,11 +58,11 @@ Controller::~Controller(void) {
     closeConnection(clientIt->first);
   }
 
-  std::multimap<int, Server*>::iterator serverIt = serverPool.begin();
-  std::multimap<int, Server*>::iterator serverIte = serverPool.end();
+  std::vector<Server*>::iterator serverIt = serverList.begin();
+  std::vector<Server*>::iterator serverIte = serverList.end();
 
   for (; serverIt != serverIte; serverIt++) {
-    delete serverIt->second;
+    delete *serverIt;
   }
 
   std::map<int, TCPServerSocket*>::iterator socketIt = socketPool.begin();
@@ -93,39 +101,42 @@ void Controller::init(void) {
   }
   
   // start sockets
-  std::map<int, Server*>::iterator it = serverPool.begin();
-  std::map<int, Server*>::iterator ite = serverPool.end();
+  //std::map<int, Server*>::iterator it = serverPool.begin();
+  //std::map<int, Server*>::iterator ite = serverPool.end();
 
-  for (; it != ite; ++it) {
-    it->second->setControllerPtr(this);
+  for (size_t i = 0; i < serverList.size(); i++) {
+    serverList[i]->setControllerPtr(this);
+    std::vector<size_t> ports = serverList[i]->getPorts();
 
-    int port = it->first;
-    std::map<int, TCPServerSocket*>::iterator it = socketPool.find(port);
+    for (size_t j = 0; j < ports.size(); j++) {
+      int port = ports[j];
+      std::map<int, TCPServerSocket*>::iterator it = socketPool.find(port);
 
-    if (it != socketPool.end()) { // port already binded
-      continue;
-    }
+      if (it != socketPool.end()) { // port already binded
+        continue;
+      }
 
-    TCPServerSocket *socket = new TCPServerSocket(port);
+      TCPServerSocket *socket = new TCPServerSocket(port, serverList[i]->getHost());
 
-    if (socket->bindAndListen() == -1) {
-      Logger::msg << "webserv will not be able to serve pages on port " << port;
-      Logger::print(Warning);
-      continue;
-    }
+      if (socket->bindAndListen() == -1) {
+        Logger::msg << "webserv will not be able to serve pages on port " << port;
+        Logger::print(Warning);
+        continue;
+      }
 
-    socketPool.insert(std::make_pair(port, socket));
-    Logger::msg << "listening on port: " << socket->getPort();
-    Logger::print(Info);
+      socketPool.insert(std::make_pair(port, socket));
+      Logger::msg << "listening on port: " << socket->getPort();
+      Logger::print(Info);
 
-    // Bind sockfd on epoll event
-    initEpollEvent(&ev, EPOLLIN | EPOLLOUT, socket->getFD());
+      // Bind sockfd on epoll event
+      initEpollEvent(&ev, EPOLLIN | EPOLLOUT, socket->getFD());
 
-    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket->getFD(), &ev) == -1) {
-      Logger::msg << "Failed to add sockfd to epoll. errno: " << errno;
-      Logger::print(Error);
-    } else {
-      events.push_back(ev);
+      if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket->getFD(), &ev) == -1) {
+        Logger::msg << "Failed to add sockfd to epoll. errno: " << errno;
+        Logger::print(Error);
+      } else {
+        events.push_back(ev);
+      }
     }
   }
 
@@ -337,7 +348,7 @@ void Controller::addCGItoEpoll(int fd, int port, Client* client) {
 
   // IDENTIFICAR SE EU PRECISO DE REQUEST E RESPONSE AQUI
   // ESSAS BUDEGA TAO ME FUDENDO DE ALGUMA FORMA.
-  serverList servers;
+  servers_multimap servers;
   Client *newClient = new Client(fd, servers, port, 0, "CGI", NULL, NULL);
   newClient->setRequestStatus(CGI);
   client->setCgiClient(newClient);

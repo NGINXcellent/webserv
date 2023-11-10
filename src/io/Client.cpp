@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 03:34:17 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 05:42:16 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include "../../include/http/HttpTime.hpp"
 #include "../../include/http/Server.hpp"
 
-Client::Client(int conFd, serverList serversL, int serverPort, time_t conStart, std::string kind) :
+Client::Client(int conFd, servers_multimap serversL, int serverPort, time_t conStart, std::string kind) :
                connectionFd(conFd), port(serverPort), servers(serversL), \
                connectionTimeout(conStart + 60), kind(kind) {
 
@@ -27,7 +27,7 @@ Client::Client(int conFd, serverList serversL, int serverPort, time_t conStart, 
   requestStatus = New_Status;
 }
 
-Client::Client(int conFd, serverList serversL, int serverPort, time_t conStart, std::string kind, HttpRequest* request, HttpResponse* response) :
+Client::Client(int conFd, servers_multimap serversL, int serverPort, time_t conStart, std::string kind, HttpRequest* request, HttpResponse* response) :
                connectionFd(conFd), port(serverPort), servers(serversL), \
                connectionTimeout(conStart + 60), request(request), response(response), kind(kind) {
   this->buffer = "";

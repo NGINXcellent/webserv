@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 03:34:39 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 04:35:58 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -323,8 +323,9 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, \
         }
       }
     } else if (word == "host") {
-      if (!server.host.empty())
+      if (!server.host.empty()) {
         throw std::runtime_error("duplicate host");
+      }
       addToString(fileStream, server.host);
 
     } else if (word == "server_name") {

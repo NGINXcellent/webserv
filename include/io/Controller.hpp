@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 20:56:44 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 05:22:22 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,10 @@ class Controller {
   char                              buffer[4096];
   std::map<int, Client*>            connectedClients;
   std::multimap<int, Server*>	    serverPool;
+  std::vector<Server*>		    serverList;
   std::map<int, TCPServerSocket*>   socketPool;
   std::vector<epoll_event>	    events;
+  Server			    *defaultServer;
 
   Controller(const Controller& f);
   Controller& operator=(const Controller& t);
