@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 05:46:28 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 06:28:01 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 #include "../../include/http/Server.hpp"
 
 Controller::Controller(const InputHandler &input) {
+  defaultServer = NULL;
   std::vector<struct s_serverConfig>::iterator it = input.serverVector->begin();
   std::vector<struct s_serverConfig>::iterator end = input.serverVector->end();
 
@@ -125,7 +126,7 @@ void Controller::init(void) {
       }
 
       socketPool.insert(std::make_pair(port, socket));
-      Logger::msg << "listening on port: " << socket->getPort();
+      Logger::msg << "listening on " << serverList[i]->getHost() << ":" << socket->getPort();
       Logger::print(Info);
 
       // Bind sockfd on epoll event
@@ -202,11 +203,14 @@ void Controller::handleConnections(void) {
 
           if (request->isRequestReady() && client->getRequestStatus() == New_Status){
               client->chooseServer(request->getServerName());
+
+              if (client->getServer() == NULL) {
+                client->setServer(defaultServer);
+              } 
+
               HttpStatusCode status;
-              if (client->getServer() != NULL) {
-                status = client->getServer()->process(client, request, response);
-                client->setRequestStatus(status);
-              }
+              status = client->getServer()->process(client, request, response);
+              client->setRequestStatus(status);
           }
 
           if(client->getCgiClient() != NULL) {

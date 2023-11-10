@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/20 16:10:03 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 05:42:16 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 06:32:07 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,10 @@ HttpResponse *Client::getResponse() {
 
 Server* Client::getServer(void) {
   return (this->server);
+}
+
+void Client::setServer(Server *newServer) {
+  this->server = newServer;
 }
 
 int Client::getPort(void) {

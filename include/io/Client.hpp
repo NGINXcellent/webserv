@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/19 17:56:00 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 05:41:42 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 06:31:33 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ class Client {
   HttpRequest*		getRequest(void);
   HttpResponse*		getResponse(void);
   time_t		getTimeout(void);
+  void			setServer(Server *newServer);
   Server*		getServer(void);
   void			chooseServer(const std::string &server_name);
   void			setCgiClient(Client* client);
