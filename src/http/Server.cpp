@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 16:45:15 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 20:18:44 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,11 @@
 #include "../../include/io/FileWriter.hpp"
 #include "../../include/io/TcpServerSocket.hpp"
 
-Server::Server(const struct s_serverConfig &config) {
-  port = strtol(config.port.c_str(), NULL, 0);
+Server::Server(const struct s_serverConfig& config) {
+  for (size_t i = 0; i < config.ports.size(); i++) {
+    ports.push_back(strtol(config.ports[i].c_str(), NULL, 0));
+  }
+  
   host = config.host;
   server_name = config.server_name;
   srv_max_body_size = config.srv_max_body_size;
@@ -416,4 +419,12 @@ int Server::getPort(void) { return (port); }
 
 std::string Server::getHost(void) { return (host); }
 
-std::string Server::getServerName(void) { return (server_name); }
+std::string Server::getServerName(void) {
+  return (server_name);
+}
+
+std::vector<size_t> Server::getPorts(void) {
+  return (this->ports);
+}
+
+

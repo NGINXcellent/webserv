@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:23:14 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 19:28:05 by dvargas          ###   ########.fr       */
+/*   Updated: 2023/11/09 20:18:30 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class Server {
   HttpStatusCode  post(Client* client, HttpRequest *request, HttpResponse *response);
   HttpStatusCode  del(HttpRequest *request, HttpResponse *response);
   int             getPort(void);
+  std::vector<size_t> getPorts(void);
   std::string     getHost(void);
   std::string     getServerName(void);
   HttpStatusCode  getCGI(Client* client, HttpRequest *request);
@@ -52,6 +53,7 @@ class Server {
 
  private:
   size_t                        port;
+  std::vector<size_t>           ports;
   std::string                   host;
   std::string                   server_name;
   size_t                        srv_max_body_size;
