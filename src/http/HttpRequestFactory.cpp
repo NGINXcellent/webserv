@@ -303,7 +303,7 @@ std::vector<std::string> location::splitPath(const std::string &path) {
   } else {
       while (std::getline(iss, token, '/')) {
         if (!token.empty()) {
-          token = token;
+         // token = token;
           tokens.push_back(token);
         }
       }
