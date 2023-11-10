@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:51:31 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 00:49:51 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 02:40:44 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,8 +97,6 @@ void Controller::init(void) {
   std::map<int, Server*>::iterator ite = serverPool.end();
 
   for (; it != ite; ++it) {
-    Logger::msg << "HEY MISTER DJ!";
-    Logger::print(Debug);
     it->second->setControllerPtr(this);
 
     int port = it->first;
@@ -109,7 +107,13 @@ void Controller::init(void) {
     }
 
     TCPServerSocket *socket = new TCPServerSocket(port);
-    socket->bindAndListen();
+
+    if (socket->bindAndListen() == -1) {
+      Logger::msg << "webserv will not be able to serve pages on port " << port;
+      Logger::print(Warning);
+      continue;
+    }
+
     socketPool.insert(std::make_pair(port, socket));
     Logger::msg << "listening on port: " << socket->getPort();
     Logger::print(Info);
@@ -118,11 +122,8 @@ void Controller::init(void) {
     initEpollEvent(&ev, EPOLLIN | EPOLLOUT, socket->getFD());
 
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket->getFD(), &ev) == -1) {
-      // std::cerr << "Failed to add sockfd to epoll. errno: ";
-      // std::cout << errno << std::endl;
       Logger::msg << "Failed to add sockfd to epoll. errno: " << errno;
       Logger::print(Error);
-      exit(EXIT_FAILURE);
     } else {
       events.push_back(ev);
     }
@@ -144,6 +145,7 @@ void Controller::handleConnections(void) {
       //std::cerr << "epoll_wait error. errno: " << errno << std::endl;
       continue;
     }
+
     for (int i = 0; i < numEvents; ++i) {
       int currentFd = events[i].data.fd;    // this client fd
       int currentEvent = events[i].events;  // this client event state

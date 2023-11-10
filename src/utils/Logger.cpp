@@ -6,7 +6,7 @@
 /*   By: lfarias- <lfarias-@student.42.rio>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 13:11:56 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 15:46:58 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 02:45:28 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,21 +23,21 @@ void Logger::logMessage(const std::string &msg, LogLevel level) {
 
   switch(level) {
     case Info:
-      levelStr = "[INFO]:\t";
+      levelStr = "[INFO]:\t ";
       colorCode = "\033[32m";
       break;
     case Warning:
-      levelStr = "[WARNING]:\t";
+      levelStr = "[WARNING]:\t ";
       colorCode = "\033[33m";
       fd = 2;
       break;
     case Error:
-      levelStr = "[ERROR]:\t";
+      levelStr = "[ERROR]:\t ";
       colorCode = "\033[31m";
       fd = 2;
       break;
     case Debug:
-      levelStr = "[DEBUG]:\t";
+      levelStr = "[DEBUG]:\t ";
       colorCode = "\033[36m";
   }
 

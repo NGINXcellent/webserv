@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/11/09 16:30:57 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 02:39:02 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,20 +41,20 @@ int TCPServerSocket::bindAndListen() {
     std::cerr << "Failed to create socket. errno: " << errno << std::endl;
     Logger::msg << "Failed to create socket. errno: ";
     Logger::print(Error);
-    exit(EXIT_FAILURE);
+    return (-1);
   }
 
   if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
     Logger::msg << "Failed to bind to port " << hostPort << ". errno: " << errno;
     Logger::print(Error);
-    exit(EXIT_FAILURE);
+    return (-1);
   }
 
   // Colocar o socket em modo de escuta
   if (listen(sockfd, 10) < 0) {
     Logger::msg << "Failed to listen on socket. errno: " << errno;
     Logger::print(Error);
-    exit(EXIT_FAILURE);
+    return (-1);
    }
 
   return sockfd;
