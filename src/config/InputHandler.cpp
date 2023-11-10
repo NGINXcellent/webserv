@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 12:05:52 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/09 20:01:28 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 01:09:15 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -313,17 +313,14 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, \
 
   for (fileStream >> word; word != "}" && bracket; fileStream >> word) {
     if (word == "listen") {
-      if (!server.ports.empty()) {
-        std::sort(server.ports.begin(), server.ports.end());
+      addPort(fileStream, server.ports);
+      std::sort(server.ports.begin(), server.ports.end());
 
-        for (size_t i = 0; i < server.ports.size() - 1; i++) {
-          if (server.ports[i] == server.ports[i + 1]) {
-            throw std::runtime_error("duplicate listen");
-          }
+      for (size_t i = 0; i < server.ports.size() - 1; i++) {
+        if (server.ports[i] == server.ports[i + 1]) {
+          throw std::runtime_error("duplicate listen");
         }
       }
-
-      addPort(fileStream, server.ports);
     } else if (word == "host") {
       if (!server.host.empty())
         throw std::runtime_error("duplicate host");
