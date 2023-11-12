@@ -257,7 +257,7 @@ void InputHandler::addLocation(std::ifstream &fileStream, \
       extractExtension(fileStream, newLocation.cgi_extension);
 
     } else if (word == "max_body_size") {
-      if (!newLocation.loc_max_body_size != 0)
+      if ((!newLocation.loc_max_body_size) != 0)
         throw std::runtime_error("duplicate loc_max_body_size inside location");
       addToSizeT(fileStream, newLocation.loc_max_body_size);
 
@@ -339,7 +339,7 @@ void InputHandler::newServerCheck(std::ifstream &fileStream, \
       addToMap(fileStream, server.error_page);
 
     } else if (word == "max_body_size") {
-      if (!server.srv_max_body_size != 0)
+      if ((!server.srv_max_body_size) != 0)
         throw std::runtime_error("duplicate loc_max_body_size");
       addToSizeT(fileStream, server.srv_max_body_size);
 

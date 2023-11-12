@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/06 20:48:07 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 05:22:22 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 07:48:19 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 #include <vector>
 #include <map>
 
+#define EPOLL_SIZE 50
 #define TIMEOUT 60
 
 class Client;

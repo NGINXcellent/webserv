@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 17:22:33 by lfarias-          #+#    #+#             */
-/*   Updated: 2023/11/10 03:28:43 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 07:12:39 by dvargas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,11 +82,12 @@ HttpStatusCode Server::getCGI(Client *client, HttpRequest *request) {
   if (childPid == 0) {
     close(pipefd[0]);
     dup2(pipefd[1], STDOUT_FILENO);
+    std::string path = request->getCGIPath();
     char *argv[] = {const_cast<char *>("php-cgi"),
-                    const_cast<char *>("/usr/bin/php-cgi"), NULL};
+                    const_cast<char *>(path.c_str()), NULL};
     char **env = createCGIEnv(request);
     close(pipefd[1]);
-    execve("/usr/bin/php-cgi", argv, env);
+    execve(path.c_str(), argv, env);
     perror("execve");
     exit(EXIT_FAILURE);
   } else {
@@ -228,8 +229,9 @@ HttpStatusCode Server::postCGI(Client *client, HttpRequest *request) {
     close(pipe_to_parent[0]);
 
     char **env = createCGIEnv(request);
+    std::string path = request->getCGIPath();
     char *argv[] = {const_cast<char *>("php-cgi"),
-                  const_cast<char *>("/usr/bin/php-cgi"), NULL};
+                  const_cast<char *>(path.c_str()), NULL};
     execve(request->getCGIPath().c_str(), argv, env);
     perror("execve");
     exit(EXIT_FAILURE);
@@ -306,7 +308,7 @@ HttpStatusCode Server::post(Client *client, HttpRequest *request,
     }
   }
 
-  if (opStatus != Ready || opStatus != No_Content || opStatus != Created) {
+  if (opStatus != Ready && opStatus != No_Content && opStatus != Created) {
     return opStatus;
   }
   response->setContentType(MimeType::identify(request->getResource()));
