@@ -6,7 +6,7 @@
 /*   By: dvargas <dvargas@student.42.rio>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 08:40:52 by dvargas           #+#    #+#             */
-/*   Updated: 2023/11/10 02:39:02 by lfarias-         ###   ########.fr       */
+/*   Updated: 2023/11/10 05:32:33 by lfarias-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,17 @@
 
 #include <iostream>
 
+#include <string.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <stdlib.h>
+
 #include "../../include/http/Server.hpp"
 #include "../../include/utils/Logger.hpp"
 
 // Constructor Server Socket
-TCPServerSocket::TCPServerSocket(unsigned int hPort) : sockfd(-1), \
-                                              hostPort(hPort) {}
+TCPServerSocket::TCPServerSocket(unsigned int hPort, const std::string &host) : \
+                                sockfd(-1), hostPort(hPort), hostAddr(host) {}
 
 // simple destructor
 TCPServerSocket::~TCPServerSocket() {
@@ -33,7 +38,15 @@ int TCPServerSocket::bindAndListen() {
   sockaddr_in serverAddr;
   bzero(&serverAddr, sizeof(serverAddr));
   serverAddr.sin_family = AF_INET;
-  serverAddr.sin_addr.s_addr = INADDR_ANY;
+  in_addr_t ip_addr = ft_inet_addr(hostAddr.c_str());
+
+  if (ip_addr == INADDR_NONE) {
+    Logger::msg << "error while trying to parse host";
+    Logger::print(Error);
+    return (-1);
+  }
+    
+  serverAddr.sin_addr.s_addr = ip_addr;
   serverAddr.sin_port = htons(hostPort);
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -80,3 +93,30 @@ int TCPServerSocket::getFD(void) {
 unsigned int TCPServerSocket::getPort(void) {
   return (hostPort);
 }
+
+unsigned long TCPServerSocket::ft_inet_addr(const char *ipAddrString) {
+    struct addrinfo hints, *result, *p;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+
+    int status = getaddrinfo(ipAddrString, NULL, &hints, &result);
+
+    if (status != 0) {
+        return INADDR_NONE;
+    }
+
+    unsigned long ipBinary = INADDR_NONE;
+
+    for (p = result; p != NULL; p = p->ai_next) {
+      if (p->ai_family == AF_INET) {
+          struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+          ipBinary = ipv4->sin_addr.s_addr;
+          break; // Use the first IPv4 address found
+      }
+    }
+
+    freeaddrinfo(result);
+
+    return ipBinary;
+}
+

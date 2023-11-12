@@ -24,8 +24,11 @@
 #include "../../include/http/Server.hpp"
 
 Controller::Controller(const InputHandler &input) {
+  defaultServer = NULL;
   std::vector<struct s_serverConfig>::iterator it = input.serverVector->begin();
   std::vector<struct s_serverConfig>::iterator end = input.serverVector->end();
+
+  bool is_first = true;
 
   while (it != end) {
     const struct s_serverConfig &serverConfig = *it;
@@ -36,6 +39,12 @@ Controller::Controller(const InputHandler &input) {
       this->serverPool.insert(std::make_pair(ports[i], newServer));
     }
 
+    if (is_first) {
+      this->defaultServer = newServer;
+      is_first = false;
+    }
+
+    serverList.push_back(newServer);
     ++it;
   }
 
@@ -49,13 +58,7 @@ Controller::~Controller(void) {
   for (; clientIt != clientIte; clientIt++) {
     closeConnection(clientIt->first);
   }
-
-  /* std::multimap<int, Server*>::iterator serverIt = serverPool.begin();
-  std::multimap<int, Server*>::iterator serverIte = serverPool.end();
-
-  for (; serverIt != serverIte; serverIt++) {
-    delete serverIt->second;
-  } */
+  
   for (std::multimap<int, Server*>::iterator it = serverPool.begin(); it != serverPool.end(); /* no increment here */) {
       // Get the current key
       int currentKey = it->first;
@@ -112,39 +115,42 @@ void Controller::init(void) {
   }
   
   // start sockets
-  std::map<int, Server*>::iterator it = serverPool.begin();
-  std::map<int, Server*>::iterator ite = serverPool.end();
+  //std::map<int, Server*>::iterator it = serverPool.begin();
+  //std::map<int, Server*>::iterator ite = serverPool.end();
 
-  for (; it != ite; ++it) {
-    it->second->setControllerPtr(this);
+  for (size_t i = 0; i < serverList.size(); i++) {
+    serverList[i]->setControllerPtr(this);
+    std::vector<size_t> ports = serverList[i]->getPorts();
 
-    int port = it->first;
-    std::map<int, TCPServerSocket*>::iterator it = socketPool.find(port);
+    for (size_t j = 0; j < ports.size(); j++) {
+      int port = ports[j];
+      std::map<int, TCPServerSocket*>::iterator it = socketPool.find(port);
 
-    if (it != socketPool.end()) { // port already binded
-      continue;
-    }
+      if (it != socketPool.end()) { // port already binded
+        continue;
+      }
 
-    TCPServerSocket *socket = new TCPServerSocket(port);
+      TCPServerSocket *socket = new TCPServerSocket(port, serverList[i]->getHost());
 
-    if (socket->bindAndListen() == -1) {
-      Logger::msg << "webserv will not be able to serve pages on port " << port;
-      Logger::print(Warning);
-      continue;
-    }
+      if (socket->bindAndListen() == -1) {
+        Logger::msg << "webserv will not be able to serve pages on port " << port;
+        Logger::print(Warning);
+        continue;
+      }
 
-    socketPool.insert(std::make_pair(port, socket));
-    Logger::msg << "listening on port: " << socket->getPort();
-    Logger::print(Info);
+      socketPool.insert(std::make_pair(port, socket));
+      Logger::msg << "listening on " << serverList[i]->getHost() << ":" << socket->getPort();
+      Logger::print(Info);
 
-    // Bind sockfd on epoll event
-    initEpollEvent(&ev, EPOLLIN | EPOLLOUT, socket->getFD());
+      // Bind sockfd on epoll event
+      initEpollEvent(&ev, EPOLLIN | EPOLLOUT, socket->getFD());
 
-    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket->getFD(), &ev) == -1) {
-      Logger::msg << "Failed to add sockfd to epoll. errno: " << errno;
-      Logger::print(Error);
-    } else {
-      events.push_back(ev);
+      if (epoll_ctl(epollfd, EPOLL_CTL_ADD, socket->getFD(), &ev) == -1) {
+        Logger::msg << "Failed to add sockfd to epoll. errno: " << errno;
+        Logger::print(Error);
+      } else {
+        events.push_back(ev);
+      }
     }
   }
 
@@ -206,11 +212,14 @@ void Controller::handleConnections(void) {
 
           if (request->isRequestReady() && client->getRequestStatus() == New_Status){
               client->chooseServer(request->getServerName());
+
+              if (client->getServer() == NULL) {
+                client->setServer(defaultServer);
+              } 
+
               HttpStatusCode status;
-              if (client->getServer() != NULL) {
-                status = client->getServer()->process(client, request, response);
-                client->setRequestStatus(status);
-              }
+              status = client->getServer()->process(client, request, response);
+              client->setRequestStatus(status);
           }
 
           if(client->getCgiClient() != NULL) {
@@ -336,6 +345,7 @@ void Controller::addCGItoEpoll(int fd, int port, Client* client) {
     close(fd);
     return;
   }
+
 
   serverList servers;
   Client *newClient = new Client(fd, servers, port, 100000000, "CGI", NULL, NULL);

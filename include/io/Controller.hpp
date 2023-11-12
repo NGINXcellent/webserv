@@ -45,8 +45,10 @@ class Controller {
   char                              buffer[4096];
   std::map<int, Client*>            connectedClients;
   std::multimap<int, Server*>	    serverPool;
+  std::vector<Server*>		    serverList;
   std::map<int, TCPServerSocket*>   socketPool;
   std::vector<epoll_event>	    events;
+  Server			    *defaultServer;
 
   Controller(const Controller& f);
   Controller& operator=(const Controller& t);
